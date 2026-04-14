@@ -1,0 +1,82 @@
+[
+    {
+        "id": 1,
+        "platform": "🍑 淘宝",
+        "title": "淘宝新人专属188元红包",
+        "desc": "新用户下载淘宝APP并完成注册，最高可领188元红包",
+        "type": "coupon",
+        "typeText": "红包",
+        "link": "https://taobao.com",
+        "date": "2026-04-14"
+    },
+    {
+        "id": 2,
+        "platform": "🛒 京东",
+        "title": "京东超市满99减30神券",
+        "desc": "京东超市全品类满99元减30元，需提前领取",
+        "type": "coupon",
+        "typeText": "满减券",
+        "link": "https://jd.com",
+        "date": "2026-04-14"
+    },
+    {
+        "id": 3,
+        "platform": "📱 拼多多",
+        "title": "拼多多百亿补贴 iPhone16 Pro",
+        "desc": "iPhone 16 Pro 256G 百亿补贴价，到手价惊喜",
+        "type": "discount",
+        "typeText": "百亿补贴",
+        "link": "https://pinduoduo.com",
+        "date": "2026-04-13"
+    },
+    {
+        "id": 4,
+        "platform": "🍜 美团",
+        "title": "美团外卖新客首单1分钱",
+        "desc": "美团外卖新用户首单1分钱起，可选麦当劳、肯德基等",
+        "type": "coupon",
+        "typeText": "新客专享",
+        "link": "https://meituan.com",
+        "date": "2026-04-14"
+    },
+    {
+        "id": 5,
+        "platform": "🎬 饿了么",
+        "title": "饿了么会员买一送一",
+        "desc": "饿了么超级会员买一个月送一个月，限时活动",
+        "type": "event",
+        "typeText": "限时活动",
+        "link": "https://ele.me",
+        "date": "2026-04-12"
+    },
+    {
+        "id": 6,
+        "platform": "🎮 Steam",
+        "title": "Steam 春季特卖已开启",
+        "desc": "Steam 春季特卖全场上万款游戏打折，部分低至2折",
+        "type": "discount",
+        "typeText": "折扣",
+        "link": "https://store.steampowered.com",
+        "date": "2026-04-10"
+    },
+    {
+        "id": 7,
+        "platform": "📚 腾讯视频",
+        "title": "腾讯视频VIP年卡5折",
+        "desc": "年卡限时5折，仅限新用户或过期用户续费",
+        "type": "coupon",
+        "typeText": "5折",
+        "link": "https://v.qq.com",
+        "date": "2026-04-13"
+    },
+    {
+        "id": 8,
+        "platform": "☁️ 阿里云",
+        "title": "阿里云新人云服务器99元/年",
+        "desc": "阿里云ECS云服务器新用户专享，2核1G配置",
+        "type": "free",
+        "typeText": "新客价",
+        "link": "https://aliyun.com",
+        "date": "2026-04-11"
+    }
+]

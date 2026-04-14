@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜罗天下 - 发现生活中的每一份优惠</title>
+    <meta name="description" content="搜罗天下，专注于发现和分享全网优质优惠信息，帮你省钱每一天。">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <header class="header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🦞</span>
+                <span class="logo-text">搜罗天下</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link active">首页</a>
+                <a href="deals.html" class="nav-link">优惠折扣</a>
+                <a href="#" class="nav-link disabled">AI工具 <span class="soon">筹备中</span></a>
+                <a href="#" class="nav-link disabled">实用工具 <span class="soon">筹备中</span></a>
+                <a href="#" class="nav-link disabled">资源下载 <span class="soon">筹备中</span></a>
+                <a href="about.html" class="nav-link">关于我们</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 横幅 -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title">搜罗天下</h1>
+            <p class="hero-subtitle">发现生活中的每一份优惠与美好</p>
+            <div class="hero-search">
+                <input type="text" placeholder="搜索优惠信息..." class="search-input">
+                <button class="search-btn">搜索</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 板块导航 -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">📦 热门板块</h2>
+            <div class="card-grid">
+
+                <a href="deals.html" class="card card-featured">
+                    <div class="card-icon">🎁</div>
+                    <h3 class="card-title">优惠折扣</h3>
+                    <p class="card-desc">汇集全网最新优惠券、折扣信息，购物前先来看看，省到就是赚到</p>
+                    <span class="card-tag hot">🔥 热门</span>
+                </a>
+
+                <a href="#" class="card disabled-card">
+                    <div class="card-icon">🤖</div>
+                    <h3 class="card-title">AI工具</h3>
+                    <p class="card-desc">收录优质AI工具与使用技巧，用科技提升效率，开启智能生活</p>
+                    <span class="card-tag soon-tag">筹备中</span>
+                </a>
+
+                <a href="#" class="card disabled-card">
+                    <div class="card-icon">🛠️</div>
+                    <h3 class="card-title">实用工具</h3>
+                    <p class="card-desc">在线工具大全，日常所需应有尽有，无需下载直接使用</p>
+                    <span class="card-tag soon-tag">筹备中</span>
+                </a>
+
+                <a href="#" class="card disabled-card">
+                    <div class="card-icon">📥</div>
+                    <h3 class="card-title">资源下载</h3>
+                    <p class="card-desc">精选软件、模板、素材资源下载，持续更新中...</p>
+                    <span class="card-tag soon-tag">筹备中</span>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 最新优惠 -->
+    <section class="section section-gray">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">🆕 最新优惠</h2>
+                <a href="deals.html" class="more-link">查看全部 →</a>
+            </div>
+            <div class="deal-list" id="dealList">
+                <div class="deal-loading">正在加载优惠信息...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">首页</a>
+                <a href="deals.html">优惠折扣</a>
+                <a href="about.html">关于我们</a>
+                <a href="about.html#disclaimer">免责申明</a>
+            </div>
+            <p class="footer-text">
+                © 2026 搜罗天下 · 
+                <a href="https://github.com/aszxwqaszx/souluotianxia" target="_blank" class="github-link">GitHub</a>
+            </p>
+            <p class="footer-disclaimer">
+                本网站仅收录公开优惠信息，购买前请仔细核对，如有问题请与商家联系。
+            </p>
+        </div>
+    </footer>
+
+    <script>
+    // 加载优惠数据
+    async function loadDeals() {
+        const container = document.getElementById('dealList');
+        try {
+            const res = await fetch('deals.json');
+            const data = await res.json();
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#999;padding:30px 0;">暂无优惠信息，敬请期待！</p>';
+                return;
+            }
+            container.innerHTML = data.slice(0, 6).map(item => `
+                <div class="deal-item">
+                    <div class="deal-platform">${item.platform}</div>
+                    <div class="deal-content">
+                        <h4 class="deal-title">${item.title}</h4>
+                        <p class="deal-desc">${item.desc}</p>
+                        <div class="deal-meta">
+                            <span class="deal-tag ${item.type}">${item.typeText}</span>
+                            <span class="deal-date">${item.date}</span>
+                        </div>
+                    </div>
+                    <a href="${item.link}" target="_blank" class="deal-btn">立即领取</a>
+                </div>
+            `).join('');
+        } catch(e) {
+            container.innerHTML = '<p style="text-align:center;color:#999;padding:30px 0;">暂无优惠信息，敬请期待！</p>';
+        }
+    }
+    loadDeals();
+    </script>
+
+</body>
+</html>
