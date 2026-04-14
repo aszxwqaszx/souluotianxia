@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜罗天下AI - AI工具推荐排行榜</title>
+    <meta name="description" content="搜罗天下AI，精选全球热门AI工具，涵盖图像生成、对话聊天、写作辅助、视频制作、办公效率，免费付费全覆盖。">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🦞</span>
+                <span class="logo-text">搜罗天下</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wallpapers.html" class="nav-link">壁纸头像</a>
+                <a href="deals.html" class="nav-link">优惠折扣</a>
+                <a href="ai-tools.html" class="nav-link active">AI工具</a>
+                <a href="about.html" class="nav-link">关于我们</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-header ai-header">
+        <div class="container">
+            <div class="ai-header-inner">
+                <div class="ai-header-text">
+                    <h1>🤖 搜罗天下AI</h1>
+                    <p>精选全球热门AI工具 · 免费付费全覆盖</p>
+                </div>
+                <div class="ai-header-stats">
+                    <div class="ai-stat">
+                        <span class="ai-stat-num" id="toolCount">0</span>
+                        <span class="ai-stat-label">款精选工具</span>
+                    </div>
+                    <div class="ai-stat">
+                        <span class="ai-stat-num">8</span>
+                        <span class="ai-stat-label">大分类</span>
+                    </div>
+                    <div class="ai-stat">
+                        <span class="ai-stat-num">100%</span>
+                        <span class="ai-stat-label">持续更新</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+
+            <!-- 分类标签 -->
+            <div class="ai-filters">
+                <button class="ai-filter active" data-cat="all">全部工具</button>
+                <button class="ai-filter" data-cat="image">🎨 图像生成</button>
+                <button class="ai-filter" data-cat="chat">💬 对话AI</button>
+                <button class="ai-filter" data-cat="write">📝 写作助手</button>
+                <button class="ai-filter" data-cat="video">📹 视频制作</button>
+                <button class="ai-filter" data-cat="audio">🎵 音频AI</button>
+                <button class="ai-filter" data-cat="code">💻 编程开发</button>
+                <button class="ai-filter" data-cat="office">🧮 办公效率</button>
+            </div>
+
+            <!-- 价格筛选 -->
+            <div class="ai-price-filter">
+                <button class="ai-price-btn active" data-price="all">全部</button>
+                <button class="ai-price-btn" data-price="free">🆓 免费</button>
+                <button class="ai-price-btn" data-price="freemium">⚡ 免费+付费</button>
+                <button class="ai-price-btn" data-price="paid">💎 付费</button>
+            </div>
+
+            <!-- 工具卡片网格 -->
+            <div class="ai-grid" id="aiGrid">
+                <div class="deal-loading">🚀 正在加载AI工具...</div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer footer-ai">
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">首页</a>
+                <a href="wallpapers.html">壁纸头像</a>
+                <a href="deals.html">优惠折扣</a>
+                <a href="ai-tools.html">AI工具</a>
+                <a href="about.html">关于我们</a>
+            </div>
+            <p class="footer-text">© 2026 搜罗天下AI · 内容来自公开资料，仅供参考</p>
+        </div>
+    </footer>
+
+    <script>
+    let allTools = [];
+
+    async function loadTools() {
+        const grid = document.getElementById('aiGrid');
+        try {
+            const res = await fetch('ai-tools.json');
+            allTools = await res.json();
+            document.getElementById('toolCount').textContent = allTools.length;
+            renderTools(allTools);
+            initFilters();
+        } catch(e) {
+            grid.innerHTML = '<p style="text-align:center;color:#999;padding:60px 0;">加载失败，请稍后再试。</p>';
+        }
+    }
+
+    function renderTools(data) {
+        const grid = document.getElementById('aiGrid');
+        if (data.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:#777;padding:60px 0;font-size:16px;">该分类暂无工具，敬请期待！</p>';
+            return;
+        }
+        grid.innerHTML = data.map(tool => `
+            <div class="ai-card" data-cat="${tool.category}" data-price="${tool.price}">
+                <div class="ai-card-top">
+                    <div class="ai-card-icon">${tool.icon}</div>
+                    <div class="ai-card-badges">
+                        <span class="ai-badge ai-badge-${tool.price}">
+                            ${tool.priceText}
+                        </span>
+                        <span class="ai-badge ai-badge-cat">${tool.catText}</span>
+                    </div>
+                </div>
+                <h3 class="ai-card-name">${tool.name}</h3>
+                <p class="ai-card-desc">${tool.desc}</p>
+                <div class="ai-card-tags">
+                    ${tool.tags.map(t => `<span class="ai-tag">${t}</span>`).join('')}
+                </div>
+                <a class="ai-card-link" href="${tool.url}" target="_blank" rel="noopener">
+                    🔗 访问官网
+                </a>
+            </div>
+        `).join('');
+    }
+
+    function initFilters() {
+        // 分类筛选
+        document.querySelectorAll('.ai-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.ai-filter').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                applyFilters();
+            });
+        });
+        // 价格筛选
+        document.querySelectorAll('.ai-price-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.ai-price-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                applyFilters();
+            });
+        });
+    }
+
+    function applyFilters() {
+        const cat = document.querySelector('.ai-filter.active').dataset.cat;
+        const price = document.querySelector('.ai-price-btn.active').dataset.price;
+        let filtered = allTools;
+        if (cat !== 'all') filtered = filtered.filter(t => t.category === cat);
+        if (price !== 'all') filtered = filtered.filter(t => t.price === price);
+        renderTools(filtered);
+    }
+
+    loadTools();
+    </script>
+
+</body>
+</html>

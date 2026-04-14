@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>搜罗天下 - 发现生活中的每一份优惠</title>
-    <meta name="description" content="搜罗天下，专注于发现和分享全网优质优惠信息，帮你省钱每一天。">
+    <title>搜罗天下 - 发现生活中的每一份优惠与美好</title>
+    <meta name="description" content="搜罗天下，专注于发现和分享全网最新优惠折扣信息，帮你省钱每一分。还有壁纸头像、AI工具推荐等精彩内容！">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <!-- 导航栏 -->
+    <!-- 导航 -->
     <header class="header">
         <div class="container header-inner">
             <a href="index.html" class="logo">
@@ -20,13 +20,13 @@
                 <a href="index.html" class="nav-link active">首页</a>
                 <a href="deals.html" class="nav-link">优惠折扣</a>
                 <a href="wallpapers.html" class="nav-link">壁纸头像</a>
-                <a href="#" class="nav-link disabled">AI工具 <span class="soon">筹备中</span></a>
+                <a href="ai-tools.html" class="nav-link">AI工具</a>
                 <a href="about.html" class="nav-link">关于我们</a>
             </nav>
         </div>
     </header>
 
-    <!-- 横幅 -->
+    <!-- Banner -->
     <section class="hero">
         <div class="container">
             <h1 class="hero-title">搜罗天下</h1>
@@ -41,28 +41,28 @@
     <!-- 板块导航 -->
     <section class="section">
         <div class="container">
-            <h2 class="section-title">📦 热门板块</h2>
+            <h2 class="section-title">🔥 热门板块</h2>
             <div class="card-grid">
 
                 <a href="deals.html" class="card card-featured">
-                    <div class="card-icon">🎁</div>
+                    <div class="card-icon">🏷️</div>
                     <h3 class="card-title">优惠折扣</h3>
-                    <p class="card-desc">汇集全网最新优惠券、折扣信息，购物前先来看看，省到就是赚到</p>
+                    <p class="card-desc">搜集全网最新优惠券信息，购物前先来看，省到就是赚到</p>
                     <span class="card-tag hot">🔥 热门</span>
                 </a>
 
                 <a href="wallpapers.html" class="card">
                     <div class="card-icon">🖼️</div>
                     <h3 class="card-title">壁纸头像</h3>
-                    <p class="card-desc">汇集全球高清壁纸、头像、背景图，风景/动漫/人物/城市，手机电脑一网打尽</p>
+                    <p class="card-desc">搜集全球高清壁纸、头像、背景图，风景/动漫/人物/城市，手机电脑一网打尽</p>
                     <span class="card-tag hot">🆕 新上线</span>
                 </a>
 
-                <a href="#" class="card disabled-card">
+                <a href="ai-tools.html" class="card">
                     <div class="card-icon">🤖</div>
                     <h3 class="card-title">AI工具</h3>
-                    <p class="card-desc">收录优质AI工具与使用技巧，用科技提升效率，开启智能生活</p>
-                    <span class="card-tag soon-tag">筹备中</span>
+                    <p class="card-desc">搜集全网精选AI工具，涵盖图像生成、对话AI、写作助手、视频制作、编程辅助</p>
+                    <span class="card-tag hot">🆕 新上线</span>
                 </a>
 
                 <a href="#" class="card disabled-card">
@@ -95,21 +95,16 @@
             <div class="footer-links">
                 <a href="index.html">首页</a>
                 <a href="deals.html">优惠折扣</a>
+                <a href="wallpapers.html">壁纸头像</a>
+                <a href="ai-tools.html">AI工具</a>
                 <a href="about.html">关于我们</a>
-                <a href="about.html#disclaimer">免责申明</a>
             </div>
-            <p class="footer-text">
-                © 2026 搜罗天下 · 
-                <a href="https://github.com/aszxwqaszx/souluotianxia" target="_blank" class="github-link">GitHub</a>
-            </p>
-            <p class="footer-disclaimer">
-                本网站仅收录公开优惠信息，购买前请仔细核对，如有问题请与商家联系。
-            </p>
+            <p class="footer-text">© 2026 搜罗天下</p>
+            <p class="footer-disclaimer">本站仅为导航站，内容来自公开资料，购买前请仔细核对。</p>
         </div>
     </footer>
 
     <script>
-    // 加载优惠数据
     async function loadDeals() {
         const container = document.getElementById('dealList');
         try {
