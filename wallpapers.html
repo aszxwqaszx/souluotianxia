@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜罗天下壁纸 - 高清壁纸/头像/背景图</title>
+    <meta name="description" content="搜罗天下壁纸，汇集全球高清壁纸、头像、背景图，风景/动漫/人物/文字/城市/动物/抽象，手机电脑一网打尽。">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🦞</span>
+                <span class="logo-text">搜罗天下</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wallpapers.html" class="nav-link active">壁纸头像</a>
+                <a href="deals.html" class="nav-link">优惠折扣</a>
+                <a href="#" class="nav-link disabled">AI工具 <span class="soon">筹备中</span></a>
+                <a href="about.html" class="nav-link">关于我们</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>🖼️ 搜罗天下壁纸</h1>
+            <p>汇集全球高清壁纸 · 手机电脑一网打尽</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+
+            <!-- 分类标签 -->
+            <div class="wp-filters">
+                <button class="wp-filter active" data-cat="all">全部</button>
+                <button class="wp-filter" data-cat="nature">🌿 风景自然</button>
+                <button class="wp-filter" data-cat="anime">🎨 动漫二次元</button>
+                <button class="wp-filter" data-cat="people">👤 人物肖像</button>
+                <button class="wp-filter" data-cat="quotes">💬 文字励志</button>
+                <button class="wp-filter" data-cat="city">🏙️ 城市建筑</button>
+                <button class="wp-filter" data-cat="animal">🐾 动物萌宠</button>
+                <button class="wp-filter" data-cat="abstract">✨ 抽象艺术</button>
+            </div>
+
+            <!-- 设备筛选 -->
+            <div class="wp-device-filters">
+                <button class="wp-device active" data-device="all">全部尺寸</button>
+                <button class="wp-device" data-device="desktop">🖥️ 电脑壁纸</button>
+                <button class="wp-device" data-device="mobile">📱 手机壁纸</button>
+            </div>
+
+            <!-- 壁纸网格 -->
+            <div class="wp-grid" id="wpGrid">
+                <div class="deal-loading">正在加载壁纸...</div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 灯箱预览 -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-overlay"></div>
+        <div class="lightbox-content">
+            <button class="lightbox-close" id="lbClose">✕</button>
+            <img class="lightbox-img" id="lbImg" src="" alt="">
+            <div class="lightbox-info">
+                <h3 class="lightbox-title" id="lbTitle"></h3>
+                <p class="lightbox-author" id="lbAuthor"></p>
+                <div class="lightbox-tags" id="lbTags"></div>
+                <a class="lightbox-download" id="lbDownload" href="#" target="_blank" download>⬇️ 下载壁纸</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">首页</a>
+                <a href="wallpapers.html">壁纸头像</a>
+                <a href="deals.html">优惠折扣</a>
+                <a href="about.html">关于我们</a>
+            </div>
+            <p class="footer-text">© 2026 搜罗天下</p>
+            <p class="footer-disclaimer">壁纸来源于 Unsplash/Pixabay 等免费图库，仅供个人使用。</p>
+        </div>
+    </footer>
+
+    <script>
+    let allWalls = [];
+
+    async function loadWallpapers() {
+        const grid = document.getElementById('wpGrid');
+        try {
+            const res = await fetch('wallpapers.json');
+            allWalls = await res.json();
+            renderWallpapers(allWalls);
+            initFilters();
+        } catch(e) {
+            grid.innerHTML = '<p style="text-align:center;color:#999;padding:40px 0;">壁纸加载失败，请稍后再试。</p>';
+        }
+    }
+
+    function renderWallpapers(data) {
+        const grid = document.getElementById('wpGrid');
+        if (data.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;color:#999;padding:40px 0;">该分类暂无壁纸，敬请期待！</p>';
+            return;
+        }
+        grid.innerHTML = data.map(item => `
+            <div class="wp-card" data-cat="${item.category}" data-device="${item.device}" data-id="${item.id}">
+                <div class="wp-thumb-wrap">
+                    <img class="wp-thumb" src="${item.thumb}" alt="${item.title}" loading="lazy">
+                    <div class="wp-overlay">
+                        <span class="wp-view-btn">🔍 预览</span>
+                    </div>
+                </div>
+                <div class="wp-card-info">
+                    <span class="wp-card-title">${item.title}</span>
+                    <span class="wp-card-cat">${item.catText}</span>
+                </div>
+            </div>
+        `).join('');
+
+        // 绑定点击预览
+        grid.querySelectorAll('.wp-card').forEach(card => {
+            card.addEventListener('click', () => openLightbox(card.dataset.id));
+        });
+    }
+
+    function initFilters() {
+        // 分类筛选
+        document.querySelectorAll('.wp-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.wp-filter').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                applyFilters();
+            });
+        });
+        // 设备筛选
+        document.querySelectorAll('.wp-device').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.wp-device').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                applyFilters();
+            });
+        });
+    }
+
+    function applyFilters() {
+        const cat = document.querySelector('.wp-filter.active').dataset.cat;
+        const device = document.querySelector('.wp-device.active').dataset.device;
+        let filtered = allWalls;
+        if (cat !== 'all') filtered = filtered.filter(w => w.category === cat);
+        if (device !== 'all') filtered = filtered.filter(w => w.device === device);
+        renderWallpapers(filtered);
+    }
+
+    function openLightbox(id) {
+        const item = allWalls.find(w => w.id == id);
+        if (!item) return;
+        document.getElementById('lbImg').src = item.url;
+        document.getElementById('lbTitle').textContent = item.title;
+        document.getElementById('lbAuthor').textContent = item.author ? '📸 ' + item.author : '';
+        document.getElementById('lbTags').innerHTML = item.tags.map(t => `<span class="lb-tag">${t}</span>`).join('');
+        document.getElementById('lbDownload').href = item.url;
+        document.getElementById('lightbox').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('lbClose').addEventListener('click', closeLightbox);
+    document.querySelector('.lightbox-overlay').addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    loadWallpapers();
+    </script>
+
+</body>
+</html>
