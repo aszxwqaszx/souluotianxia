@@ -3,22 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鎼滅綏澶╀笅澹佺焊 - 楂樻竻澹佺焊/澶村儚/鑳屾櫙鍥?/title>
-    <meta name="description" content="鎼滅綏澶╀笅澹佺焊锛屾眹闆嗗叏鐞冮珮娓呭绾搞€佸ご鍍忋€佽儗鏅浘锛岄鏅?鍔ㄦ极/浜虹墿/鏂囧瓧/鍩庡競/鍔ㄧ墿/鎶借薄锛屾墜鏈虹數鑴戜竴缃戞墦灏姐€?>
+    <title>🎨 搜罗天下壁纸 - 高清壁纸/头像/背景免费用</title>
+    <meta name="description" content="搜罗天下壁纸站，汇集全球高清壁纸、头像、背景图，分类齐全，手机电脑一网打尽。">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .page-header { text-align: center; padding: 48px 20px 32px; }
+        .page-header h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+        .page-header p { color: #6b7280; font-size: 14px; }
+
+        /* Upload Zone */
+        .upload-zone {
+            max-width: 680px; margin: 0 auto 32px; padding: 28px;
+            background: rgba(15,0,35,0.7); border: 2px dashed rgba(139,92,246,0.4);
+            border-radius: 16px; text-align: center; cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #7c3aed; background: rgba(139,92,246,0.08);
+        }
+        .upload-zone input[type="file"] { display: none; }
+        .upload-icon { font-size: 40px; margin-bottom: 10px; }
+        .upload-text { color: #a78bfa; font-size: 15px; font-weight: 600; }
+        .upload-hint { color: #6b7280; font-size: 12px; margin-top: 6px; }
+        .upload-btn {
+            display: inline-block; margin-top: 14px; padding: 10px 28px;
+            background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff;
+            border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-btn:hover { box-shadow: 0 0 20px rgba(139,92,246,0.4); transform: scale(1.03); }
+
+        /* Preview Strip */
+        .upload-preview { display: none; margin-bottom: 28px; }
+        .upload-preview.show { display: block; }
+        .upload-preview h3 { color: #a78bfa; font-size: 13px; margin: 0 0 12px; padding-left: 4px; }
+        .preview-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px; scrollbar-width: thin; }
+        .preview-strip::-webkit-scrollbar { height: 4px; }
+        .preview-strip::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 4px; }
+        .preview-item { flex-shrink: 0; width: 110px; position: relative; }
+        .preview-item img { width: 110px; height: 80px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(139,92,246,0.2); }
+        .preview-remove {
+            position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+            background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%;
+            font-size: 12px; cursor: pointer; line-height: 20px; text-align: center;
+        }
+        .preview-remove:hover { background: #ef4444; }
+
+        /* Filters */
+        .wp-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; justify-content: center; }
+        .wp-filter {
+            padding: 7px 16px; border-radius: 20px; border: 1px solid rgba(139,92,246,0.25);
+            background: rgba(15,0,35,0.6); color: #9ca3af; font-size: 13px; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .wp-filter.active { background: rgba(139,92,246,0.2); color: #c4b5fd; border-color: #7c3aed; }
+        .wp-filter:hover:not(.active) { border-color: rgba(139,92,246,0.5); color: #a78bfa; }
+
+        /* Device filters */
+        .wp-device-filters { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
+        .wp-device {
+            padding: 5px 16px; border-radius: 8px; border: 1px solid rgba(139,92,246,0.2);
+            background: transparent; color: #6b7280; font-size: 12px; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .wp-device.active { background: rgba(139,92,246,0.15); color: #a78bfa; border-color: #7c3aed; }
+
+        /* Grid */
+        .wp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .wp-card {
+            background: rgba(15,0,35,0.8); border-radius: 14px; overflow: hidden;
+            border: 1px solid rgba(139,92,246,0.15); cursor: pointer; transition: all 0.25s;
+        }
+        .wp-card:hover { transform: translateY(-4px); border-color: rgba(139,92,246,0.4); box-shadow: 0 8px 24px rgba(139,92,246,0.15); }
+        .wp-thumb-wrap { position: relative; overflow: hidden; aspect-ratio: 16/10; }
+        .wp-thumb { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .wp-card:hover .wp-thumb { transform: scale(1.05); }
+        .wp-overlay {
+            position: absolute; inset: 0; background: rgba(10,0,25,0.5);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .wp-card:hover .wp-overlay { opacity: 1; }
+        .wp-view-btn { padding: 8px 20px; background: rgba(139,92,246,0.85); color: #fff; border-radius: 20px; font-size: 13px; font-weight: 600; }
+        .wp-card-info { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .wp-card-title { font-size: 13px; color: #e5e7eb; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .wp-card-cat { font-size: 11px; color: #a78bfa; background: rgba(139,92,246,0.12); padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+
+        /* Empty state */
+        .deal-loading { grid-column: 1/-1; text-align: center; color: #6b7280; padding: 60px 0; font-size: 14px; }
+    </style>
 </head>
 <body>
 
     <header class="header">
         <div class="container header-inner">
             <a href="index.html" class="logo">
-                <span class="logo-icon">馃</span>
-                <span class="logo-text">鎼滅綏澶╀笅</span>
+                <span class="logo-icon">🔮</span>
+                <span class="logo-text">搜罗天下</span>
             </a>
             <nav class="nav">
                 <a href="index.html" class="nav-link">首页</a>
                 <a href="deals.html" class="nav-link">优惠折扣</a>
-                <a href="wallpapers.html" class="nav-link">壁纸头像</a>
+                <a href="wallpapers.html" class="nav-link active">🎨 壁纸头像</a>
                 <a href="ai-tools.html" class="nav-link">AI工具</a>
                 <a href="games.html" class="nav-link">🎮 游戏</a>
                 <a href="about.html" class="nav-link">关于我们</a>
@@ -27,53 +113,66 @@
     </header>
 
     <div class="page-header">
-        <div class="container">
-            <h1>馃柤锔?鎼滅綏澶╀笅澹佺焊</h1>
-            <p>姹囬泦鍏ㄧ悆楂樻竻澹佺焊 路 鎵嬫満鐢佃剳涓€缃戞墦灏?/p>
-        </div>
+        <h1>🎨 搜罗天下壁纸</h1>
+        <p>汇集全球高清壁纸 · 手机电脑一网打尽</p>
     </div>
 
     <section class="section">
         <div class="container">
 
-            <!-- 鍒嗙被鏍囩 -->
+            <!-- 图片上传区域 -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-text">点击或拖拽图片上传</div>
+                <div class="upload-hint">支持 JPG / PNG / WEBP，自动生成本地预览</div>
+                <div class="upload-btn" onclick="document.getElementById('fileInput').click()">📁 选择图片文件</div>
+                <input type="file" id="fileInput" accept="image/*" multiple>
+            </div>
+
+            <!-- 上传预览 -->
+            <div class="upload-preview" id="uploadPreview">
+                <h3>📸 本地预览（仅自己可见）</h3>
+                <div class="preview-strip" id="previewStrip"></div>
+            </div>
+
+            <!-- 分类标签 -->
             <div class="wp-filters">
-                <button class="wp-filter active" data-cat="all">鍏ㄩ儴</button>
-                <button class="wp-filter" data-cat="nature">馃尶 椋庢櫙鑷劧</button>
-                <button class="wp-filter" data-cat="anime">馃帹 鍔ㄦ极浜屾鍏?/button>
-                <button class="wp-filter" data-cat="people">馃懁 浜虹墿鑲栧儚</button>
-                <button class="wp-filter" data-cat="quotes">馃挰 鏂囧瓧鍔卞織</button>
-                <button class="wp-filter" data-cat="city">馃彊锔?鍩庡競寤虹瓚</button>
-                <button class="wp-filter" data-cat="animal">馃惥 鍔ㄧ墿钀屽疇</button>
-                <button class="wp-filter" data-cat="abstract">鉁?鎶借薄鑹烘湳</button>
+                <button class="wp-filter active" data-cat="all">全部</button>
+                <button class="wp-filter" data-cat="nature">🌿 风景自然</button>
+                <button class="wp-filter" data-cat="anime">💫 动漫二次元</button>
+                <button class="wp-filter" data-cat="people">👤 人物头像</button>
+                <button class="wp-filter" data-cat="quotes">✨ 文字励志</button>
+                <button class="wp-filter" data-cat="city">🌆 城市建筑</button>
+                <button class="wp-filter" data-cat="animal">🐱 动物萌宠</button>
+                <button class="wp-filter" data-cat="abstract">🌈 抽象艺术</button>
             </div>
 
-            <!-- 璁惧绛涢€?-->
+            <!-- 设备筛选 -->
             <div class="wp-device-filters">
-                <button class="wp-device active" data-device="all">鍏ㄩ儴灏哄</button>
-                <button class="wp-device" data-device="desktop">馃枼锔?鐢佃剳澹佺焊</button>
-                <button class="wp-device" data-device="mobile">馃摫 鎵嬫満澹佺焊</button>
+                <button class="wp-device active" data-device="all">全部尺寸</button>
+                <button class="wp-device" data-device="desktop">🖥️ 电脑壁纸</button>
+                <button class="wp-device" data-device="mobile">📱 手机壁纸</button>
             </div>
 
-            <!-- 澹佺焊缃戞牸 -->
+            <!-- 壁纸网格 -->
             <div class="wp-grid" id="wpGrid">
-                <div class="deal-loading">姝ｅ湪鍔犺浇澹佺焊...</div>
+                <div class="deal-loading">正在加载壁纸...</div>
             </div>
 
         </div>
     </section>
 
-    <!-- 鐏棰勮 -->
+    <!-- 灯箱预览 -->
     <div class="lightbox" id="lightbox">
         <div class="lightbox-overlay"></div>
         <div class="lightbox-content">
-            <button class="lightbox-close" id="lbClose">鉁?/button>
+            <button class="lightbox-close" id="lbClose">✕</button>
             <img class="lightbox-img" id="lbImg" src="" alt="">
             <div class="lightbox-info">
                 <h3 class="lightbox-title" id="lbTitle"></h3>
                 <p class="lightbox-author" id="lbAuthor"></p>
                 <div class="lightbox-tags" id="lbTags"></div>
-                <a class="lightbox-download" id="lbDownload" href="#" target="_blank" download>猬囷笍 涓嬭浇澹佺焊</a>
+                <a class="lightbox-download" id="lbDownload" href="#" target="_blank" download>⬇️ 下载壁纸</a>
             </div>
         </div>
     </div>
@@ -81,19 +180,73 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-links">
-                <a href="index.html">棣栭〉</a>
-                <a href="wallpapers.html">澹佺焊澶村儚</a>
-                <a href="deals.html">浼樻儬鎶樻墸</a>
-                <a href="about.html">鍏充簬鎴戜滑</a>
+                <a href="index.html">首页</a>
+                <a href="wallpapers.html">壁纸头像</a>
+                <a href="deals.html">优惠折扣</a>
+                <a href="about.html">关于我们</a>
             </div>
-            <p class="footer-text">漏 2026 鎼滅綏澶╀笅</p>
-            <p class="footer-disclaimer">澹佺焊鏉ユ簮浜?Unsplash/Pixabay 绛夊厤璐瑰浘搴擄紝浠呬緵涓汉浣跨敤銆?/p>
+            <p class="footer-text">© 2026 搜罗天下</p>
+            <p class="footer-disclaimer">壁纸来源为 Unsplash/Pixabay 等免费图库，仅供个人使用。</p>
         </div>
     </footer>
 
     <script>
     let allWalls = [];
+    let localImages = [];
 
+    // ========== 图片上传 ==========
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const previewStrip = document.getElementById('previewStrip');
+    const uploadPreview = document.getElementById('uploadPreview');
+
+    uploadZone.addEventListener('click', e => {
+        if (e.target.tagName !== 'INPUT') fileInput.click();
+    });
+
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+    function handleFiles(files) {
+        Array.from(files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const url = e.target.result;
+                localImages.push(url);
+                renderPreview();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderPreview() {
+        if (localImages.length === 0) {
+            uploadPreview.classList.remove('show');
+            return;
+        }
+        uploadPreview.classList.add('show');
+        previewStrip.innerHTML = localImages.map((url, i) => `
+            <div class="preview-item">
+                <img src="${url}" alt="预览${i+1}">
+                <button class="preview-remove" onclick="removeLocal(${i})">×</button>
+            </div>
+        `).join('');
+    }
+
+    function removeLocal(idx) {
+        localImages.splice(idx, 1);
+        renderPreview();
+    }
+
+    // ========== 壁纸加载 ==========
     async function loadWallpapers() {
         const grid = document.getElementById('wpGrid');
         try {
@@ -102,14 +255,14 @@
             renderWallpapers(allWalls);
             initFilters();
         } catch(e) {
-            grid.innerHTML = '<p style="text-align:center;color:#999;padding:40px 0;">澹佺焊鍔犺浇澶辫触锛岃绋嶅悗鍐嶈瘯銆?/p>';
+            grid.innerHTML = '<p style="text-align:center;color:#999;padding:40px 0;">壁纸加载失败，请稍后再试。</p>';
         }
     }
 
     function renderWallpapers(data) {
         const grid = document.getElementById('wpGrid');
         if (data.length === 0) {
-            grid.innerHTML = '<p style="text-align:center;color:#999;padding:40px 0;">璇ュ垎绫绘殏鏃犲绾革紝鏁鏈熷緟锛?/p>';
+            grid.innerHTML = '<p style="text-align:center;color:#6b7280;padding:60px 0;">该分类暂无壁纸，敬请期待！</p>';
             return;
         }
         grid.innerHTML = data.map(item => `
@@ -117,7 +270,7 @@
                 <div class="wp-thumb-wrap">
                     <img class="wp-thumb" src="${item.thumb}" alt="${item.title}" loading="lazy">
                     <div class="wp-overlay">
-                        <span class="wp-view-btn">馃攳 棰勮</span>
+                        <span class="wp-view-btn">🔍 预览</span>
                     </div>
                 </div>
                 <div class="wp-card-info">
@@ -127,21 +280,20 @@
             </div>
         `).join('');
 
-        // 缁戝畾鐐瑰嚮棰勮
         grid.querySelectorAll('.wp-card').forEach(card => {
             card.addEventListener('click', () => openLightbox(card.dataset.id));
         });
     }
 
     function initFilters() {
-        // 鍒嗙被绛涢€?        document.querySelectorAll('.wp-filter').forEach(btn => {
+        document.querySelectorAll('.wp-filter').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.wp-filter').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 applyFilters();
             });
         });
-        // 璁惧绛涢€?        document.querySelectorAll('.wp-device').forEach(btn => {
+        document.querySelectorAll('.wp-device').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.wp-device').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -164,7 +316,7 @@
         if (!item) return;
         document.getElementById('lbImg').src = item.url;
         document.getElementById('lbTitle').textContent = item.title;
-        document.getElementById('lbAuthor').textContent = item.author ? '馃摳 ' + item.author : '';
+        document.getElementById('lbAuthor').textContent = item.author ? '📷 ' + item.author : '';
         document.getElementById('lbTags').innerHTML = item.tags.map(t => `<span class="lb-tag">${t}</span>`).join('');
         document.getElementById('lbDownload').href = item.url;
         document.getElementById('lightbox').classList.add('active');
@@ -185,5 +337,3 @@
 
 </body>
 </html>
-
-
