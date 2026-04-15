@@ -18,34 +18,31 @@
         .score-bar { display: flex; gap: 10px; margin-bottom: 14px; }
         .score-box { flex: 1; background: rgba(15,0,35,0.8); border: 1px solid rgba(139,92,246,0.25);
             border-radius: 12px; padding: 10px 14px; text-align: center; }
-        .score-label { font-size: 10px; color: #a78bfa; }
+        .score-label { font-size: 10px; color: #a78bfa; text-transform: uppercase; letter-spacing: 1px; }
         .score-num { font-size: 24px; font-weight: 800; color: #fff; }
         .score-num.highlight { color: #f472b6; }
-        .canvas-wrap { position: relative; }
-        #gameCanvas { display: block; width: 100%; border-radius: 14px;
-            border: 2px solid rgba(139,92,246,0.3); }
-        .overlay {
-            position: absolute; inset: 0; border-radius: 12px;
-            background: rgba(10,0,25,0.85); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 14px; backdrop-filter: blur(4px);
-        }
+        .canvas-wrap { position: relative; border-radius: 16px; overflow: hidden;
+            border: 2px solid rgba(139,92,246,0.3); background: #0a0015; }
+        #gameCanvas { display: block; width: 100%; }
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: rgba(10,0,25,0.85);
+            backdrop-filter: blur(4px); }
         .overlay.hidden { display: none; }
-        .overlay h2 { color: #fff; font-size: 26px; margin: 0; font-weight: 800; }
-        .overlay h2.win { background: linear-gradient(90deg,#f472b6,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .overlay p { color: #9ca3af; font-size: 14px; margin: 0; }
-        .start-btn { padding: 13px 36px; border-radius: 12px; font-size: 16px; font-weight: 700;
-            background: linear-gradient(135deg,#7c3aed,#db2777); color: #fff;
-            border: none; cursor: pointer; font-family: inherit; transition: all .2s; }
-        .start-btn:hover { box-shadow: 0 0 25px rgba(139,92,246,.4); transform: scale(1.05); }
-        .how-to { background: rgba(15,0,35,.7); border-radius: 12px; padding: 14px;
-            border: 1px solid rgba(139,92,246,.15); margin-top: 14px; }
+        .overlay-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .overlay-title.win { background: linear-gradient(90deg, #f472b6, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .overlay-msg { font-size: 14px; color: #9ca3af; margin-bottom: 16px; text-align: center; }
+        .overlay-btn { padding: 12px 32px; border-radius: 12px; font-size: 15px; font-weight: 700;
+            cursor: pointer; border: none; font-family: inherit; transition: all .2s;
+            background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; }
+        .overlay-btn:hover { box-shadow: 0 0 20px rgba(139,92,246,0.4); transform: scale(1.05); }
+        .how-to { background: rgba(15,0,35,0.7); border-radius: 12px; padding: 14px;
+            border: 1px solid rgba(139,92,246,0.15); margin-top: 14px; }
         .how-to h3 { color: #a78bfa; font-size: 13px; margin: 0 0 6px; }
-        .how-to p { color: #9ca3af; font-size: 12px; margin: 0; }
-        .tap-hint { text-align: center; margin-top: 10px; color: #6b7280; font-size: 12px; }
+        .how-to p { color: #9ca3af; font-size: 12px; margin: 0; line-height: 1.5; }
     </style>
 </head>
 <body>
-
 <div class="game-wrap">
     <div class="game-header">
         <a href="games.html" class="back-btn">←</a>
@@ -54,35 +51,32 @@
             <p>点击飞翔 · 躲避障碍</p>
         </div>
     </div>
-
     <div class="score-bar">
         <div class="score-box">
-            <div class="score-label">得分</div>
+            <div class="score-label">当前分数</div>
             <div class="score-num" id="score">0</div>
         </div>
         <div class="score-box">
-            <div class="score-label">最高</div>
+            <div class="score-label">历史最高</div>
             <div class="score-num highlight" id="best">0</div>
         </div>
     </div>
-
     <div class="canvas-wrap">
-        <canvas id="gameCanvas" width="380" height="520"></canvas>
+        <canvas id="gameCanvas" width="400" height="500"></canvas>
         <div class="overlay" id="startOverlay">
-            <h2>🐦 Flappy Bird</h2>
-            <p>点击屏幕让小鸟飞翔<br>穿过管道缝隙得分！</p>
-            <button class="start-btn" onclick="startGame()">▶️ 开始游戏</button>
+            <div class="overlay-title">🐦 Flappy Bird</div>
+            <div class="overlay-msg">点击或按空格开始游戏</div>
+            <button class="overlay-btn" onclick="startGame()">▶ 开始游戏</button>
         </div>
         <div class="overlay hidden" id="gameOverOverlay">
-            <h2 id="overTitle">💔 游戏结束</h2>
-            <p id="overMsg">得分 0，加油！</p>
-            <button class="start-btn" onclick="startGame()">🔄 再来</button>
+            <div class="overlay-title" id="overTitle">💔 游戏结束</div>
+            <div class="overlay-msg" id="overMsg">得分 0</div>
+            <button class="overlay-btn" onclick="startGame()">🔄 再来一局</button>
         </div>
     </div>
-
     <div class="how-to">
-        <h3>📖 玩法</h3>
-        <p>点击屏幕或按空格键让小鸟往上飞，穿过绿色管道的缝隙得分。撞到管道或掉下去就输了。</p>
+        <h3>📖 玩法说明</h3>
+        <p>点击屏幕或按空格键让小鸟飞翔，躲避管道，挑战最高分！</p>
     </div>
 </div>
 
@@ -90,11 +84,13 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
+
 let bird, pipes, score, frame, best, gameState, particles;
 best = parseInt(localStorage.getItem('gFlappy_best') || '0');
 document.getElementById('best').textContent = best;
 
 function startGame() {
+    // 难度调整：更大的间隙、更慢的管道、更好的跳跃手感
     bird = { x: 60, y: H/2, vy: 0, rot: 0 };
     pipes = [];
     score = 0;
@@ -110,12 +106,11 @@ function startGame() {
 
 function jump() {
     if (gameState !== 'playing') return;
-    bird.vy = -8;
-    // Burst particles
-    for (let i = 0; i < 6; i++) {
+    bird.vy = -7; // 跳跃力度（原-8，改为-7更温和）
+    for (let i = 0; i < 5; i++) {
         particles.push({
             x: bird.x + 15, y: bird.y + 12,
-            vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4,
+            vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3,
             life: 1, color: ['#a78bfa','#f472b6','#fbbf24'][Math.floor(Math.random()*3)]
         });
     }
@@ -123,21 +118,22 @@ function jump() {
 
 function update() {
     if (gameState !== 'playing') return;
-    bird.vy += 0.45;
+    bird.vy += 0.35; // 重力（原0.45，改为0.35更慢下落）
     bird.y += bird.vy;
     bird.rot = Math.min(Math.max(bird.vy * 4, -30), 90);
-    // Particles
-    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.05; });
+    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.04; });
     particles = particles.filter(p => p.life > 0);
-    // Pipes
-    if (frame % 90 === 0) {
-        let gap = 130, h = Math.random() * (H - gap - 120) + 60;
-        pipes.push({ x: W, top: 0, bot: h, w: 60, gap, scored: false });
-        pipes.push({ x: W, top: h+gap, bot: H, w: 60, gap, scored: false });
+    
+    // 管道生成：间隔更大、间隙更宽
+    if (frame % 100 === 0) { // 原90帧，改为100帧更稀疏
+        let gap = 160; // 间隙从130改为160，更容易通过
+        let h = Math.random() * (H - gap - 100) + 50;
+        pipes.push({ x: W, top: 0, bot: h, w: 55, gap, scored: false });
+        pipes.push({ x: W, top: h+gap, bot: H, w: 55, gap, scored: false });
     }
-    pipes.forEach(p => p.x -= 3);
+    pipes.forEach(p => p.x -= 2.5); // 管道速度从3改为2.5，更慢
     pipes = pipes.filter(p => p.x + p.w > 0);
-    // Score
+    
     pipes.forEach(p => {
         if (!p.scored && p.x + p.w < bird.x && p.top === 0) {
             score++;
@@ -150,11 +146,12 @@ function update() {
             }
         }
     });
-    // Collision
+    
+    // 碰撞检测：小鸟碰撞盒稍微缩小一点
     if (bird.y > H - 30 || bird.y < -10) { gameOver(); return; }
     for (let p of pipes) {
-        if (bird.x + 22 > p.x && bird.x < p.x + p.w &&
-            (bird.y < p.bot || bird.y + 24 > p.top)) {
+        if (bird.x + 18 > p.x && bird.x < p.x + p.w &&
+            (bird.y + 5 < p.bot || bird.y + 20 > p.top)) {
             gameOver(); return;
         }
     }
@@ -162,73 +159,64 @@ function update() {
 }
 
 function draw() {
-    // Sky gradient
     let sky = ctx.createLinearGradient(0, 0, 0, H);
     sky.addColorStop(0, '#1a0035');
     sky.addColorStop(0.6, '#0d0025');
     sky.addColorStop(1, '#0a0015');
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
-    // Stars
+    
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    for (let i = 0; i < 30; i++) {
-        let sx = (i*137.5 + frame*0.1) % W, sy = (i*73.3) % (H*0.6);
+    for (let i = 0; i < 25; i++) {
+        let sx = (i*137.5 + frame*0.08) % W, sy = (i*73.3) % (H*0.6);
         ctx.beginPath(); ctx.arc(sx, sy, 1, 0, Math.PI*2); ctx.fill();
     }
-    // Ground
+    
     ctx.fillStyle = '#1a0030';
     ctx.fillRect(0, H-30, W, 30);
     ctx.fillStyle = '#a78bfa';
     ctx.fillRect(0, H-30, W, 2);
-    // Pipes
+    
     pipes.forEach(p => {
-        if (p.top === 0) return; // skip top half, draw as one
+        if (p.top === 0) return;
         let grad = ctx.createLinearGradient(p.x, 0, p.x+p.w, 0);
         grad.addColorStop(0, '#22c55e'); grad.addColorStop(0.5, '#4ade80'); grad.addColorStop(1, '#16a34a');
         ctx.fillStyle = grad;
-        // Top pipe
         let topH = p.top;
         ctx.fillRect(p.x, 0, p.w, topH);
-        // Bottom pipe
         ctx.fillRect(p.x, p.top+p.gap, p.w, H - (p.top+p.gap) - 30);
-        // Pipe caps
         ctx.fillStyle = '#16a34a';
-        ctx.fillRect(p.x-3, topH-18, p.w+6, 18);
-        ctx.fillRect(p.x-3, p.top+p.gap, p.w+6, 18);
-        // Shine
+        ctx.fillRect(p.x-3, topH-16, p.w+6, 16);
+        ctx.fillRect(p.x-3, p.top+p.gap, p.w+6, 16);
         ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.fillRect(p.x+4, 0, 6, topH);
-        ctx.fillRect(p.x+4, p.top+p.gap, 6, H);
+        ctx.fillRect(p.x+4, 0, 5, topH);
+        ctx.fillRect(p.x+4, p.top+p.gap, 5, H);
     });
-    // Particles
+    
     particles.forEach(p => {
         ctx.globalAlpha = p.life;
         ctx.fillStyle = p.color;
         ctx.beginPath(); ctx.arc(p.x, p.y, 3*p.life, 0, Math.PI*2); ctx.fill();
     });
     ctx.globalAlpha = 1;
-    // Bird
+    
     ctx.save();
     ctx.translate(bird.x + 15, bird.y + 12);
     ctx.rotate(bird.rot * Math.PI / 180);
-    // Body
-    let bGrad = ctx.createRadialGradient(0,0,2, 0,0,16);
+    let bGrad = ctx.createRadialGradient(0,0,2, 0,0,14);
     bGrad.addColorStop(0,'#fde68a'); bGrad.addColorStop(1,'#f59e0b');
     ctx.fillStyle = bGrad;
-    ctx.beginPath(); ctx.ellipse(0,0,18,13,0,0,Math.PI*2); ctx.fill();
-    // Wing
+    ctx.beginPath(); ctx.ellipse(0,0,16,11,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#d97706';
-    ctx.beginPath(); ctx.ellipse(-2, 4, 9, 5, -0.3, 0, Math.PI*2); ctx.fill();
-    // Eye
+    ctx.beginPath(); ctx.ellipse(-2, 4, 8, 4, -0.3, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(7,-2,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6,-2,4.5,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#1a1a2e';
-    ctx.beginPath(); ctx.arc(8,-2,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7,-2,2.5,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(9,-3,1.2,0,Math.PI*2); ctx.fill();
-    // Beak
+    ctx.beginPath(); ctx.arc(8,-3,1,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#f97316';
-    ctx.beginPath(); ctx.moveTo(14,2); ctx.lineTo(22,4); ctx.lineTo(14,7); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(12,2); ctx.lineTo(19,4); ctx.lineTo(12,6); ctx.closePath(); ctx.fill();
     ctx.restore();
 }
 
@@ -251,12 +239,10 @@ function loop() {
     window._fi = requestAnimationFrame(loop);
 }
 
-// Input
 canvas.addEventListener('click', jump);
 canvas.addEventListener('touchstart', e => { e.preventDefault(); jump(); }, {passive:false});
 document.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); jump(); } });
 
-// Draw idle state
 draw();
 </script>
 </body>

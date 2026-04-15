@@ -10,25 +10,18 @@
     <style>
         body { background: #0a0015; min-height: 100vh; }
         .game-container { max-width: 520px; margin: 0 auto; padding: 20px 16px 40px; }
-
-        /* Header */
         .game-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 14px 18px;
             background: rgba(15,0,35,0.8); border-radius: 14px; border: 1px solid rgba(139,92,246,0.2); }
         .back-btn { font-size: 20px; cursor: pointer; text-decoration: none; }
         .back-btn:hover { transform: scale(1.1); }
         .game-title-wrap h1 { font-size: 20px; color: #fff; margin: 0; font-weight: 700; }
         .game-title-wrap p { font-size: 12px; color: #6b7280; margin: 2px 0 0; }
-
-        /* Score bar */
         .score-bar { display: flex; gap: 12px; margin-bottom: 20px; }
         .score-box { flex: 1; background: rgba(15,0,35,0.8); border: 1px solid rgba(139,92,246,0.25);
             border-radius: 12px; padding: 12px 16px; text-align: center; }
         .score-label { font-size: 11px; color: #a78bfa; text-transform: uppercase; letter-spacing: 1px; }
         .score-num { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.1; }
         .score-num.highlight { color: #f472b6; }
-        .score-box-new-best { display: none; }
-
-        /* Board */
         .board-wrapper { position: relative; margin-bottom: 20px; }
         #board {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
@@ -41,8 +34,6 @@
             font-weight: 800; font-size: clamp(24px, 7vw, 44px);
             transition: transform 0.08s;
         }
-
-        /* Cell colors */
         .c0 { background: rgba(30,20,50,0.6); }
         .c2 { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #6b21a8; }
         .c4 { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #7c3aed; }
@@ -57,8 +48,6 @@
         .c2048 { background: linear-gradient(135deg, #f472b6, #ec4899); color: #fff; font-size: clamp(16px, 4.5vw, 30px);
             box-shadow: 0 0 30px rgba(244,114,182,0.5); }
         .c4096,.c8192 { background: linear-gradient(135deg, #7c3aed, #4c1d95); color: #fff; font-size: clamp(14px, 4vw, 26px); }
-
-        /* Overlay */
         .overlay {
             position: absolute; inset: 10px; border-radius: 12px;
             background: rgba(10,0,25,0.88); display: none; flex-direction: column;
@@ -71,49 +60,32 @@
         .overlay-sub { font-size: 14px; color: #9ca3af; text-align: center; max-width: 200px; }
         .overlay-btn { padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 700;
             cursor: pointer; border: none; font-family: inherit; transition: all .2s; }
-        .btn-retry {
-            background: linear-gradient(135deg, #7c3aed, #db2777);
-            color: #fff;
-        }
+        .btn-retry { background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; }
         .btn-retry:hover { box-shadow: 0 0 20px rgba(139,92,246,0.4); transform: scale(1.05); }
-
-        /* Controls */
         .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
         .ctrl-btn { padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(139,92,246,0.3);
             background: rgba(15,0,35,0.8); color: #a78bfa; font-size: 13px; font-weight: 600;
             cursor: pointer; font-family: inherit; transition: all .2s; }
         .ctrl-btn:hover { border-color: #7c3aed; color: #fff; background: rgba(139,92,246,0.15); }
-
-        /* How to */
-        .how-to {
-            background: rgba(15,0,35,0.7); border-radius: 12px; padding: 16px;
-            border: 1px solid rgba(139,92,246,0.15); margin-bottom: 20px;
-        }
+        .how-to { background: rgba(15,0,35,0.7); border-radius: 12px; padding: 16px;
+            border: 1px solid rgba(139,92,246,0.15); margin-bottom: 20px; }
         .how-to h3 { color: #a78bfa; font-size: 14px; margin: 0 0 8px; }
         .how-to p { color: #9ca3af; font-size: 13px; margin: 0; line-height: 1.6; }
         .how-to .key-hint { display: inline-flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
         .key { background: rgba(139,92,246,0.2); color: #c4b5fd; padding: 2px 8px; border-radius: 5px;
             font-size: 12px; border: 1px solid rgba(139,92,246,0.3); }
-
-        /* Share */
         .share-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        .share-btn {
-            padding: 10px 22px; border-radius: 10px; font-size: 13px; font-weight: 700;
+        .share-btn { padding: 10px 22px; border-radius: 10px; font-size: 13px; font-weight: 700;
             cursor: pointer; border: none; font-family: inherit; text-decoration: none;
-            transition: all .2s; display: inline-flex; align-items: center; gap: 6px;
-        }
+            transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
         .share-twitter { background: #1d9bf0; color: #fff; }
-        .share-copy { background: rgba(139,92,246,0.2); color: #a78bfa;
-            border: 1px solid rgba(139,92,246,0.3); }
+        .share-copy { background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
         .share-btn:hover { transform: scale(1.05); opacity: .9; }
         .copied-tip { display: none; color: #34d399; font-size: 13px; text-align: center; margin-top: 8px; }
     </style>
 </head>
 <body>
-
 <div class="game-container">
-
-    <!-- Header -->
     <div class="game-header">
         <a href="games.html" class="back-btn">←</a>
         <div class="game-title-wrap">
@@ -121,8 +93,6 @@
             <p>合并数字 · 挑战2048</p>
         </div>
     </div>
-
-    <!-- Score -->
     <div class="score-bar">
         <div class="score-box">
             <div class="score-label">当前分数</div>
@@ -133,47 +103,36 @@
             <div class="score-num highlight" id="best">0</div>
         </div>
     </div>
-
-    <!-- Board -->
     <div class="board-wrapper">
         <div id="board"></div>
         <div class="overlay" id="overlay">
             <div class="overlay-title" id="overlayTitle">游戏结束</div>
-            <div class="overlay-sub" id="overlaySub">再接再厉，刷新页面重新开始！</div>
+            <div class="overlay-sub" id="overlaySub">再接再厉！</div>
             <button class="overlay-btn btn-retry" onclick="resetGame()">🔄 再来一局</button>
         </div>
     </div>
-
-    <!-- Controls -->
     <div class="controls">
         <button class="ctrl-btn" onclick="resetGame()">🔄 新游戏</button>
         <button class="ctrl-btn" onclick="undoMove()">↩️ 撤销</button>
     </div>
-
-    <!-- How to play -->
     <div class="how-to">
         <h3>📖 玩法说明</h3>
-        <p>滑动合并相同数字，目标是合成 <strong style="color:#f472b6">2048</strong>！相同数字碰撞会合并成它们的和。</p>
+        <p>滑动合并相同数字，目标是合成 <strong style="color:#f472b6">2048</strong>！</p>
         <div class="key-hint">
             <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span>
             方向键 或 滑动屏幕
         </div>
     </div>
-
-    <!-- Share -->
     <div class="share-row">
-        <a class="share-btn share-twitter" id="shareTwitter" href="#" target="_blank">
-            🐦 分享给朋友
-        </a>
+        <a class="share-btn share-twitter" id="shareTwitter" href="#" target="_blank">🐦 分享给朋友</a>
         <button class="share-btn share-copy" onclick="copyLink()">📋 复制链接</button>
     </div>
-    <p class="copied-tip" id="copiedTip">✅ 链接已复制，快去分享吧！</p>
-
+    <p class="copied-tip" id="copiedTip">✅ 链接已复制！</p>
 </div>
 
 <script>
 const SIZE = 4;
-let board, score, best, canMove;
+let board, score, best, canMove, undoStack = [];
 best = parseInt(localStorage.getItem('g2048_best') || '0');
 document.getElementById('best').textContent = best;
 
@@ -181,6 +140,7 @@ function init() {
     board = Array.from({length: SIZE}, () => Array(SIZE).fill(0));
     score = 0;
     canMove = true;
+    undoStack = [];
     document.getElementById('score').textContent = '0';
     document.getElementById('overlay').classList.remove('show');
     addRandom();
@@ -232,7 +192,9 @@ function slide(row) {
 
 function move(dir) {
     if (!canMove) return;
-    let prev = board.map(r => [...r]);
+    undoStack.push({ board: board.map(r => [...r]), score });
+    if (undoStack.length > 10) undoStack.shift();
+
     let gained = 0;
     let moved = false;
 
@@ -289,7 +251,20 @@ function move(dir) {
         render();
         checkGame();
         updateShare();
+    } else {
+        undoStack.pop(); // no move, remove undo record
     }
+}
+
+function undoMove() {
+    if (!undoStack.length) return;
+    let prev = undoStack.pop();
+    board = prev.board;
+    score = prev.score;
+    document.getElementById('score').textContent = score;
+    canMove = true;
+    document.getElementById('overlay').classList.remove('show');
+    render();
 }
 
 function checkGame() {
@@ -302,12 +277,11 @@ function checkGame() {
         canMove = false;
         document.getElementById('overlayTitle').textContent = '🎉 2048达成！';
         document.getElementById('overlayTitle').classList.add('win');
-        document.getElementById('overlaySub').textContent = '太厉害了！你已达成2048，可以继续玩挑战更高分！';
+        document.getElementById('overlaySub').textContent = '太厉害了！继续挑战更高分！';
         document.getElementById('overlay').classList.add('show');
         return;
     }
 
-    // Check if no moves
     for (let r = 0; r < SIZE; r++)
         for (let c = 0; c < SIZE; c++) {
             if (board[r][c] === 0) return;
@@ -323,94 +297,23 @@ function checkGame() {
 
 function resetGame() { init(); }
 
-// Undo
-let undoStack = [];
-function undoMove() {
-    if (!undoStack.length) return;
-    let prev = undoStack.pop();
-    board = prev.board;
-    score = prev.score;
-    document.getElementById('score').textContent = score;
-    render();
+function updateShare() {
+    let url = encodeURIComponent(window.location.href);
+    let text = encodeURIComponent('我在搜罗天下玩2048，分数 ' + score + '！');
+    document.getElementById('shareTwitter').href = 'https://twitter.com/intent/tweet?text=' + text + '&url=' + url;
 }
-function move(dir) {
-    if (!canMove) return;
-    let prev = { board: board.map(r => [...r]), score };
-    let prev = { board: board.map(r => [...r]), score: score };
-    undoStack.push(prev);
-    if (undoStack.length > 10) undoStack.shift();
-    // ... rest of move logic
-    // (merge the duplicate line below into the above)
-}
-function move(dir) {
-    if (!canMove) return;
-    let prev = { board: board.map(r => [...r]), score };
-    undoStack.push(prev);
-    if (undoStack.length > 10) undoStack.shift();
-    let gained = 0;
-    let moved = false;
-    if (dir === 'left') {
-        for (let r = 0; r < SIZE; r++) {
-            let { row, gained: g } = slide(board[r]);
-            if (row.join() !== board[r].join()) moved = true;
-            board[r] = row;
-            gained += g;
-        }
-    } else if (dir === 'right') {
-        for (let r = 0; r < SIZE; r++) {
-            let rev = [...board[r]].reverse();
-            let { row, gained: g } = slide(rev);
-            let final = row.reverse();
-            if (final.join() !== board[r].join()) moved = true;
-            board[r] = final;
-            gained += g;
-        }
-    } else if (dir === 'up') {
-        for (let c = 0; c < SIZE; c++) {
-            let col = [];
-            for (let r = 0; r < SIZE; r++) col.push(board[r][c]);
-            let { row, gained: g } = slide(col);
-            for (let r = 0; r < SIZE; r++) {
-                if (board[r][c] !== row[r]) moved = true;
-                board[r][c] = row[r];
-            }
-            gained += g;
-        }
-    } else if (dir === 'down') {
-        for (let c = 0; c < SIZE; c++) {
-            let col = [];
-            for (let r = 0; r < SIZE; r++) col.push(board[r][c]);
-            let { row, gained: g } = slide([...col].reverse());
-            let final = row.reverse();
-            for (let r = 0; r < SIZE; r++) {
-                if (board[r][c] !== final[r]) moved = true;
-                board[r][c] = final[r];
-            }
-            gained += g;
-        }
-    }
-    if (moved) {
-        score += gained;
-        document.getElementById('score').textContent = score;
-        if (score > best) {
-            best = score;
-            localStorage.setItem('g2048_best', best);
-            document.getElementById('best').textContent = best;
-        }
-        addRandom();
-        render();
-        checkGame();
-        updateShare();
-    }
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        document.getElementById('copiedTip').style.display = 'block';
+        setTimeout(() => document.getElementById('copiedTip').style.display = 'none', 2500);
+    });
 }
 
-// Keyboard
 document.addEventListener('keydown', e => {
     const map = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' };
     if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
 });
 
-// Touch
 let touchStartX, touchStartY;
 const boardEl = document.getElementById('board');
 boardEl.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive:true});
@@ -423,19 +326,6 @@ boardEl.addEventListener('touchend', e => {
     if (adx > ady) move(dx > 0 ? 'right' : 'left');
     else move(dy > 0 ? 'down' : 'up');
 }, {passive:true});
-
-// Share
-function updateShare() {
-    let url = encodeURIComponent(window.location.href);
-    let text = encodeURIComponent('我在搜罗天下玩2048，分数 ' + score + '！来挑战我吧 🏆');
-    document.getElementById('shareTwitter').href = 'https://twitter.com/intent/tweet?text=' + text + '&url=' + url;
-}
-function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-        document.getElementById('copiedTip').style.display = 'block';
-        setTimeout(() => document.getElementById('copiedTip').style.display = 'none', 2500);
-    });
-}
 
 init();
 updateShare();
