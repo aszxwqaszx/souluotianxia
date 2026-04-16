@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 打地鼠 - 搜罗天下游戏</title>
+    <meta name="description" content="经典打地鼠游戏！地鼠冒头就敲，考验反应速度，挑战最高分！搜罗天下免费在线小游戏。">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="games.css">
+    <style>
+        body { background: #0a0015; min-height: 100vh; }
+        .game-container { max-width: 520px; margin: 0 auto; padding: 20px 16px 40px; }
+
+        .game-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 14px 18px;
+            background: rgba(15,0,35,0.8); border-radius: 14px; border: 1px solid rgba(139,92,246,0.2); }
+        .back-btn { font-size: 20px; cursor: pointer; text-decoration: none; }
+        .game-title-wrap h1 { font-size: 20px; color: #fff; margin: 0; font-weight: 700; }
+        .game-title-wrap p { font-size: 12px; color: #6b7280; margin: 2px 0 0; }
+
+        .stats-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+        .stat-box { flex: 1; background: rgba(15,0,35,0.8); border: 1px solid rgba(139,92,246,0.25);
+            border-radius: 12px; padding: 10px 14px; text-align: center; }
+        .stat-label { font-size: 10px; color: #a78bfa; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-num { font-size: 24px; font-weight: 800; color: #fff; }
+        .stat-num.green { color: #34d399; }
+        .stat-num.red { color: #f87171; }
+
+        /* Game field */
+        .field-wrap { margin-bottom: 16px; position: relative; }
+        .field-bg {
+            width: 100%; aspect-ratio: 1; max-height: 420px;
+            background: radial-gradient(ellipse at bottom, #1a1040 0%, #0d0820 60%, #0a0015 100%);
+            border-radius: 16px; border: 2px solid rgba(139,92,246,0.3);
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr); gap: 8px; padding: 16px;
+            overflow: hidden; user-select: none;
+        }
+        .hole {
+            position: relative; display: flex; align-items: flex-end; justify-content: center;
+            overflow: hidden; border-radius: 12px; cursor: pointer;
+        }
+        .hole-bg {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 55%; background: #1a0a30;
+            border-radius: 50% 50% 0 0;
+        }
+        .mole {
+            position: absolute; bottom: -100%; width: 70%; aspect-ratio: 1;
+            display: flex; align-items: center; justify-content: center;
+            font-size: clamp(32px, 9vw, 52px);
+            transition: bottom 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 2; pointer-events: none;
+        }
+        .mole.up { bottom: 25%; }
+        .mole.hit { animation: hitAnim 0.3s ease forwards; }
+        @keyframes hitAnim {
+            0% { transform: scale(1); }
+            30% { transform: scale(0.7) rotate(-10deg); }
+            100% { transform: scale(0) translateY(100px); bottom: -100%; }
+        }
+
+        /* Hit effect */
+        .hit-effect {
+            position: absolute; pointer-events: none; font-size: 24px; font-weight: 900;
+            z-index: 10; animation: floatUp 0.7s ease forwards;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.4); }
+        }
+
+        /* Combo */
+        .combo-bar { text-align: center; margin-bottom: 16px; min-height: 32px; }
+        .combo-text { display: inline-block; padding: 4px 16px; border-radius: 20px;
+            font-size: 14px; font-weight: 700; background: rgba(139,92,246,0.15);
+            color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .combo-text.big { background: rgba(251,146,60,0.2); color: #fb923c;
+            border-color: #f97316; font-size: 16px; }
+        .combo-text.super { background: rgba(244,114,182,0.2); color: #f472b6;
+            border-color: #ec4899; font-size: 17px; box-shadow: 0 0 16px rgba(244,114,182,0.3); }
+
+        /* Lives */
+        .lives { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
+        .life { font-size: 22px; }
+        .life.lost { opacity: 0.2; }
+
+        /* Difficulty selector */
+        .diff-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; }
+        .diff-btn { padding: 7px 18px; border-radius: 8px; border: 1px solid rgba(139,92,246,0.25);
+            background: transparent; color: #6b7280; font-size: 13px; cursor: pointer;
+            font-family: inherit; transition: all .2s; }
+        .diff-btn.active { background: rgba(139,92,246,0.2); color: #a78bfa; border-color: #7c3aed; }
+        .diff-btn:hover:not(.active) { border-color: rgba(139,92,246,0.5); color: #a78bfa; }
+
+        .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .ctrl-btn { padding: 10px 22px; border-radius: 10px; border: 1px solid rgba(139,92,246,0.3);
+            background: rgba(15,0,35,0.8); color: #a78bfa; font-size: 13px; font-weight: 600;
+            cursor: pointer; font-family: inherit; transition: all .2s; }
+        .ctrl-btn:hover { border-color: #7c3aed; color: #fff; background: rgba(139,92,246,0.15); }
+        .ctrl-btn.primary { background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; border: none; }
+
+        /* Overlay */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(10,0,25,0.92);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; backdrop-filter: blur(8px);
+        }
+        .overlay.show { display: flex; }
+        .overlay-title { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+        .overlay-title.win { background: linear-gradient(135deg, #f472b6, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .overlay-score { font-size: 48px; font-weight: 900; color: #fb923c; margin: 8px 0; }
+        .overlay-sub { color: #9ca3af; font-size: 14px; margin-bottom: 20px; }
+        .overlay-btn { padding: 14px 36px; border-radius: 14px; font-size: 16px; font-weight: 700;
+            background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff;
+            border: none; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .overlay-btn:hover { box-shadow: 0 0 30px rgba(139,92,246,0.5); transform: scale(1.05); }
+
+        .how-to { background: rgba(15,0,35,0.7); border-radius: 12px; padding: 16px;
+            border: 1px solid rgba(139,92,246,0.15); }
+        .how-to h3 { color: #a78bfa; font-size: 14px; margin: 0 0 8px; }
+        .how-to p { color: #9ca3af; font-size: 13px; margin: 0; line-height: 1.6; }
+
+        /* Ground grass */
+        .ground-strip {
+            height: 8px; background: linear-gradient(to right, #166534, #22c55e, #166534);
+            border-radius: 4px; margin-top: -4px; position: relative; z-index: 3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="game-header">
+        <a href="games.html" class="back-btn">←</a>
+        <div class="game-title-wrap">
+            <h1>🎯 打地鼠</h1>
+            <p>反应速度挑战 · 连续命中加分解锁</p>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-box">
+            <div class="stat-label">得分</div>
+            <div class="stat-num green" id="score">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">最高分</div>
+            <div class="stat-num" id="best">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">波次</div>
+            <div class="stat-num" id="wave">1</div>
+        </div>
+    </div>
+
+    <div class="combo-bar" id="comboBar"></div>
+
+    <div class="lives" id="lives"></div>
+
+    <div class="field-wrap">
+        <div class="field-bg" id="field"></div>
+    </div>
+
+    <div class="diff-row">
+        <button class="diff-btn active" data-speed="900">简单</button>
+        <button class="diff-btn" data-speed="600">中等</button>
+        <button class="diff-btn" data-speed="380">困难</button>
+    </div>
+
+    <div class="controls">
+        <button class="ctrl-btn primary" id="startBtn" onclick="startGame()">▶️ 开始游戏</button>
+    </div>
+
+    <div class="how-to">
+        <h3>📖 玩法说明</h3>
+        <p>地鼠从洞穴冒头时点击敲打！连续命中得COMBO加分，失误扣命。共有3条命，通关全部5波次即为胜利！</p>
+    </div>
+</div>
+
+<div class="overlay" id="overlay">
+    <div class="overlay-title win" id="overlayTitle">游戏结束</div>
+    <div class="overlay-score" id="overlayScore">0</div>
+    <div class="overlay-sub" id="overlaySub"></div>
+    <button class="overlay-btn" onclick="document.getElementById('overlay').classList.remove('show'); startGame();">🔄 再来一局</button>
+</div>
+
+<script>
+const HOLES = 9;
+const MOLE_EMOJIS = ['🐹', '🐭', '🐰', '🦔', '🐻', '🐼'];
+const MAX_WAVES = 5;
+const TARGETS_PER_WAVE = [8, 12, 16, 20, 24];
+
+let gameInterval = null;
+let score = 0, combo = 0, lives = 3, wave = 1;
+let moleUp = Array(HOLES).fill(false);
+let isRunning = false;
+let moleSpeed = 900;
+let targetsHit = 0;
+let moleTimer = null;
+let upTimer = null;
+
+best = parseInt(localStorage.getItem('gMole_best') || '0');
+document.getElementById('best').textContent = best;
+
+// Build field
+const field = document.getElementById('field');
+for (let i = 0; i < HOLES; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'hole';
+    hole.dataset.i = i;
+    hole.innerHTML = '<div class="hole-bg"></div><div class="mole" id="mole'+i+'"></div>';
+    hole.addEventListener('click', () => whack(i));
+    hole.addEventListener('touchstart', e => { e.preventDefault(); whack(i); });
+    field.appendChild(hole);
+}
+
+// Difficulty
+document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        moleSpeed = parseInt(btn.dataset.speed);
+    });
+});
+
+function startGame() {
+    score = 0; combo = 0; lives = 3; wave = 1;
+    targetsHit = 0; isRunning = true;
+    moleUp = Array(HOLES).fill(false);
+    for (let i = 0; i < HOLES; i++) {
+        const m = document.getElementById('mole'+i);
+        m.className = 'mole'; m.textContent = '';
+    }
+    updateUI();
+    spawnLoop();
+}
+
+function spawnLoop() {
+    clearInterval(gameInterval);
+    const targets = TARGETS_PER_WAVE[wave - 1];
+    const duration = 30000 + (wave - 1) * 8000; // each wave gets longer
+    const spawnRate = moleSpeed;
+
+    gameInterval = setInterval(() => {
+        if (!isRunning) return;
+        if (targetsHit >= targets) {
+            nextWave();
+            return;
+        }
+        // Spawn 1-2 moles at a time
+        const count = wave >= 3 ? 2 : 1;
+        for (let c = 0; c < count; c++) {
+            const idx = Math.floor(Math.random() * HOLES);
+            if (!moleUp[idx]) showMole(idx);
+        }
+    }, spawnRate);
+
+    // Auto-hide after moleSpeed
+    upTimer = setInterval(() => {
+        if (!isRunning) return;
+        for (let i = 0; i < HOLES; i++) {
+            if (moleUp[i]) {
+                moleUp[i] = false;
+                const m = document.getElementById('mole'+i);
+                m.classList.remove('up');
+            }
+        }
+    }, moleSpeed + 50);
+}
+
+function showMole(idx) {
+    const m = document.getElementById('mole'+idx);
+    const emoji = MOLE_EMOJIS[Math.floor(Math.random() * MOLE_EMOJIS.length)];
+    m.textContent = emoji;
+    m.classList.add('up');
+    moleUp[idx] = true;
+}
+
+function whack(idx) {
+    if (!isRunning) return;
+    if (!moleUp[idx]) {
+        // Miss - hit the hole
+        combo = 0;
+        updateCombo();
+        return;
+    }
+
+    moleUp[idx] = false;
+    const m = document.getElementById('mole'+idx);
+    m.classList.remove('up');
+    m.classList.add('hit');
+
+    combo++;
+    targetsHit++;
+    let pts = 10;
+    if (combo >= 5) pts = 40;
+    else if (combo >= 3) pts = 25;
+    else if (combo >= 2) pts = 15;
+    score += pts;
+    updateCombo();
+    showHitEffect(m, '+' + pts);
+    updateUI();
+
+    setTimeout(() => { m.classList.remove('hit'); }, 350);
+}
+
+function missMole(idx) {
+    if (moleUp[idx]) {
+        moleUp[idx] = false;
+        const m = document.getElementById('mole'+idx);
+        m.classList.remove('up');
+    }
+}
+
+function showHitEffect(el, text) {
+    const eff = document.createElement('div');
+    eff.className = 'hit-effect';
+    eff.textContent = text;
+    const rect = el.getBoundingClientRect();
+    eff.style.left = rect.left + rect.width / 2 - 16 + 'px';
+    eff.style.top = rect.top - 10 + 'px';
+    document.body.appendChild(eff);
+    setTimeout(() => eff.remove(), 700);
+}
+
+function nextWave() {
+    clearInterval(gameInterval);
+    if (wave >= MAX_WAVES) {
+        gameWin();
+        return;
+    }
+    wave++;
+    targetsHit = 0;
+    // Speed up each wave
+    moleSpeed = Math.max(300, moleSpeed - 120);
+    updateUI();
+    setTimeout(spawnLoop, 1500);
+}
+
+function updateCombo() {
+    const bar = document.getElementById('comboBar');
+    if (combo <= 1) { bar.innerHTML = ''; return; }
+    let cls = 'combo-text';
+    let text = 'COMBO x' + combo;
+    if (combo >= 5) { cls += ' super'; text += ' !!'; }
+    else if (combo >= 3) { cls += ' big'; text += ' !'; }
+    bar.innerHTML = '<span class="' + cls + '">' + text + '</span>';
+}
+
+function updateUI() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('wave').textContent = wave;
+    document.getElementById('best').textContent = best;
+    const livesEl = document.getElementById('lives');
+    livesEl.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+        const h = document.createElement('span');
+        h.className = 'life' + (i < lives ? '' : ' lost');
+        h.textContent = '❤️';
+        livesEl.appendChild(h);
+    }
+}
+
+function loseLife() {
+    lives--;
+    combo = 0;
+    updateCombo();
+    updateUI();
+    if (lives <= 0) {
+        gameOver();
+    }
+}
+
+function gameOver() {
+    isRunning = false;
+    clearInterval(gameInterval);
+    clearInterval(upTimer);
+    if (score > best) {
+        best = score;
+        localStorage.setItem('gMole_best', best);
+    }
+    document.getElementById('overlayTitle').textContent = '💥 游戏结束';
+    document.getElementById('overlayScore').textContent = score;
+    document.getElementById('overlaySub').textContent = '最高分: ' + best + ' · 第 ' + wave + ' 波次';
+    document.getElementById('overlay').classList.add('show');
+}
+
+function gameWin() {
+    isRunning = false;
+    clearInterval(gameInterval);
+    clearInterval(upTimer);
+    if (score > best) {
+        best = score;
+        localStorage.setItem('gMole_best', best);
+    }
+    document.getElementById('overlayTitle').textContent = '🎉 通关成功!';
+    document.getElementById('overlayScore').textContent = score;
+    document.getElementById('overlaySub').textContent = '全部5波次通过！最高分: ' + best;
+    document.getElementById('overlay').classList.add('show');
+}
+</script>
+</body>
+</html>
