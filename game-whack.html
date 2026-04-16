@@ -162,9 +162,9 @@
     </div>
 
     <div class="diff-row">
-        <button class="diff-btn active" data-speed="900">简单</button>
-        <button class="diff-btn" data-speed="600">中等</button>
-        <button class="diff-btn" data-speed="380">困难</button>
+        <button class="diff-btn active" data-speed="1600" data-stay="1400">简单</button>
+        <button class="diff-btn" data-speed="1100" data-stay="900">中等</button>
+        <button class="diff-btn" data-speed="750" data-stay="600">困难</button>
     </div>
 
     <div class="controls">
@@ -174,6 +174,7 @@
     <div class="how-to">
         <h3>📖 玩法说明</h3>
         <p>地鼠从洞穴冒头时点击敲打！连续命中得COMBO加分，失误扣命。共有3条命，通关全部5波次即为胜利！</p>
+        <p style="margin-top:8px;color:#6b7280;font-size:12px;">简单：地鼠停留1.4秒 · 中等：停留0.9秒 · 困难：停留0.6秒</p>
     </div>
 </div>
 
@@ -194,7 +195,10 @@ let gameInterval = null;
 let score = 0, combo = 0, lives = 3, wave = 1;
 let moleUp = Array(HOLES).fill(false);
 let isRunning = false;
-let moleSpeed = 900;
+let moleSpeed = 1600;
+let moleStay = 1400;
+let baseSpeed = 1600;
+let baseStay = 1400;
 let targetsHit = 0;
 let moleTimer = null;
 let upTimer = null;
@@ -219,13 +223,18 @@ document.querySelectorAll('.diff-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        moleSpeed = parseInt(btn.dataset.speed);
+        baseSpeed = parseInt(btn.dataset.speed);
+        baseStay = parseInt(btn.dataset.stay);
+        moleSpeed = baseSpeed;
+        moleStay = baseStay;
     });
 });
 
 function startGame() {
     score = 0; combo = 0; lives = 3; wave = 1;
     targetsHit = 0; isRunning = true;
+    moleSpeed = baseSpeed;
+    moleStay = baseStay;
     moleUp = Array(HOLES).fill(false);
     for (let i = 0; i < HOLES; i++) {
         const m = document.getElementById('mole'+i);
@@ -255,7 +264,7 @@ function spawnLoop() {
         }
     }, spawnRate);
 
-    // Auto-hide after moleSpeed
+    // Auto-hide after moleStay
     upTimer = setInterval(() => {
         if (!isRunning) return;
         for (let i = 0; i < HOLES; i++) {
@@ -265,7 +274,7 @@ function spawnLoop() {
                 m.classList.remove('up');
             }
         }
-    }, moleSpeed + 50);
+    }, moleStay);
 }
 
 function showMole(idx) {
@@ -331,8 +340,9 @@ function nextWave() {
     }
     wave++;
     targetsHit = 0;
-    // Speed up each wave
-    moleSpeed = Math.max(300, moleSpeed - 120);
+    // Speed up each wave (gradual difficulty)
+    moleSpeed = Math.max(600, moleSpeed - 80);
+    moleStay = Math.max(500, moleStay - 60);
     updateUI();
     setTimeout(spawnLoop, 1500);
 }
