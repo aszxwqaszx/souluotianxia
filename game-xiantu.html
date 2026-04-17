@@ -20,39 +20,43 @@ body {
   display: flex;
 }
 #game-canvas {
-  flex: 1;
+  width: calc(100vw - 260px);
+  height: 100vh;
   background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
 }
-/* 右侧面板 */
+/* 右侧面板 - 固定宽度，不会被挤掉 */
 #side-panel {
-  width: 280px;
+  width: 260px;
+  min-width: 260px;
   background: #0d1117;
   border-left: 1px solid #30363d;
   display: flex;
   flex-direction: column;
-  font-size: 13px;
+  font-size: 12px;
+  overflow-y: auto;
 }
 .panel-section {
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid #30363d;
 }
 .panel-title {
   color: #58a6ff;
-  font-size: 12px;
-  margin-bottom: 8px;
+  font-size: 11px;
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 /* 角色状态 */
-#player-name { font-size: 16px; font-weight: bold; color: #f0f6fc; }
-#player-realm { color: #ffa500; font-size: 12px; }
+#player-name { font-size: 14px; font-weight: bold; color: #f0f6fc; }
+#player-realm { color: #ffa500; font-size: 11px; }
 .stat-row {
   display: flex;
   justify-content: space-between;
-  margin: 4px 0;
+  margin: 3px 0;
+  font-size: 11px;
 }
 .stat-bar {
-  height: 6px;
+  height: 5px;
   background: #21262d;
   border-radius: 3px;
   margin-top: 2px;
@@ -70,7 +74,7 @@ body {
 .equip-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 3px;
 }
 .equip-slot {
   aspect-ratio: 1;
@@ -80,59 +84,54 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  position: relative;
 }
 .equip-slot:hover { border-color: #58a6ff; }
-.equip-slot.quality-green { border-color: #3fb950; }
-.equip-slot.quality-blue { border-color: #58a6ff; }
-.equip-slot.quality-purple { border-color: #a371f7; }
-.equip-slot.quality-orange { border-color: #d29922; }
-.equip-slot.quality-red { border-color: #f85149; }
+.equip-slot.quality-green { border-color: #3fb950; background: rgba(63,185,80,0.1); }
+.equip-slot.quality-blue { border-color: #58a6ff; background: rgba(88,166,255,0.1); }
+.equip-slot.quality-purple { border-color: #a371f7; background: rgba(163,113,247,0.1); }
+.equip-slot.quality-orange { border-color: #d29922; background: rgba(210,153,34,0.1); }
+.equip-slot.quality-red { border-color: #f85149; background: rgba(248,81,73,0.1); }
 /* 技能栏 */
 .skill-bar {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 .skill-slot {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background: #161b22;
   border: 2px solid #30363d;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   position: relative;
 }
 .skill-slot:hover { border-color: #58a6ff; }
-.skill-slot.on-cooldown {
-  opacity: 0.5;
-}
+.skill-slot.on-cooldown { opacity: 0.5; }
 .skill-slot .cooldown-overlay {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  font-size: 10px;
+  font-size: 9px;
   color: #f85149;
 }
 .skill-key {
   position: absolute;
-  top: 2px;
+  top: 1px;
   left: 2px;
-  font-size: 10px;
+  font-size: 9px;
   color: #8b949e;
 }
 /* 背包 */
 #inventory-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 3px;
-  max-height: 200px;
-  overflow-y: auto;
+  gap: 2px;
 }
 .inv-slot {
   aspect-ratio: 1;
@@ -142,27 +141,26 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
-  position: relative;
 }
 .inv-slot:hover { border-color: #58a6ff; }
 .inv-slot .item-count {
   position: absolute;
   bottom: 1px;
   right: 2px;
-  font-size: 10px;
+  font-size: 9px;
   color: #f0f6fc;
 }
 /* 日志 */
 #combat-log {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 12px;
-  font-size: 11px;
-  line-height: 1.6;
+  padding: 6px 10px;
+  font-size: 10px;
+  line-height: 1.5;
 }
-.log-item { margin: 2px 0; }
+.log-item { margin: 1px 0; }
 .log-damage { color: #f85149; }
 .log-heal { color: #3fb950; }
 .log-drop { color: #ffa657; }
@@ -177,24 +175,25 @@ body {
   background: #0d1117;
   border: 2px solid #30363d;
   border-radius: 12px;
-  padding: 20px;
-  min-width: 300px;
+  padding: 16px;
+  min-width: 280px;
   display: none;
   z-index: 100;
   text-align: center;
 }
 #drop-modal.show { display: block; }
-#drop-modal h3 { color: #ffa657; margin-bottom: 12px; }
-#drop-items { margin: 12px 0; }
+#drop-modal h3 { color: #ffa657; margin-bottom: 10px; font-size: 14px; }
+#drop-items { margin: 10px 0; }
 .drop-item {
-  padding: 8px;
-  margin: 4px 0;
+  padding: 6px;
+  margin: 3px 0;
   background: #161b22;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 #drop-modal button {
-  margin-top: 12px;
-  padding: 8px 24px;
+  margin-top: 10px;
+  padding: 6px 20px;
   background: #238636;
   border: none;
   border-radius: 6px;
@@ -206,76 +205,39 @@ body {
   position: fixed;
   bottom: 0;
   left: 0;
-  right: 280px;
-  height: 40px;
+  right: 260px;
+  height: 32px;
   background: #161b22;
   border-top: 1px solid #30363d;
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  gap: 20px;
-  font-size: 12px;
+  padding: 0 12px;
+  gap: 16px;
+  font-size: 11px;
 }
 #bottom-bar .coord { color: #8b949e; }
 #bottom-bar .gold { color: #ffa657; }
 #bottom-bar .kills { color: #f85149; }
-/* 暂停/设置按钮 */
+/* 控制按钮 */
 #top-controls {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  top: 8px;
+  left: 8px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   z-index: 50;
 }
 .ctrl-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   background: #161b22;
   border: 1px solid #30363d;
   border-radius: 6px;
   color: #8b949e;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
 }
 .ctrl-btn:hover { border-color: #58a6ff; color: #f0f6fc; }
-/* 怪物血条 */
-.mob-hp-bar {
-  position: absolute;
-  width: 50px;
-  height: 4px;
-  background: #21262d;
-  border-radius: 2px;
-  transform: translateX(-50%);
-}
-.mob-hp-fill {
-  height: 100%;
-  background: #f85149;
-  border-radius: 2px;
-}
-.mob-name {
-  position: absolute;
-  font-size: 10px;
-  color: #f0f6fc;
-  white-space: nowrap;
-  transform: translateX(-50%);
-}
-/* 伤害数字 */
-.damage-number {
-  position: absolute;
-  font-weight: bold;
-  font-size: 14px;
-  pointer-events: none;
-  animation: floatUp 0.8s ease-out forwards;
-}
-@keyframes floatUp {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-30px); }
-}
-.dmg-player { color: #f85149; }
-.dmg-mob { color: #ffa657; }
-.dmg-crit { color: #f0f6fc; font-size: 18px; }
-.dmg-heal { color: #3fb950; }
 </style>
 </head>
 <body>
@@ -284,30 +246,17 @@ body {
   <canvas id="game-canvas"></canvas>
   
   <div id="side-panel">
-    <!-- 角色信息 -->
     <div class="panel-section">
       <div id="player-name">无名修士</div>
       <div id="player-realm">凡人境 Lv.1</div>
-      <div class="stat-row" style="margin-top:8px;">
-        <span>生命</span>
-        <span id="hp-text">100/100</span>
-      </div>
+      <div class="stat-row" style="margin-top:6px;"><span>生命</span><span id="hp-text">100/100</span></div>
       <div class="stat-bar"><div class="stat-fill hp-fill" id="hp-bar" style="width:100%"></div></div>
-      
-      <div class="stat-row">
-        <span>法力</span>
-        <span id="mp-text">50/50</span>
-      </div>
+      <div class="stat-row"><span>法力</span><span id="mp-text">50/50</span></div>
       <div class="stat-bar"><div class="stat-fill mp-fill" id="mp-bar" style="width:100%"></div></div>
-      
-      <div class="stat-row">
-        <span>经验</span>
-        <span id="exp-text">0/100</span>
-      </div>
+      <div class="stat-row"><span>经验</span><span id="exp-text">0/100</span></div>
       <div class="stat-bar"><div class="stat-fill exp-fill" id="exp-bar" style="width:0%"></div></div>
     </div>
     
-    <!-- 属性 -->
     <div class="panel-section">
       <div class="panel-title">属性</div>
       <div class="stat-row"><span>攻击</span><span id="stat-atk">10</span></div>
@@ -316,7 +265,6 @@ body {
       <div class="stat-row"><span>闪避</span><span id="stat-dodge">3%</span></div>
     </div>
     
-    <!-- 装备 -->
     <div class="panel-section">
       <div class="panel-title">装备</div>
       <div class="equip-grid">
@@ -329,7 +277,6 @@ body {
       </div>
     </div>
     
-    <!-- 技能 -->
     <div class="panel-section">
       <div class="panel-title">技能</div>
       <div class="skill-bar">
@@ -340,33 +287,28 @@ body {
       </div>
     </div>
     
-    <!-- 背包 -->
     <div class="panel-section">
       <div class="panel-title">背包 <span id="inv-count">(0/20)</span></div>
       <div id="inventory-grid"></div>
     </div>
     
-    <!-- 战斗日志 -->
     <div id="combat-log"></div>
   </div>
 </div>
 
-<!-- 底部状态栏 -->
 <div id="bottom-bar">
   <span class="coord">📍 <span id="pos-text">0, 0</span></span>
   <span class="gold">💰 <span id="gold-text">0</span></span>
-  <span class="kills">⚔️ 击杀: <span id="kills-text">0</span></span>
+  <span class="kills">⚔️ <span id="kills-text">0</span></span>
   <span style="margin-left:auto;color:#8b949e;">WASD移动 | 鼠标攻击 | 1-4技能</span>
 </div>
 
-<!-- 顶部控制 -->
 <div id="top-controls">
   <button class="ctrl-btn" id="btn-pause" title="暂停">⏸️</button>
   <button class="ctrl-btn" id="btn-save" title="存档">💾</button>
   <button class="ctrl-btn" id="btn-load" title="读档">📂</button>
 </div>
 
-<!-- 掉落弹窗 -->
 <div id="drop-modal">
   <h3>🎉 战利品</h3>
   <div id="drop-items"></div>
@@ -376,25 +318,24 @@ body {
 <script>
 // ==================== 游戏配置 ====================
 const CONFIG = {
-  TILE_SIZE: 40,
+  TILE_SIZE: 50,
   PLAYER_SPEED: 3,
-  ATTACK_RANGE: 60,
-  ATTACK_COOLDOWN: 500,
+  ATTACK_RANGE: 80,
+  ATTACK_COOLDOWN: 400,
+  COLLISION_RADIUS: 35,  // 碰撞半径
 };
 
 // ==================== 数据定义 ====================
-// 境界系统
 const REALMS = [
-  { name: '凡人', minLv: 1, maxLv: 10, hpBonus: 0, atkBonus: 0 },
-  { name: '筑基', minLv: 11, maxLv: 25, hpBonus: 50, atkBonus: 5 },
-  { name: '金丹', minLv: 26, maxLv: 40, hpBonus: 150, atkBonus: 15 },
-  { name: '元婴', minLv: 41, maxLv: 55, hpBonus: 400, atkBonus: 35 },
-  { name: '化神', minLv: 56, maxLv: 70, hpBonus: 900, atkBonus: 70 },
-  { name: '大乘', minLv: 71, maxLv: 85, hpBonus: 1800, atkBonus: 130 },
-  { name: '渡劫', minLv: 86, maxLv: 100, hpBonus: 3500, atkBonus: 250 },
+  { name: '凡人', minLv: 1, maxLv: 10 },
+  { name: '筑基', minLv: 11, maxLv: 25 },
+  { name: '金丹', minLv: 26, maxLv: 40 },
+  { name: '元婴', minLv: 41, maxLv: 55 },
+  { name: '化神', minLv: 56, maxLv: 70 },
+  { name: '大乘', minLv: 71, maxLv: 85 },
+  { name: '渡劫', minLv: 86, maxLv: 100 },
 ];
 
-// 装备品质
 const QUALITIES = [
   { name: '普通', color: '#8b949e', mult: 1, class: '' },
   { name: '优秀', color: '#3fb950', mult: 1.3, class: 'quality-green' },
@@ -404,7 +345,6 @@ const QUALITIES = [
   { name: '神话', color: '#f85149', mult: 5, class: 'quality-red' },
 ];
 
-// 装备类型
 const EQUIP_TYPES = {
   weapon: { name: '武器', icon: '⚔️', baseAtk: 5, baseDef: 0 },
   helmet: { name: '头盔', icon: '🪖', baseAtk: 0, baseDef: 3 },
@@ -414,7 +354,6 @@ const EQUIP_TYPES = {
   boot: { name: '鞋子', icon: '👢', baseAtk: 0, baseDef: 2 },
 };
 
-// 装备名称库
 const EQUIP_NAMES = {
   weapon: ['木剑', '铁剑', '精钢剑', '玄铁剑', '灵剑', '仙剑', '神剑'],
   helmet: ['布帽', '铁盔', '精钢盔', '玄铁盔', '灵盔', '仙冠', '神冠'],
@@ -422,9 +361,8 @@ const EQUIP_NAMES = {
   ring: ['铜戒', '银戒', '金戒', '灵戒', '仙戒', '神戒', '圣戒'],
   amulet: ['铜坠', '银坠', '金坠', '灵坠', '仙坠', '神坠', '圣坠'],
   boot: ['布鞋', '铁靴', '精钢靴', '玄铁靴', '灵靴', '仙靴', '神靴'],
-};
+];
 
-// 随机词条
 const AFFIXES = [
   { name: '力量', stat: 'atk', min: 2, max: 10 },
   { name: '守护', stat: 'def', min: 1, max: 8 },
@@ -433,9 +371,7 @@ const AFFIXES = [
   { name: '闪避', stat: 'dodge', min: 1, max: 4 },
 ];
 
-// 怪物定义
 const MONSTERS = {
-  // 幽冥洞 (Lv 1-10)
   bat: { 
     name: '幽冥蝠', icon: '🦇', hp: 30, atk: 5, def: 2, exp: 15, gold: 5,
     dropTable: [
@@ -455,7 +391,6 @@ const MONSTERS = {
     ],
     guarantee: { kills: 40, reward: { type: 'equip', quality: 1, level: 5 } }
   },
-  // 血魔窟 (Lv 11-25)
   bloodBat: {
     name: '血蝠', icon: '🩸', hp: 120, atk: 25, def: 10, exp: 80, gold: 35,
     dropTable: [
@@ -474,7 +409,6 @@ const MONSTERS = {
     ],
     guarantee: { kills: 25, reward: { type: 'equip', quality: 2, level: 15 } }
   },
-  // BOSS
   boss_ghost: {
     name: '幽冥王', icon: '👿', hp: 500, atk: 40, def: 20, exp: 500, gold: 200,
     isBoss: true,
@@ -487,7 +421,6 @@ const MONSTERS = {
   },
 };
 
-// 消耗品
 const ITEMS = {
   hp_potion: { name: '回血丹', icon: '💊', effect: { hp: 50 }, stackable: true },
   mp_potion: { name: '回气丹', icon: '🧪', effect: { mp: 30 }, stackable: true },
@@ -509,12 +442,15 @@ let gameState = {
     dodge: 3,
     gold: 0,
     kills: 0,
-    x: 400,
-    y: 300,
+    x: 300,
+    y: 250,
+    facing: 0,  // 面朝方向（弧度）
+    attacking: false,  // 是否正在攻击
+    attackAnim: 0,  // 攻击动画帧
     equipment: { weapon: null, helmet: null, armor: null, ring: null, amulet: null, boot: null },
     inventory: [],
     skillCooldowns: [0, 0, 0, 0],
-    guaranteeCounters: {}, // 保底计数器
+    guaranteeCounters: {},
   },
   mobs: [],
   particles: [],
@@ -526,64 +462,40 @@ let gameState = {
 };
 
 // ==================== 工具函数 ====================
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randFloat(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function distance(x1, y1, x2, y2) {
-  return Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-}
-
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randFloat(min, max) { return Math.random() * (max - min) + min; }
+function distance(x1, y1, x2, y2) { return Math.sqrt((x2-x1)**2 + (y2-y1)**2); }
 function getRealm(level) {
   for (let i = REALMS.length - 1; i >= 0; i--) {
-    if (level >= REALMS[i].minLv && level <= REALMS[i].maxLv) {
-      return { ...REALMS[i], index: i };
-    }
+    if (level >= REALMS[i].minLv && level <= REALMS[i].maxLv) return { ...REALMS[i], index: i };
   }
   return REALMS[0];
 }
-
-function expToLevel(level) {
-  return Math.floor(100 * Math.pow(1.15, level - 1));
-}
+function expToLevel(level) { return Math.floor(100 * Math.pow(1.15, level - 1)); }
 
 // ==================== 装备生成 ====================
 function generateEquip(type, qualityIndex, level) {
   const quality = QUALITIES[qualityIndex];
   const equipType = EQUIP_TYPES[type];
   const nameIndex = Math.min(Math.floor(level / 15), EQUIP_NAMES[type].length - 1);
-  
   const baseAtk = Math.floor(equipType.baseAtk * quality.mult * (1 + level * 0.1));
   const baseDef = Math.floor(equipType.baseDef * quality.mult * (1 + level * 0.1));
   
-  // 随机词条 (品质越高词条越多)
   const affixCount = Math.min(qualityIndex, 3);
   const affixes = [];
   const usedStats = new Set();
-  
   for (let i = 0; i < affixCount; i++) {
-    const availableAffixes = AFFIXES.filter(a => !usedStats.has(a.stat));
-    if (availableAffixes.length === 0) break;
-    const affix = availableAffixes[rand(0, availableAffixes.length - 1)];
+    const available = AFFIXES.filter(a => !usedStats.has(a.stat));
+    if (!available.length) break;
+    const affix = available[rand(0, available.length - 1)];
     usedStats.add(affix.stat);
-    const value = rand(affix.min, affix.max) * (qualityIndex + 1);
-    affixes.push({ name: affix.name, stat: affix.stat, value });
+    affixes.push({ name: affix.name, stat: affix.stat, value: rand(affix.min, affix.max) * (qualityIndex + 1) });
   }
   
   return {
     id: Date.now() + Math.random(),
-    type,
-    name: EQUIP_NAMES[type][nameIndex],
-    quality: qualityIndex,
-    level,
-    atk: baseAtk,
-    def: baseDef,
-    affixes,
-    icon: equipType.icon,
+    type, name: EQUIP_NAMES[type][nameIndex], quality: qualityIndex, level,
+    atk: baseAtk, def: baseDef, affixes, icon: equipType.icon,
   };
 }
 
@@ -591,43 +503,28 @@ function generateEquip(type, qualityIndex, level) {
 function processDrop(mob, mobType) {
   const drops = [];
   const monster = MONSTERS[mobType];
-  
-  // 更新保底计数器
   const counterKey = mobType;
-  if (!gameState.player.guaranteeCounters[counterKey]) {
-    gameState.player.guaranteeCounters[counterKey] = 0;
-  }
-  gameState.player.guaranteeCounters[counterKey]++;
+  gameState.player.guaranteeCounters[counterKey] = (gameState.player.guaranteeCounters[counterKey] || 0) + 1;
   
-  // 检查保底
   if (monster.guarantee && gameState.player.guaranteeCounters[counterKey] >= monster.guarantee.kills) {
     const reward = monster.guarantee.reward;
     if (reward.type === 'equip') {
       const types = Object.keys(EQUIP_TYPES);
-      const type = types[rand(0, types.length - 1)];
-      drops.push(generateEquip(type, reward.quality, reward.level));
+      drops.push(generateEquip(types[rand(0, types.length - 1)], reward.quality, reward.level));
     }
     gameState.player.guaranteeCounters[counterKey] = 0;
   }
   
-  // 随机掉落
   for (const drop of monster.dropTable) {
     if (Math.random() < drop.rate) {
-      if (drop.type === 'gold') {
-        const amount = rand(drop.min, drop.max);
-        drops.push({ type: 'gold', amount });
-      } else if (drop.type === 'item') {
-        drops.push({ type: 'item', ...ITEMS[drop.id], id: drop.id });
-      } else if (drop.type === 'equip') {
+      if (drop.type === 'gold') drops.push({ type: 'gold', amount: rand(drop.min, drop.max) });
+      else if (drop.type === 'item') drops.push({ type: 'item', ...ITEMS[drop.id], id: drop.id });
+      else if (drop.type === 'equip') {
         const types = Object.keys(EQUIP_TYPES);
-        const equipType = types[rand(0, types.length - 1)];
-        const quality = rand(drop.qualityRange[0], drop.qualityRange[1]);
-        const level = rand(drop.levelRange[0], drop.levelRange[1]);
-        drops.push(generateEquip(equipType, quality, level));
+        drops.push(generateEquip(types[rand(0, types.length - 1)], rand(drop.qualityRange[0], drop.qualityRange[1]), rand(drop.levelRange[0], drop.levelRange[1])));
       }
     }
   }
-  
   return drops;
 }
 
@@ -636,39 +533,28 @@ function updateUI() {
   const p = gameState.player;
   const realm = getRealm(p.level);
   
-  // 角色信息
   document.getElementById('player-name').textContent = p.name;
   document.getElementById('player-realm').textContent = `${realm.name}境 Lv.${p.level}`;
   
-  // 血条
   document.getElementById('hp-text').textContent = `${Math.floor(p.hp)}/${p.maxHp}`;
   document.getElementById('hp-bar').style.width = `${(p.hp / p.maxHp) * 100}%`;
   document.getElementById('mp-text').textContent = `${Math.floor(p.mp)}/${p.maxMp}`;
   document.getElementById('mp-bar').style.width = `${(p.mp / p.maxMp) * 100}%`;
   
-  // 经验
   const expNeeded = expToLevel(p.level);
   document.getElementById('exp-text').textContent = `${p.exp}/${expNeeded}`;
   document.getElementById('exp-bar').style.width = `${(p.exp / expNeeded) * 100}%`;
   
-  // 属性 (基础 + 装备)
-  let totalAtk = p.baseAtk;
-  let totalDef = p.baseDef;
-  let totalCrit = p.crit;
-  let totalDodge = p.dodge;
-  let totalMaxHp = p.maxHp;
-  
+  let totalAtk = p.baseAtk, totalDef = p.baseDef, totalCrit = p.crit, totalDodge = p.dodge;
   for (const slot in p.equipment) {
     const equip = p.equipment[slot];
     if (equip) {
-      totalAtk += equip.atk;
-      totalDef += equip.def;
+      totalAtk += equip.atk; totalDef += equip.def;
       for (const affix of equip.affixes) {
         if (affix.stat === 'atk') totalAtk += affix.value;
         if (affix.stat === 'def') totalDef += affix.value;
         if (affix.stat === 'crit') totalCrit += affix.value;
         if (affix.stat === 'dodge') totalDodge += affix.value;
-        if (affix.stat === 'maxHp') totalMaxHp += affix.value;
       }
     }
   }
@@ -678,20 +564,16 @@ function updateUI() {
   document.getElementById('stat-crit').textContent = totalCrit + '%';
   document.getElementById('stat-dodge').textContent = totalDodge + '%';
   
-  // 底部状态
   document.getElementById('pos-text').textContent = `${Math.floor(p.x)}, ${Math.floor(p.y)}`;
   document.getElementById('gold-text').textContent = p.gold;
   document.getElementById('kills-text').textContent = p.kills;
   
-  // 装备槽
   document.querySelectorAll('.equip-slot').forEach(slot => {
-    const slotType = slot.dataset.slot;
-    const equip = p.equipment[slotType];
+    const equip = p.equipment[slot.dataset.slot];
     slot.textContent = equip ? equip.icon : '·';
     slot.className = 'equip-slot' + (equip ? ' ' + QUALITIES[equip.quality].class : '');
   });
   
-  // 背包
   const invGrid = document.getElementById('inventory-grid');
   invGrid.innerHTML = '';
   for (let i = 0; i < 20; i++) {
@@ -700,32 +582,19 @@ function updateUI() {
     if (p.inventory[i]) {
       const item = p.inventory[i];
       slot.textContent = item.icon;
-      if (item.quality !== undefined) {
-        slot.style.color = QUALITIES[item.quality].color;
-      }
-      if (item.count > 1) {
-        const count = document.createElement('span');
-        count.className = 'item-count';
-        count.textContent = item.count;
-        slot.appendChild(count);
-      }
+      if (item.quality !== undefined) slot.style.color = QUALITIES[item.quality].color;
       slot.title = item.name;
     }
     invGrid.appendChild(slot);
   }
   document.getElementById('inv-count').textContent = `(${p.inventory.filter(x => x).length}/20)`;
   
-  // 技能冷却
   document.querySelectorAll('.skill-slot').forEach((slot, i) => {
     const cd = p.skillCooldowns[i];
     if (cd > 0) {
       slot.classList.add('on-cooldown');
       let overlay = slot.querySelector('.cooldown-overlay');
-      if (!overlay) {
-        overlay = document.createElement('span');
-        overlay.className = 'cooldown-overlay';
-        slot.appendChild(overlay);
-      }
+      if (!overlay) { overlay = document.createElement('span'); overlay.className = 'cooldown-overlay'; slot.appendChild(overlay); }
       overlay.textContent = Math.ceil(cd / 1000) + 's';
     } else {
       slot.classList.remove('on-cooldown');
@@ -735,7 +604,6 @@ function updateUI() {
   });
 }
 
-// ==================== 日志 ====================
 function log(msg, type = '') {
   const logDiv = document.getElementById('combat-log');
   const entry = document.createElement('div');
@@ -743,11 +611,7 @@ function log(msg, type = '') {
   entry.textContent = msg;
   logDiv.appendChild(entry);
   logDiv.scrollTop = logDiv.scrollHeight;
-  
-  // 保留最近100条
-  while (logDiv.children.length > 100) {
-    logDiv.removeChild(logDiv.firstChild);
-  }
+  while (logDiv.children.length > 80) logDiv.removeChild(logDiv.firstChild);
 }
 
 // ==================== Canvas 渲染 ====================
@@ -764,50 +628,65 @@ resizeCanvas();
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  // 绘制网格背景
-  ctx.strokeStyle = '#21262d';
+  // 网格背景
+  ctx.strokeStyle = '#1c2128';
   ctx.lineWidth = 1;
-  const gridSize = CONFIG.TILE_SIZE;
-  for (let x = 0; x < canvas.width; x += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
-    ctx.stroke();
+  for (let x = 0; x < canvas.width; x += CONFIG.TILE_SIZE) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
   }
-  for (let y = 0; y < canvas.height; y += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width, y);
-    ctx.stroke();
+  for (let y = 0; y < canvas.height; y += CONFIG.TILE_SIZE) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
   }
   
   // 绘制怪物
   for (const mob of gameState.mobs) {
-    // 怪物本体
-    ctx.font = '32px Arial';
+    ctx.font = '28px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(mob.icon, mob.x, mob.y + 10);
+    ctx.fillText(mob.icon, mob.x, mob.y + 8);
     
     // 血条
     const hpPercent = mob.hp / mob.maxHp;
     ctx.fillStyle = '#21262d';
-    ctx.fillRect(mob.x - 25, mob.y - 35, 50, 6);
+    ctx.fillRect(mob.x - 22, mob.y - 32, 44, 5);
     ctx.fillStyle = mob.isBoss ? '#ffa657' : '#f85149';
-    ctx.fillRect(mob.x - 25, mob.y - 35, 50 * hpPercent, 6);
+    ctx.fillRect(mob.x - 22, mob.y - 32, 44 * hpPercent, 5);
     
     // 名字
-    ctx.font = '11px Arial';
-    ctx.fillStyle = mob.isBoss ? '#ffa657' : '#f0f6fc';
-    ctx.fillText(mob.name, mob.x, mob.y - 42);
+    ctx.font = '10px Arial';
+    ctx.fillStyle = mob.isBoss ? '#ffa657' : '#8b949e';
+    ctx.fillText(mob.name, mob.x, mob.y - 38);
   }
   
   // 绘制玩家
   const p = gameState.player;
-  ctx.font = '36px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('🧙', p.x, p.y + 12);
   
-  // 玩家攻击范围指示
+  // 攻击动画：挥砍效果
+  if (p.attackAnim > 0) {
+    const swingAngle = (1 - p.attackAnim / 10) * Math.PI * 0.8;  // 0到72度的摆动
+    const swingDist = 50;
+    
+    ctx.strokeStyle = 'rgba(255, 165, 87, 0.8)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, swingDist, p.facing - swingAngle, p.facing + swingAngle);
+    ctx.stroke();
+    
+    // 剑光拖尾
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, swingDist * 0.8, p.facing - swingAngle * 0.8, p.facing + swingAngle * 0.8);
+    ctx.stroke();
+    
+    p.attackAnim--;
+  }
+  
+  // 玩家本体
+  ctx.font = '32px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('🧙', p.x, p.y + 10);
+  
+  // 攻击范围指示（按住鼠标时显示）
   if (gameState.mouse.down) {
     ctx.strokeStyle = 'rgba(88, 166, 255, 0.3)';
     ctx.lineWidth = 2;
@@ -818,11 +697,11 @@ function render() {
   
   // 伤害数字
   for (const dmg of gameState.damageNumbers) {
-    ctx.font = dmg.crit ? 'bold 18px Arial' : '14px Arial';
+    ctx.font = dmg.crit ? 'bold 16px Arial' : '13px Arial';
     ctx.fillStyle = dmg.color;
     ctx.textAlign = 'center';
     ctx.fillText(dmg.text, dmg.x, dmg.y);
-    dmg.y -= 1;
+    dmg.y -= 1.2;
     dmg.life--;
   }
   gameState.damageNumbers = gameState.damageNumbers.filter(d => d.life > 0);
@@ -844,39 +723,64 @@ function render() {
 
 // ==================== 游戏逻辑 ====================
 function spawnMob() {
-  if (gameState.mobs.length >= 10) return;
+  if (gameState.mobs.length >= 8) return;
   
   const mobTypes = Object.keys(MONSTERS).filter(m => !MONSTERS[m].isBoss);
   const type = mobTypes[rand(0, mobTypes.length - 1)];
   const mobData = MONSTERS[type];
   
-  // 在玩家周围生成，但不要太近
-  let x, y;
+  let x, y, attempts = 0;
   do {
     const angle = Math.random() * Math.PI * 2;
-    const dist = rand(200, 400);
+    const dist = rand(180, 350);
     x = gameState.player.x + Math.cos(angle) * dist;
     y = gameState.player.y + Math.sin(angle) * dist;
-  } while (x < 50 || x > canvas.width - 50 || y < 50 || y > canvas.height - 50);
+    attempts++;
+  } while ((x < 50 || x > canvas.width - 50 || y < 50 || y > canvas.height - 50) && attempts < 20);
+  
+  if (attempts >= 20) return;
   
   gameState.mobs.push({
-    id: Date.now() + Math.random(),
-    type,
-    name: mobData.name,
-    icon: mobData.icon,
-    x,
-    y,
-    hp: mobData.hp,
-    maxHp: mobData.hp,
-    atk: mobData.atk,
-    def: mobData.def,
-    exp: mobData.exp,
-    gold: mobData.gold,
-    isBoss: mobData.isBoss || false,
-    lastAttack: 0,
-    targetX: x,
-    targetY: y,
+    id: Date.now() + Math.random(), type, name: mobData.name, icon: mobData.icon,
+    x, y, hp: mobData.hp, maxHp: mobData.hp, atk: mobData.atk, def: mobData.def,
+    exp: mobData.exp, gold: mobData.gold, isBoss: mobData.isBoss || false,
+    lastAttack: 0, targetX: x, targetY: y,
   });
+}
+
+// 碰撞分离：防止怪物和玩家重叠
+function resolveCollisions() {
+  const p = gameState.player;
+  const minDist = CONFIG.COLLISION_RADIUS;
+  
+  // 怪物之间的碰撞
+  for (let i = 0; i < gameState.mobs.length; i++) {
+    for (let j = i + 1; j < gameState.mobs.length; j++) {
+      const m1 = gameState.mobs[i];
+      const m2 = gameState.mobs[j];
+      const dist = distance(m1.x, m1.y, m2.x, m2.y);
+      if (dist < minDist && dist > 0) {
+        const overlap = (minDist - dist) / 2;
+        const angle = Math.atan2(m2.y - m1.y, m2.x - m1.x);
+        m1.x -= Math.cos(angle) * overlap;
+        m1.y -= Math.sin(angle) * overlap;
+        m2.x += Math.cos(angle) * overlap;
+        m2.y += Math.sin(angle) * overlap;
+      }
+    }
+  }
+  
+  // 怪物和玩家的碰撞
+  for (const mob of gameState.mobs) {
+    const dist = distance(mob.x, mob.y, p.x, p.y);
+    if (dist < minDist && dist > 0) {
+      const overlap = minDist - dist;
+      const angle = Math.atan2(mob.y - p.y, mob.x - p.x);
+      // 只推开怪物，玩家位置不变
+      mob.x += Math.cos(angle) * overlap;
+      mob.y += Math.sin(angle) * overlap;
+    }
+  }
 }
 
 function update(dt) {
@@ -895,83 +799,77 @@ function update(dt) {
     const len = Math.sqrt(dx*dx + dy*dy);
     p.x += (dx / len) * CONFIG.PLAYER_SPEED;
     p.y += (dy / len) * CONFIG.PLAYER_SPEED;
-    // 边界限制
-    p.x = Math.max(20, Math.min(canvas.width - 20, p.x));
-    p.y = Math.max(20, Math.min(canvas.height - 20, p.y));
+    p.facing = Math.atan2(dy, dx);  // 更新面朝方向
+    p.x = Math.max(25, Math.min(canvas.width - 25, p.x));
+    p.y = Math.max(25, Math.min(canvas.height - 25, p.y));
   }
   
   // 技能冷却
   for (let i = 0; i < p.skillCooldowns.length; i++) {
-    if (p.skillCooldowns[i] > 0) {
-      p.skillCooldowns[i] -= dt;
-    }
+    if (p.skillCooldowns[i] > 0) p.skillCooldowns[i] -= dt;
   }
   
   // MP回复
-  p.mp = Math.min(p.maxMp, p.mp + 0.02 * dt / 16);
+  p.mp = Math.min(p.maxMp, p.mp + 0.015 * dt / 16);
   
   // 怪物AI
   for (const mob of gameState.mobs) {
     const distToPlayer = distance(mob.x, mob.y, p.x, p.y);
     
-    if (distToPlayer < 200) {
-      // 追击玩家
+    if (distToPlayer < 180 && distToPlayer > CONFIG.COLLISION_RADIUS) {
+      // 追击玩家（但保持距离）
       const angle = Math.atan2(p.y - mob.y, p.x - mob.x);
-      mob.x += Math.cos(angle) * 1.5;
-      mob.y += Math.sin(angle) * 1.5;
+      const speed = mob.isBoss ? 1.8 : 1.2;
+      mob.x += Math.cos(angle) * speed;
+      mob.y += Math.sin(angle) * speed;
       
       // 攻击玩家
-      if (distToPlayer < 40 && Date.now() - mob.lastAttack > 1000) {
+      if (distToPlayer < CONFIG.COLLISION_RADIUS + 10 && Date.now() - mob.lastAttack > 1200) {
         mob.lastAttack = Date.now();
-        // 闪避判定
         if (Math.random() * 100 < p.dodge) {
-          log(`闪避了 ${mob.name} 的攻击!`);
-          gameState.damageNumbers.push({
-            text: '闪避', x: p.x, y: p.y - 30,
-            color: '#3fb950', life: 40, crit: false
-          });
+          log(`闪避了 ${mob.name}!`);
+          gameState.damageNumbers.push({ text: '闪避', x: p.x, y: p.y - 25, color: '#3fb950', life: 35, crit: false });
         } else {
           const dmg = Math.max(1, mob.atk - p.baseDef);
           p.hp -= dmg;
-          log(`${mob.name} 对你造成 ${dmg} 点伤害`, 'damage');
-          gameState.damageNumbers.push({
-            text: '-' + dmg, x: p.x, y: p.y - 30,
-            color: '#f85149', life: 40, crit: false
-          });
-          // 死亡判定
+          log(`${mob.name} 攻击你 -${dmg}`, 'damage');
+          gameState.damageNumbers.push({ text: '-' + dmg, x: p.x, y: p.y - 25, color: '#f85149', life: 35, crit: false });
           if (p.hp <= 0) {
-            log('你已死亡...自动复活中', 'damage');
-            p.hp = p.maxHp;
-            p.mp = p.maxMp;
-            p.gold = Math.floor(p.gold * 0.9); // 损失10%金币
+            log('死亡! 复活中...', 'damage');
+            p.hp = p.maxHp; p.mp = p.maxMp;
+            p.gold = Math.floor(p.gold * 0.9);
           }
         }
       }
-    } else {
+    } else if (distToPlayer >= 180) {
       // 随机游荡
       if (Math.random() < 0.02) {
-        mob.targetX = mob.x + rand(-50, 50);
-        mob.targetY = mob.y + rand(-50, 50);
+        mob.targetX = mob.x + rand(-60, 60);
+        mob.targetY = mob.y + rand(-60, 60);
       }
       const angle = Math.atan2(mob.targetY - mob.y, mob.targetX - mob.x);
-      mob.x += Math.cos(angle) * 0.5;
-      mob.y += Math.sin(angle) * 0.5;
+      mob.x += Math.cos(angle) * 0.4;
+      mob.y += Math.sin(angle) * 0.4;
     }
   }
+  
+  // 碰撞分离
+  resolveCollisions();
   
   // 鼠标攻击
   if (gameState.mouse.down && Date.now() - gameState.lastAttackTime > CONFIG.ATTACK_COOLDOWN) {
     const attackX = gameState.mouse.x;
     const attackY = gameState.mouse.y;
     
-    // 找最近的目标
-    let nearestMob = null;
-    let nearestDist = CONFIG.ATTACK_RANGE + 50;
+    // 更新面朝方向（朝向鼠标）
+    p.facing = Math.atan2(attackY - p.y, attackX - p.x);
     
+    // 找最近的目标
+    let nearestMob = null, nearestDist = CONFIG.ATTACK_RANGE + 40;
     for (const mob of gameState.mobs) {
       const dist = distance(mob.x, mob.y, p.x, p.y);
       const distToMouse = distance(mob.x, mob.y, attackX, attackY);
-      if (dist < CONFIG.ATTACK_RANGE + 30 && distToMouse < nearestDist) {
+      if (dist < CONFIG.ATTACK_RANGE + 20 && distToMouse < nearestDist) {
         nearestMob = mob;
         nearestDist = distToMouse;
       }
@@ -979,59 +877,46 @@ function update(dt) {
     
     if (nearestMob) {
       gameState.lastAttackTime = Date.now();
+      p.attackAnim = 10;  // 启动攻击动画
       
-      // 暴击判定
       const isCrit = Math.random() * 100 < p.crit;
       let dmg = Math.max(1, p.baseAtk - nearestMob.def);
       if (isCrit) dmg = Math.floor(dmg * 1.5);
       
       nearestMob.hp -= dmg;
-      
-      log(`你对 ${nearestMob.name} 造成 ${dmg}${isCrit ? ' (暴击!)' : ''} 点伤害`, isCrit ? 'damage' : '');
+      log(`→ ${nearestMob.name} -${dmg}${isCrit ? ' 暴击!' : ''}`, isCrit ? 'damage' : '');
       gameState.damageNumbers.push({
         text: (isCrit ? '暴击 ' : '') + dmg,
-        x: nearestMob.x, y: nearestMob.y - 30,
+        x: nearestMob.x, y: nearestMob.y - 25,
         color: isCrit ? '#f0f6fc' : '#ffa657',
-        life: 40, crit: isCrit
+        life: 35, crit: isCrit
       });
       
       // 攻击粒子
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 6; i++) {
         gameState.particles.push({
           x: nearestMob.x, y: nearestMob.y,
-          vx: randFloat(-2, 2), vy: randFloat(-2, 2),
-          color: '#ffa657', size: rand(2, 4),
-          life: 20, maxLife: 20
+          vx: randFloat(-2.5, 2.5), vy: randFloat(-2.5, 2.5),
+          color: isCrit ? '#f0f6fc' : '#ffa657', size: rand(2, 4),
+          life: 18, maxLife: 18
         });
       }
       
-      // 怪物死亡
       if (nearestMob.hp <= 0) {
-        log(`击杀了 ${nearestMob.name}!`, 'exp');
-        p.exp += nearestMob.exp;
-        p.gold += nearestMob.gold;
-        p.kills++;
+        log(`击杀 ${nearestMob.name}!`, 'exp');
+        p.exp += nearestMob.exp; p.gold += nearestMob.gold; p.kills++;
         
-        // 处理掉落
         const drops = processDrop(nearestMob, nearestMob.type);
-        if (drops.length > 0) {
-          showDropModal(drops);
-        }
+        if (drops.length) showDropModal(drops);
         
-        // 升级判定
         while (p.exp >= expToLevel(p.level)) {
-          p.exp -= expToLevel(p.level);
-          p.level++;
-          p.maxHp += 20;
-          p.hp = p.maxHp;
-          p.maxMp += 10;
-          p.mp = p.maxMp;
-          p.baseAtk += 2;
-          p.baseDef += 1;
-          log(`🎉 升级! 达到 Lv.${p.level}`, 'level');
+          p.exp -= expToLevel(p.level); p.level++;
+          p.maxHp += 20; p.hp = p.maxHp;
+          p.maxMp += 10; p.mp = p.maxMp;
+          p.baseAtk += 2; p.baseDef += 1;
+          log(`🎉 升级 Lv.${p.level}!`, 'level');
         }
         
-        // 移除怪物
         gameState.mobs = gameState.mobs.filter(m => m.id !== nearestMob.id);
       }
     }
@@ -1045,167 +930,118 @@ let pendingDrops = [];
 
 function showDropModal(drops) {
   pendingDrops = pendingDrops.concat(drops);
-  
   const modal = document.getElementById('drop-modal');
   const itemsDiv = document.getElementById('drop-items');
   itemsDiv.innerHTML = '';
-  
   for (const drop of drops) {
     const div = document.createElement('div');
     div.className = 'drop-item';
-    if (drop.type === 'gold') {
-      div.innerHTML = `<span style="color:#ffa657">💰 ${drop.amount} 金币</span>`;
-    } else if (drop.type === 'item') {
-      div.innerHTML = `<span>${drop.icon} ${drop.name}</span>`;
-    } else if (drop.quality !== undefined) {
-      div.innerHTML = `<span style="color:${QUALITIES[drop.quality].color}">${drop.icon} ${QUALITIES[drop.quality].name} ${drop.name}</span>`;
-    }
+    if (drop.type === 'gold') div.innerHTML = `<span style="color:#ffa657">💰 ${drop.amount} 金币</span>`;
+    else if (drop.type === 'item') div.innerHTML = `<span>${drop.icon} ${drop.name}</span>`;
+    else if (drop.quality !== undefined) div.innerHTML = `<span style="color:${QUALITIES[drop.quality].color}">${drop.icon} ${QUALITIES[drop.quality].name} ${drop.name}</span>`;
     itemsDiv.appendChild(div);
   }
-  
   modal.classList.add('show');
 }
 
 function closeDropModal() {
-  const modal = document.getElementById('drop-modal');
-  modal.classList.remove('show');
-  
-  // 处理掉落物品
+  document.getElementById('drop-modal').classList.remove('show');
   for (const drop of pendingDrops) {
-    if (drop.type === 'gold') {
-      gameState.player.gold += drop.amount;
-    } else if (drop.type === 'item') {
-      addToInventory(drop);
-    } else {
-      addToInventory(drop);
-    }
+    if (drop.type === 'gold') gameState.player.gold += drop.amount;
+    else addToInventory(drop);
   }
   pendingDrops = [];
   updateUI();
 }
 
 function addToInventory(item) {
-  // 检查是否可堆叠且已存在
   if (item.stackable) {
     const existing = gameState.player.inventory.find(i => i && i.id === item.id);
-    if (existing) {
-      existing.count++;
-      return true;
-    }
+    if (existing) { existing.count++; return true; }
   }
-  
-  // 找空位
   const emptyIndex = gameState.player.inventory.findIndex(i => !i);
   if (emptyIndex !== -1) {
     gameState.player.inventory[emptyIndex] = { ...item, count: 1 };
     return true;
   }
-  
-  log('背包已满!', 'damage');
+  log('背包满!', 'damage');
   return false;
 }
 
 // ==================== 技能系统 ====================
 function useSkill(index) {
   const p = gameState.player;
-  if (p.skillCooldowns[index] > 0) {
-    log('技能冷却中...');
-    return;
-  }
+  if (p.skillCooldowns[index] > 0) { log('冷却中'); return; }
   
   const skills = [
     { name: '剑气', mp: 10, cd: 3000, damage: 30, range: 150 },
-    { name: '雷法', mp: 20, cd: 5000, damage: 60, range: 200, aoe: true },
+    { name: '雷法', mp: 20, cd: 5000, damage: 60, range: 180, aoe: true },
     { name: '护盾', mp: 15, cd: 8000, heal: 50 },
     { name: '瞬移', mp: 25, cd: 6000, teleport: true },
   ];
   
   const skill = skills[index];
-  if (p.mp < skill.mp) {
-    log('法力不足!');
-    return;
-  }
+  if (p.mp < skill.mp) { log('法力不足'); return; }
   
   p.mp -= skill.mp;
   p.skillCooldowns[index] = skill.cd;
+  p.attackAnim = 8;  // 播放攻击动画
   
   if (skill.damage) {
-    // 找范围内的敌人
     for (const mob of gameState.mobs) {
       const dist = distance(mob.x, mob.y, p.x, p.y);
       if (dist < skill.range) {
         const dmg = skill.damage + p.baseAtk;
         mob.hp -= dmg;
-        log(`${skill.name} 对 ${mob.name} 造成 ${dmg} 点伤害`, 'damage');
-        gameState.damageNumbers.push({
-          text: dmg, x: mob.x, y: mob.y - 30,
-          color: '#a371f7', life: 40, crit: false
-        });
-        
-        if (!skill.aoe) break; // 非AOE只打一个
+        log(`${skill.name} → ${mob.name} -${dmg}`, 'damage');
+        gameState.damageNumbers.push({ text: dmg, x: mob.x, y: mob.y - 25, color: '#a371f7', life: 35, crit: false });
+        if (!skill.aoe) break;
       }
     }
   }
   
   if (skill.heal) {
     p.hp = Math.min(p.maxHp, p.hp + skill.heal);
-    log(`${skill.name} 恢复了 ${skill.heal} 点生命`, 'heal');
-    gameState.damageNumbers.push({
-      text: '+' + skill.heal, x: p.x, y: p.y - 30,
-      color: '#3fb950', life: 40, crit: false
-    });
+    log(`${skill.name} +${skill.heal} HP`, 'heal');
+    gameState.damageNumbers.push({ text: '+' + skill.heal, x: p.x, y: p.y - 25, color: '#3fb950', life: 35, crit: false });
   }
   
   if (skill.teleport) {
-    // 瞬移到鼠标位置
-    const targetX = gameState.mouse.x;
-    const targetY = gameState.mouse.y;
-    const dist = distance(targetX, targetY, p.x, p.y);
+    const dist = distance(gameState.mouse.x, gameState.mouse.y, p.x, p.y);
     if (dist < 200) {
-      p.x = targetX;
-      p.y = targetY;
-      log('瞬移成功!');
+      p.x = gameState.mouse.x;
+      p.y = gameState.mouse.y;
+      log('瞬移!');
     } else {
-      log('距离过远,瞬移失败');
-      p.mp += skill.mp; // 退还MP
+      log('距离太远');
+      p.mp += skill.mp;
       p.skillCooldowns[index] = 0;
     }
   }
-  
-  log(`使用技能: ${skill.name}`);
 }
 
 // ==================== 存档系统 ====================
 function saveGame() {
-  const saveData = JSON.stringify(gameState);
-  localStorage.setItem('xiantu_save', saveData);
-  log('游戏已存档');
+  localStorage.setItem('xiantu_save', JSON.stringify(gameState));
+  log('已存档');
 }
 
 function loadGame() {
-  const saveData = localStorage.getItem('xiantu_save');
-  if (saveData) {
-    gameState = JSON.parse(saveData);
-    log('读取存档成功');
+  const data = localStorage.getItem('xiantu_save');
+  if (data) {
+    gameState = JSON.parse(data);
+    log('读档成功');
     updateUI();
-  } else {
-    log('没有找到存档');
-  }
+  } else log('无存档');
 }
 
 // ==================== 事件监听 ====================
 document.addEventListener('keydown', e => {
   gameState.keys[e.key] = true;
-  
-  // 技能快捷键
-  if (e.key >= '1' && e.key <= '4') {
-    useSkill(parseInt(e.key) - 1);
-  }
+  if (e.key >= '1' && e.key <= '4') useSkill(parseInt(e.key) - 1);
 });
 
-document.addEventListener('keyup', e => {
-  gameState.keys[e.key] = false;
-});
+document.addEventListener('keyup', e => { gameState.keys[e.key] = false; });
 
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
@@ -1213,26 +1049,19 @@ canvas.addEventListener('mousemove', e => {
   gameState.mouse.y = e.clientY - rect.top;
 });
 
-canvas.addEventListener('mousedown', e => {
-  gameState.mouse.down = true;
-});
-
-canvas.addEventListener('mouseup', e => {
-  gameState.mouse.down = false;
-});
-
+canvas.addEventListener('mousedown', e => { gameState.mouse.down = true; });
+canvas.addEventListener('mouseup', e => { gameState.mouse.down = false; });
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 document.getElementById('btn-pause').addEventListener('click', () => {
   gameState.paused = !gameState.paused;
   document.getElementById('btn-pause').textContent = gameState.paused ? '▶️' : '⏸️';
-  log(gameState.paused ? '游戏暂停' : '游戏继续');
+  log(gameState.paused ? '暂停' : '继续');
 });
 
 document.getElementById('btn-save').addEventListener('click', saveGame);
 document.getElementById('btn-load').addEventListener('click', loadGame);
 
-// 背包点击使用物品
 document.getElementById('inventory-grid').addEventListener('click', e => {
   if (!e.target.classList.contains('inv-slot')) return;
   const index = Array.from(e.target.parentElement.children).indexOf(e.target);
@@ -1240,26 +1069,17 @@ document.getElementById('inventory-grid').addEventListener('click', e => {
   if (!item) return;
   
   if (item.effect) {
-    // 消耗品
-    if (item.effect.hp) {
-      gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + item.effect.hp);
-      log(`使用 ${item.name} 恢复 ${item.effect.hp} HP`, 'heal');
-    }
-    if (item.effect.mp) {
-      gameState.player.mp = Math.min(gameState.player.maxMp, gameState.player.mp + item.effect.mp);
-      log(`使用 ${item.name} 恢复 ${item.effect.mp} MP`, 'heal');
-    }
+    if (item.effect.hp) gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + item.effect.hp);
+    if (item.effect.mp) gameState.player.mp = Math.min(gameState.player.maxMp, gameState.player.mp + item.effect.mp);
+    log(`使用 ${item.name}`);
     item.count--;
-    if (item.count <= 0) {
-      gameState.player.inventory[index] = null;
-    }
+    if (item.count <= 0) gameState.player.inventory[index] = null;
   } else if (item.type) {
-    // 装备 - 装备到对应槽位
     const slot = item.type;
-    const oldEquip = gameState.player.equipment[slot];
+    const old = gameState.player.equipment[slot];
     gameState.player.equipment[slot] = item;
-    gameState.player.inventory[index] = oldEquip;
-    log(`装备了 ${item.name}`);
+    gameState.player.inventory[index] = old;
+    log(`装备 ${item.name}`);
   }
   updateUI();
 });
@@ -1269,21 +1089,16 @@ let lastTime = 0;
 function gameLoop(timestamp) {
   const dt = timestamp - lastTime;
   lastTime = timestamp;
-  
   update(dt);
   render();
-  
   requestAnimationFrame(gameLoop);
 }
 
-// 定期生成怪物
-setInterval(spawnMob, 3000);
+setInterval(spawnMob, 3500);
 
-// 初始化
 updateUI();
 log('欢迎来到仙途!');
-log('WASD移动,鼠标点击攻击,数字键1-4释放技能');
-log('点击背包中的物品使用或装备');
+log('WASD移动 | 鼠标攻击 | 1-4技能');
 requestAnimationFrame(gameLoop);
 </script>
 </body>
