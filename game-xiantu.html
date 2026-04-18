@@ -319,6 +319,7 @@ body {
       
       <div class="stat-row">
         <span>经验</span>
+        <div id="realm-text" style="color:#9ca3af;font-size:12px;margin-bottom:6px;"></div>
         <span id="exp-text">0/100</span>
       </div>
       <div class="stat-bar"><div class="stat-fill exp-fill" id="exp-bar" style="width:0%"></div></div>
@@ -751,7 +752,7 @@ function updateUI() {
   
   // 角色信息
   document.getElementById('player-name').textContent = p.name;
-  document.getElementById('player-realm').textContent = `${realm.name}境 Lv.${p.level}`;
+  document.getElementById('player-realm').textContent = `${realm.name}${p.level - realm.minLv + 1}层 / Lv.${p.level}`;
   
   // 血条
   document.getElementById('hp-text').textContent = `${Math.floor(p.hp)}/${p.maxHp}`;
