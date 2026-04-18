@@ -763,6 +763,44 @@ function updateUI() {
   const expNeeded = expToLevel(p.level);
   document.getElementById('exp-text').textContent = `${p.exp}/${expNeeded}`;
   document.getElementById('exp-bar').style.width = `${(p.exp / expNeeded) * 100}%`;
+  // ========== 境界进度条 ==========
+  const realm2 = getRealm(gameState.player.level);
+  const innerLv2 = p.level - realm2.minLv + 1;
+  const maxInner2 = realm2.maxLv - realm2.minLv + 1;
+  const realmPct = (innerLv2 / maxInner2) * 100;
+  // 添加或更新境界进度条
+  let realmBarEl = document.getElementById('realm-bar');
+  if (!realmBarEl) {
+    const expBar = document.getElementById('exp-bar');
+    const parent = expBar ? expBar.parentElement : null;
+    if (parent) {
+      realmBarEl = document.createElement('div');
+      realmBarEl.id = 'realm-bar';
+      realmBarEl.style.cssText = 'height:6px;background:#1f2937;border-radius:3px;margin-top:4px;';
+      const fill = document.createElement('div');
+      fill.id = 'realm-bar-fill';
+      fill.style.cssText = 'height:100%;border-radius:3px;transition:width 0.3s;';
+      realmBarEl.appendChild(fill);
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'margin-top:8px;';
+      wrapper.appendChild(realmBarEl);
+      const expText = document.getElementById('exp-text');
+      if (expText && expText.parentElement) {
+        expText.parentElement.appendChild(wrapper);
+      }
+    }
+  }
+  const realmFill = document.getElementById('realm-bar-fill');
+  if (realmFill) {
+    realmFill.style.width = realmPct + '%';
+    realmFill.style.background = realm2.color;
+  }
+  const realmTextEl = document.getElementById('realm-text');
+  if (realmTextEl) {
+    realmTextEl.textContent = realm2.name + innerLv2 + '层 (' + innerLv2 + '/' + maxInner2 + ')';
+    realmTextEl.style.color = realm2.color;
+  }
+
   
   // 属性 (基础 + 装备)
   let totalAtk = p.baseAtk;
