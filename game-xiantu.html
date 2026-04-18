@@ -436,55 +436,144 @@ const AFFIXES = [
 
 // 怪物定义
 const MONSTERS = {
-  // 幽冥洞 (Lv 1-10)
-  bat: { 
-    name: '幽冥蝠', icon: '🦇', hp: 30, atk: 5, def: 2, exp: 15, gold: 5,
+  // 凡人 (Lv 1-10) - 野鸡/山贼/小妖
+  chicken: {
+    name: '野鸡', icon: '🐔', hp: 25, atk: 4, def: 1, exp: 12, gold: 4,
     dropTable: [
-      { type: 'gold', min: 3, max: 8, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.15 },
-      { type: 'equip', qualityRange: [0, 1], levelRange: [1, 5], rate: 0.02 },
+      { type: 'gold', min: 3, max: 10, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.25 },
+      { type: 'equip', qualityRange: [0, 0], levelRange: [1, 5], rate: 0.20 },
+      { type: 'equip', qualityRange: [0, 1], levelRange: [1, 8], rate: 0.12 },
     ],
-    guarantee: { kills: 50, reward: { type: 'equip', quality: 1, level: 3 } }
+    guarantee: { kills: 5, reward: { type: 'equip', quality: 0, level: 5 } }
   },
-  ghost: {
-    name: '游魂', icon: '👻', hp: 45, atk: 8, def: 3, exp: 25, gold: 10,
+  bandit: {
+    name: '山贼', icon: '💀', hp: 40, atk: 7, def: 2, exp: 20, gold: 8,
     dropTable: [
       { type: 'gold', min: 5, max: 15, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.2 },
-      { type: 'item', id: 'mp_potion', rate: 0.1 },
-      { type: 'equip', qualityRange: [0, 1], levelRange: [1, 8], rate: 0.03 },
+      { type: 'item', id: 'hp_potion', rate: 0.30 },
+      { type: 'item', id: 'mp_potion', rate: 0.10 },
+      { type: 'equip', qualityRange: [0, 1], levelRange: [1, 8], rate: 0.18 },
     ],
-    guarantee: { kills: 40, reward: { type: 'equip', quality: 1, level: 5 } }
+    guarantee: { kills: 4, reward: { type: 'equip', quality: 1, level: 8 } }
   },
-  // 血魔窟 (Lv 11-25)
-  bloodBat: {
-    name: '血蝠', icon: '🩸', hp: 120, atk: 25, def: 10, exp: 80, gold: 35,
+  goblin: {
+    name: '小妖', icon: '👺', hp: 55, atk: 10, def: 3, exp: 28, gold: 12,
     dropTable: [
-      { type: 'gold', min: 20, max: 50, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.25 },
-      { type: 'equip', qualityRange: [1, 2], levelRange: [8, 15], rate: 0.04 },
+      { type: 'gold', min: 8, max: 20, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.35 },
+      { type: 'equip', qualityRange: [0, 1], levelRange: [3, 10], rate: 0.22 },
     ],
-    guarantee: { kills: 30, reward: { type: 'equip', quality: 2, level: 12 } }
+    guarantee: { kills: 3, reward: { type: 'equip', quality: 1, level: 10 } }
   },
-  skeleton: {
-    name: '骷髅战士', icon: '💀', hp: 180, atk: 35, def: 15, exp: 120, gold: 50,
+  // 炼体 (Lv 11-20) - 妖兽/邪修
+  wildBeast: {
+    name: '妖兽', icon: '🐺', hp: 100, atk: 18, def: 8, exp: 60, gold: 25,
     dropTable: [
-      { type: 'gold', min: 30, max: 80, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.3 },
-      { type: 'equip', qualityRange: [1, 2], levelRange: [10, 20], rate: 0.05 },
+      { type: 'gold', min: 15, max: 35, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.40 },
+      { type: 'item', id: 'mp_potion', rate: 0.15 },
+      { type: 'equip', qualityRange: [1, 1], levelRange: [11, 18], rate: 0.28 },
+      { type: 'equip', qualityRange: [1, 2], levelRange: [11, 20], rate: 0.15 },
     ],
-    guarantee: { kills: 25, reward: { type: 'equip', quality: 2, level: 15 } }
+    guarantee: { kills: 3, reward: { type: 'equip', quality: 2, level: 18 } }
   },
-  // BOSS
-  boss_ghost: {
-    name: '幽冥王', icon: '👿', hp: 500, atk: 40, def: 20, exp: 500, gold: 200,
-    isBoss: true,
+  evilCultivator: {
+    name: '邪修', icon: '🧙', hp: 130, atk: 22, def: 10, exp: 75, gold: 32,
+    dropTable: [
+      { type: 'gold', min: 20, max: 45, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.45 },
+      { type: 'item', id: 'mp_potion', rate: 0.20 },
+      { type: 'equip', qualityRange: [1, 2], levelRange: [12, 20], rate: 0.30 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 2, level: 20 } }
+  },
+  // 筑基 (Lv 21-30)
+  ghost: {
+    name: '怨灵', icon: '👻', hp: 180, atk: 30, def: 14, exp: 110, gold: 48,
+    dropTable: [
+      { type: 'gold', min: 30, max: 60, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.50 },
+      { type: 'item', id: 'mp_potion', rate: 0.25 },
+      { type: 'equip', qualityRange: [1, 2], levelRange: [18, 28], rate: 0.30 },
+      { type: 'equip', qualityRange: [2, 3], levelRange: [21, 30], rate: 0.12 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 3, level: 28 } }
+  },
+  skeletonWarrior: {
+    name: '骷髅战士', icon: '💀', hp: 220, atk: 36, def: 16, exp: 135, gold: 58,
+    dropTable: [
+      { type: 'gold', min: 35, max: 75, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.50 },
+      { type: 'equip', qualityRange: [2, 3], levelRange: [21, 30], rate: 0.28 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 3, level: 30 } }
+  },
+  // 金丹 (Lv 31-40)
+  fireDemon: {
+    name: '火魔', icon: '🔥', hp: 320, atk: 48, def: 22, exp: 200, gold: 85,
+    dropTable: [
+      { type: 'gold', min: 50, max: 100, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.55 },
+      { type: 'item', id: 'mp_potion', rate: 0.30 },
+      { type: 'equip', qualityRange: [2, 3], levelRange: [28, 38], rate: 0.30 },
+      { type: 'equip', qualityRange: [3, 4], levelRange: [31, 40], rate: 0.15 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 4, level: 38 } }
+  },
+  iceWraith: {
+    name: '冰魄', icon: '❄️', hp: 380, atk: 55, def: 26, exp: 240, gold: 100,
+    dropTable: [
+      { type: 'gold', min: 60, max: 120, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.60 },
+      { type: 'item', id: 'mp_potion', rate: 0.35 },
+      { type: 'equip', qualityRange: [3, 4], levelRange: [31, 40], rate: 0.32 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 4, level: 40 } }
+  },
+  // 元婴 (Lv 41-50)
+  dragon: {
+    name: '妖龙', icon: '🐉', hp: 550, atk: 70, def: 35, exp: 380, gold: 160,
+    dropTable: [
+      { type: 'gold', min: 80, max: 160, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.65 },
+      { type: 'item', id: 'mp_potion', rate: 0.40 },
+      { type: 'equip', qualityRange: [3, 4], levelRange: [38, 48], rate: 0.35 },
+      { type: 'equip', qualityRange: [4, 5], levelRange: [41, 50], rate: 0.18 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 5, level: 48 } }
+  },
+  celestial: {
+    name: '天兵', icon: '⚔️', hp: 650, atk: 80, def: 40, exp: 450, gold: 190,
+    dropTable: [
+      { type: 'gold', min: 100, max: 200, rate: 1.0 },
+      { type: 'item', id: 'hp_potion', rate: 0.70 },
+      { type: 'item', id: 'mp_potion', rate: 0.45 },
+      { type: 'equip', qualityRange: [4, 5], levelRange: [41, 50], rate: 0.38 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 5, level: 50 } }
+  },
+  // 化神 (Lv 51-60)
+  immortal: {
+    name: '散仙', icon: '✨', hp: 900, atk: 100, def: 55, exp: 650, gold: 280,
     dropTable: [
       { type: 'gold', min: 150, max: 300, rate: 1.0 },
-      { type: 'equip', qualityRange: [2, 3], levelRange: [10, 15], rate: 0.5 },
-      { type: 'equip', qualityRange: [3, 4], levelRange: [15, 20], rate: 0.15 },
+      { type: 'item', id: 'hp_potion', rate: 0.75 },
+      { type: 'item', id: 'mp_potion', rate: 0.50 },
+      { type: 'equip', qualityRange: [4, 5], levelRange: [48, 58], rate: 0.40 },
+      { type: 'equip', qualityRange: [5, 5], levelRange: [51, 60], rate: 0.25 },
     ],
-    guarantee: { kills: 1, reward: { type: 'equip', quality: 3, level: 15 } }
+    guarantee: { kills: 1, reward: { type: 'equip', quality: 5, level: 58 } }
+  },
+  demonLord: {
+    name: '魔尊', icon: '👹', hp: 1200, atk: 120, def: 65, exp: 900, gold: 400,
+    isBoss: true,
+    dropTable: [
+      { type: 'gold', min: 200, max: 500, rate: 1.0 },
+      { type: 'equip', qualityRange: [4, 5], levelRange: [48, 60], rate: 0.60 },
+      { type: 'equip', qualityRange: [5, 5], levelRange: [51, 60], rate: 0.35 },
+    ],
+    guarantee: { kills: 2, reward: { type: 'equip', quality: 5, level: 60 } }
   },
 };
 
@@ -541,38 +630,46 @@ function distance(x1, y1, x2, y2) {
 
 function getRealm(level) {
   for (let i = REALMS.length - 1; i >= 0; i--) {
-    if (level >= REALMS[i].minLv && level <= REALMS[i].maxLv) {
-      return { ...REALMS[i], index: i };
-    }
+    if (level >= REALMS[i].minLv) return REALMS[i];
+  }
+  return REALMS[0];
+}
+
+// 获得境界名称+层数显示
+function getRealmName(level) {
+  const r = getRealm(level);
+  const innerLv = level - r.minLv + 1;
+  const maxInner = r.maxLv - r.minLv + 1;
+  return r.name + innerLv + '层 / ' + maxInner;
+}
+
+// 境界突破检查
+function checkRealmBreakthrough(oldLevel, newLevel) {
+  const oldRealm = getRealm(oldLevel);
+  const newRealm = getRealm(newLevel);
+  if (newRealm.name !== oldRealm.name) {
+    log('【突破】境界提升至：' + newRealm.name + '！', 'level');
+    saveGame(true);
+  }
+}
   }
   return REALMS[0];
 }
 
 function expToLevel(level) {
-  return Math.floor(100 * Math.pow(1.15, level - 1));
-}
-
-// ==================== 装备生成 ====================
-function generateEquip(type, qualityIndex, level) {
-  const quality = QUALITIES[qualityIndex];
-  const equipType = EQUIP_TYPES[type];
-  const nameIndex = Math.min(Math.floor(level / 15), EQUIP_NAMES[type].length - 1);
-  
-  const baseAtk = Math.floor(equipType.baseAtk * quality.mult * (1 + level * 0.1));
-  const baseDef = Math.floor(equipType.baseDef * quality.mult * (1 + level * 0.1));
-  
-  // 随机词条 (品质越高词条越多)
-  const affixCount = Math.min(qualityIndex, 3);
-  const affixes = [];
-  const usedStats = new Set();
-  
-  for (let i = 0; i < affixCount; i++) {
-    const availableAffixes = AFFIXES.filter(a => !usedStats.has(a.stat));
-    if (availableAffixes.length === 0) break;
-    const affix = availableAffixes[rand(0, availableAffixes.length - 1)];
-    usedStats.add(affix.stat);
-    const value = rand(affix.min, affix.max) * (qualityIndex + 1);
-    affixes.push({ name: affix.name, stat: affix.stat, value });
+  // 凡人1-10: 50-200
+  if (level <= 10) return 50 + level * 15;
+  // 炼体11-20: 350-750
+  if (level <= 20) return 350 + (level - 10) * 40;
+  // 筑基21-30: 1150-2000
+  if (level <= 30) return 1150 + (level - 20) * 85;
+  // 金丹31-40: 2200-3800
+  if (level <= 40) return 2200 + (level - 30) * 160;
+  // 元婴41-50: 4200-7000
+  if (level <= 50) return 4200 + (level - 40) * 280;
+  // 化神51-60: 7600+
+  return 7600 + (level - 50) * 500;
+});
   }
   
   return {
@@ -923,39 +1020,42 @@ function render() {
 
 // ==================== 游戏逻辑 ====================
 function spawnMob() {
-  if (gameState.mobs.length >= 10) return;
-  
-  const mobTypes = Object.keys(MONSTERS).filter(m => !MONSTERS[m].isBoss);
-  const type = mobTypes[rand(0, mobTypes.length - 1)];
-  const mobData = MONSTERS[type];
-  
-  // 在玩家周围生成，但不要太近
-  let x, y;
-  do {
-    const angle = Math.random() * Math.PI * 2;
-    const dist = rand(200, 400);
-    x = gameState.player.x + Math.cos(angle) * dist;
-    y = gameState.player.y + Math.sin(angle) * dist;
-  } while (x < 50 || x > canvas.width - 50 || y < 50 || y > canvas.height - 50);
-  
-  gameState.mobs.push({
-    id: Date.now() + Math.random(),
-    type,
-    name: mobData.name,
-    icon: mobData.icon,
-    x,
-    y,
-    hp: mobData.hp,
-    maxHp: mobData.hp,
-    atk: mobData.atk,
-    def: mobData.def,
-    exp: mobData.exp,
-    gold: mobData.gold,
-    isBoss: mobData.isBoss || false,
-    lastAttack: 0,
-    targetX: x,
-    targetY: y,
+  // 根据玩家等级动态选择怪物区间
+  const lv = gameState.player.level;
+  const allTypes = Object.keys(MONSTERS);
+  // 选择与玩家等级匹配的怪物
+  const matching = allTypes.filter(t => {
+    const m = MONSTERS[t];
+    const minL = m.dropTable.find(d => d.type === 'equip');
+    return minL && minL.levelRange && m.dropTable.some(d => d.type === 'equip' && lv >= d.levelRange[0] - 3 && lv <= d.levelRange[1] + 5);
   });
+  // 回退：根据等级取附近的怪物
+  let candidates = matching.length > 0 ? matching : allTypes;
+  // 优先选当前等级段的怪物
+  const levelFiltered = candidates.filter(t => {
+    const m = MONSTERS[t];
+    return m.dropTable.some(d => d.type === 'equip' && d.levelRange && lv >= d.levelRange[0] - 2 && lv <= d.levelRange[1] + 3);
+  });
+  if (levelFiltered.length > 0) candidates = levelFiltered;
+  // 随机选一个
+  const type = candidates[rand(0, candidates.length - 1)];
+  const mob = { ...MONSTERS[type], type, x: 0, y: 0, id: Date.now() + Math.random(), targetX: 0, targetY: 0 };
+  // 缩放属性
+  const scale = 1 + (lv - 1) * 0.08;
+  mob.hp = Math.floor(mob.hp * scale);
+  mob.maxHp = mob.hp;
+  mob.atk = Math.floor(mob.atk * scale);
+  mob.def = Math.floor(mob.def * scale);
+  mob.exp = Math.floor(mob.exp * scale);
+  // 随机出生位置
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 150 + Math.random() * 250;
+  mob.x = canvas.width / 2 + Math.cos(angle) * dist;
+  mob.y = canvas.height / 2 + Math.sin(angle) * dist;
+  mob.targetX = mob.x;
+  mob.targetY = mob.y;
+  gameState.mobs.push(mob);
+});
 }
 
 function resolveCollisions(){
@@ -1152,21 +1252,23 @@ function showDropModal(drops) {
   
   for (const drop of drops) {
     const div = document.createElement('div');
-    div.className = 'drop-item';
+    const q = QUALITIES[drop.quality] || { color: '#9ca3af' };
+    div.style.cssText = 'padding:6px 10px;background:#161b22;border-radius:6px;margin:4px 0;display:flex;align-items:center;gap:10px;border-left:3px solid ' + q.color + ';';
+    
     if (drop.type === 'gold') {
-      div.innerHTML = `<span style="color:#ffa657">💰 ${drop.amount} 金币</span>`;
+      div.innerHTML = '<span style="font-size:22px">💰</span><span style="color:#fbbf24">金币 +' + drop.amount + '</span>';
     } else if (drop.type === 'item') {
-      div.innerHTML = `<span>${drop.icon} ${drop.name}</span>`;
-    } else if (drop.quality !== undefined) {
-      div.innerHTML = `<span style="color:${QUALITIES[drop.quality].color}">${drop.icon} ${QUALITIES[drop.quality].name} ${drop.name}</span>`;
+      div.innerHTML = '<span style="font-size:22px">' + (drop.icon || '?') + '</span><span style="color:#86efac">' + (drop.name || '药剂') + '</span>';
+    } else {
+      const qualName = q.name || '?';
+      const statsStr = (drop.atk ? ' 攻击+' + drop.atk : '') + (drop.def ? ' 防御+' + drop.def : '');
+      div.innerHTML = '<span style="font-size:22px">' + (drop.icon || '?') + '</span><span style="color:' + q.color + '">' + drop.name + ' [' + qualName + ']</span><span style="color:#9ca3af;font-size:11px">Lv.' + drop.level + statsStr + '</span>';
     }
     itemsDiv.appendChild(div);
   }
   
   modal.classList.add('show');
-}
-
-function closeDropModal() {
+}function closeDropModal() {
   const modal = document.getElementById('drop-modal');
   modal.classList.remove('show');
   
@@ -1279,19 +1381,12 @@ function useSkill(index) {
 }
 
 // ==================== 存档系统 ====================
-function saveGame() {
-  const saveData = JSON.stringify(gameState);
-  localStorage.setItem('xiantu_save', saveData);
-  log('游戏已存档');
-}
-
-function loadGame() {
-  const saveData = localStorage.getItem('xiantu_save');
-  if (saveData) {
-    gameState = JSON.parse(saveData);
-    log('读取存档成功');
-    updateUI();
-  } else {
+function saveGame(showMsg) {
+  const data = JSON.stringify({ player: gameState.player, version: 1 });
+  localStorage.setItem('xiantu_save', data);
+  gameState.player.lastSave = Date.now();
+  if (showMsg) log('游戏已自动保存', 'info');
+} else {
     log('没有找到存档');
   }
 }
