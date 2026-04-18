@@ -762,8 +762,69 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
+// 装饰物系统
+const decorations = {mountains:[],trees:[],rivers:[],farms:[],grass:[]};
+function rebuildDecorations(){
+  const w=canvas.width,h=canvas.height;
+  decorations.mountains=[];decorations.trees=[];decorations.rivers=[];decorations.farms=[];decorations.grass=[];
+  for(let i=0;i<5;i++) decorations.mountains.push({x:Math.random()*(w-100)+50,y:Math.random()*(h-200)+50,w:60+Math.random()*60,h:80+Math.random()*70});
+  for(let i=0;i<10;i++) decorations.trees.push({x:Math.random()*(w-60)+30,y:Math.random()*(h-100)+30,size:20+Math.random()*30});
+  decorations.rivers.push({x:w*0.3+Math.random()*w*0.4,y:h*0.3+Math.random()*h*0.4,rx:80+Math.random()*70,ry:25+Math.random()*35});
+  for(let i=0;i<4;i++) decorations.farms.push({x:Math.random()*(w-160)+40,y:Math.random()*(h-100)+40,w:70+Math.random()*50,h:45+Math.random()*35});
+  for(let i=0;i<15;i++) decorations.grass.push({x:Math.random()*(w-40)+20,y:Math.random()*(h-40)+20,size:8+Math.random()*10});
+}
+function drawDecorations(){
+  // 山
+  for(const m of decorations.mountains){
+    ctx.fillStyle='#2d333b';
+    ctx.beginPath();
+    ctx.moveTo(m.x,m.y+m.h);
+    ctx.lineTo(m.x-m.w/2,m.y+m.h);
+    ctx.lineTo(m.x,m.y);
+    ctx.lineTo(m.x+m.w/2,m.y+m.h);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // 树
+  for(const t of decorations.trees){
+    ctx.fillStyle='#3d2f1f';
+    ctx.fillRect(t.x-3,t.y,6,t.size);
+    ctx.fillStyle='#238636';
+    ctx.beginPath();
+    ctx.arc(t.x,t.y-t.size*0.3,t.size*0.7,0,Math.PI*2);
+    ctx.fill();
+  }
+  // 河
+  for(const r of decorations.rivers){
+    ctx.fillStyle='#1f6feb';
+    ctx.beginPath();
+    ctx.ellipse(r.x,r.y,r.rx,r.ry,0,0,Math.PI*2);
+    ctx.fill();
+  }
+  // 田
+  for(const f of decorations.farms){
+    ctx.fillStyle='#3d2f1f';
+    ctx.fillRect(f.x,f.y,f.w,f.h);
+    ctx.strokeStyle='#5d4f3f';
+    ctx.lineWidth=1;
+    for(let i=1;i<4;i++){
+      ctx.beginPath();
+      ctx.moveTo(f.x+i*f.w/4,f.y);
+      ctx.lineTo(f.x+i*f.w/4,f.y+f.h);
+      ctx.stroke();
+    }
+  }
+  // 草
+  for(const g of decorations.grass){
+    ctx.fillStyle='rgba(46,160,67,0.35)';
+    ctx.beginPath();
+    ctx.arc(g.x,g.y,g.size,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
 function render() {\n  drawDecorations();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);\n  drawDecorations();
   
   // 绘制网格背景
   ctx.strokeStyle = '#21262d';
