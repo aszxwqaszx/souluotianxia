@@ -1,3 +1,19 @@
+
+function loadGame() {
+  const raw = localStorage.getItem('xiantu_save');
+  if (!raw) { log('无存档，重新开始', 'info'); return; }
+  try {
+    const data = JSON.parse(raw);
+    if (data.player) {
+      gameState.player = { ...gameState.player, ...data.player };
+      gameState.player.hp = gameState.player.maxHp;
+      gameState.player.mp = gameState.player.maxMp;
+      gameState.mobs = [];
+      updateUI();
+      log('存档已加载 Lv.' + gameState.player.level + ' ' + getRealm(gameState.player.level).name, 'info');
+    }
+  } catch(e) { log('存档读取失败', 'damage'); }
+}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -386,23 +402,22 @@ const CONFIG = {
 // ==================== 数据定义 ====================
 // 境界系统
 const REALMS = [
-  { name: '凡人', minLv: 1, maxLv: 10, hpBonus: 0, atkBonus: 0 },
-  { name: '筑基', minLv: 11, maxLv: 25, hpBonus: 50, atkBonus: 5 },
-  { name: '金丹', minLv: 26, maxLv: 40, hpBonus: 150, atkBonus: 15 },
-  { name: '元婴', minLv: 41, maxLv: 55, hpBonus: 400, atkBonus: 35 },
-  { name: '化神', minLv: 56, maxLv: 70, hpBonus: 900, atkBonus: 70 },
-  { name: '大乘', minLv: 71, maxLv: 85, hpBonus: 1800, atkBonus: 130 },
-  { name: '渡劫', minLv: 86, maxLv: 100, hpBonus: 3500, atkBonus: 250 },
+  { name: '凡人', minLv: 1, maxLv: 10, hpBonus: 0, atkBonus: 0, defBonus: 0, color: '#9ca3af', bgColor: '#1f2937' },
+  { name: '炼体', minLv: 11, maxLv: 20, hpBonus: 50, atkBonus: 10, defBonus: 5, color: '#86efac', bgColor: '#14532d' },
+  { name: '筑基', minLv: 21, maxLv: 30, hpBonus: 150, atkBonus: 30, defBonus: 15, color: '#60a5fa', bgColor: '#1e3a8a' },
+  { name: '金丹', minLv: 31, maxLv: 40, hpBonus: 300, atkBonus: 60, defBonus: 30, color: '#c084fc', bgColor: '#4c1d95' },
+  { name: '元婴', minLv: 41, maxLv: 50, hpBonus: 500, atkBonus: 100, defBonus: 50, color: '#fbbf24', bgColor: '#78350f' },
+  { name: '化神', minLv: 51, maxLv: 60, hpBonus: 800, atkBonus: 150, defBonus: 80, color: '#f87171', bgColor: '#7f1d1d' },
 ];
 
 // 装备品质
 const QUALITIES = [
-  { name: '普通', color: '#8b949e', mult: 1, class: '' },
-  { name: '优秀', color: '#3fb950', mult: 1.3, class: 'quality-green' },
-  { name: '精良', color: '#58a6ff', mult: 1.8, class: 'quality-blue' },
-  { name: '史诗', color: '#a371f7', mult: 2.5, class: 'quality-purple' },
-  { name: '传说', color: '#d29922', mult: 3.5, class: 'quality-orange' },
-  { name: '神话', color: '#f85149', mult: 5, class: 'quality-red' },
+  { name: '白', color: '#9ca3af' },
+  { name: '绿', color: '#22c55e' },
+  { name: '蓝', color: '#3b82f6' },
+  { name: '紫', color: '#a855f7' },
+  { name: '橙', color: '#f97316' },
+  { name: '红', color: '#ef4444' },
 ];
 
 // 装备类型
@@ -417,12 +432,11 @@ const EQUIP_TYPES = {
 
 // 装备名称库
 const EQUIP_NAMES = {
-  weapon: ['木剑', '铁剑', '精钢剑', '玄铁剑', '灵剑', '仙剑', '神剑'],
-  helmet: ['布帽', '铁盔', '精钢盔', '玄铁盔', '灵盔', '仙冠', '神冠'],
-  armor: ['布衣', '铁甲', '精钢甲', '玄铁甲', '灵甲', '仙甲', '神甲'],
-  ring: ['铜戒', '银戒', '金戒', '灵戒', '仙戒', '神戒', '圣戒'],
-  amulet: ['铜坠', '银坠', '金坠', '灵坠', '仙坠', '神坠', '圣坠'],
-  boot: ['布鞋', '铁靴', '精钢靴', '玄铁靴', '灵靴', '仙靴', '神靴'],
+  weapon: ['木剑', '铁剑', '玄铁剑', '紫电剑', '天雷剑', '仙剑'],
+  armor: ['布衣', '皮甲', '铁甲', '玄甲', '天甲', '神甲'],
+  helmet: ['草帽', '皮帽', '铁盔', '玄盔', '天盔', '神盔'],
+  boots: ['草鞋', '布靴', '铁靴', '玄靴', '天靴', '神靴'],
+  shield: ['木盾', '皮盾', '铁盾', '玄盾', '天盾', '神盾'],
 };
 
 // 随机词条
@@ -579,8 +593,8 @@ const MONSTERS = {
 
 // 消耗品
 const ITEMS = {
-  hp_potion: { name: '回血丹', icon: '💊', effect: { hp: 50 }, stackable: true },
-  mp_potion: { name: '回气丹', icon: '🧪', effect: { mp: 30 }, stackable: true },
+  hp_potion: { name: '生命药剂', icon: '🧪', effect: { hp: 50 }, stackable: true },
+  mp_potion: { name: '法力药剂', icon: '💧', effect: { mp: 30 }, stackable: true },
 };
 
 // ==================== 游戏状态 ====================
