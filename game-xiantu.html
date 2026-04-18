@@ -762,7 +762,7 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-function render() {
+function render() {\n  drawDecorations();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
   // 绘制网格背景
@@ -880,8 +880,25 @@ function spawnMob() {
   });
 }
 
+function resolveCollisions(){
+  const e=[{x:gs.player.x,y:gs.player.y,r:28}];
+  for(const m of gs.mobs) e.push({x:m.x,y:m.y,r:m.isBoss?40:25});
+  for(let i=0;i<e.length;i++){
+    for(let j=i+1;j<e.length;j++){
+      const a=e[i],b=e[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d>0 && d<a.r+b.r){
+        const p=(a.r+b.r-d)/2,px=dx/d*p,py=dy/d*p;
+        if(i===0){gs.player.x-=px;gs.player.y-=py;}
+        else{gs.mobs[i-1].x-=px;gs.mobs[i-1].y-=py;}
+        if(j===0){gs.player.x+=px;gs.player.y+=py;}
+        else{gs.mobs[j-1].x+=px;gs.mobs[j-1].y+=py;}
+      }
+    }
+  }
+}
+
 function update(dt) {
-  if (gameState.paused) return;
+  if (gameState.paused) return;\n  resolveCollisions();
   
   const p = gameState.player;
   
