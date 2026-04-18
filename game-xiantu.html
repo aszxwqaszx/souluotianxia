@@ -1110,9 +1110,12 @@ function update(dt) {
         p.kills++;
         
         // 处理掉落
+        console.log("DEBUG mob_die:", nearestMob.type);
         const drops = processDrop(nearestMob, nearestMob.type);
+        console.log("DEBUG drops:", JSON.stringify(drops));
         if (drops.length > 0) {
-          showDropModal(drops);
+          console.log("DEBUG showModal");
+        showDropModal(drops);
         }
         
         // 升级判定
@@ -1168,7 +1171,8 @@ function closeDropModal() {
   modal.classList.remove('show');
   
   // 处理掉落物品
-  for (const drop of pendingDrops) {
+  console.log('DEBUG closeModal, pending:', pendingDrops.length);
+for (const drop of pendingDrops) {
     if (drop.type === 'gold') {
       gameState.player.gold += drop.amount;
     } else if (drop.type === 'item') {
@@ -1182,6 +1186,8 @@ function closeDropModal() {
 }
 
 function addToInventory(item) {
+  console.log('DEBUG addToInv:', item.name, item.type);
+
   // 检查是否可堆叠且已存在
   if (item.stackable) {
     const existing = gameState.player.inventory.find(i => i && i.id === item.id);
