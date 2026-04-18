@@ -1555,8 +1555,15 @@ setInterval(spawnMob, 3000);
 
 // 初始化
 rebuildDecorations();
+console.log('DEBUG: decorations ready');
 loadGame();
+console.log('DEBUG: game loaded');
 updateUI();
+console.log('DEBUG: UI updated, canvas width:', canvas.width, 'height:', canvas.height);
+requestAnimationFrame(function(t) {
+  console.log('DEBUG: first frame at', t);
+  gameLoop(t);
+});
 log('欢迎来到仙途!');
 log('WASD移动,鼠标点击攻击,数字键1-4释放技能');
 log('点击背包中的物品使用或装备');
