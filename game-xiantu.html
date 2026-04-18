@@ -824,7 +824,8 @@ function drawDecorations(){
 }
 
 function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);\n  drawDecorations();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawDecorations();
   
   // 绘制网格背景
   ctx.strokeStyle = '#21262d';
@@ -959,7 +960,8 @@ function resolveCollisions(){
 }
 
 function update(dt) {
-  if (gameState.paused) return;\n  resolveCollisions();
+  if (gameState.paused) return;
+  resolveCollisions();
   
   const p = gameState.player;
   
