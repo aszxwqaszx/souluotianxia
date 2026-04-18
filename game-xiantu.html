@@ -21,6 +21,7 @@ body {
 }
 #game-canvas {
   flex: 1;
+  max-width: calc(100vw - 280px);
   background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
 }
 /* 右侧面板 */
@@ -1037,7 +1038,7 @@ function update(dt) {
     }
   }
   
-  updateUI();
+  rebuildDecorations();updateUI();
 }
 
 // ==================== 掉落弹窗 ====================
@@ -1081,7 +1082,7 @@ function closeDropModal() {
     }
   }
   pendingDrops = [];
-  updateUI();
+  rebuildDecorations();updateUI();
 }
 
 function addToInventory(item) {
@@ -1187,7 +1188,7 @@ function loadGame() {
   if (saveData) {
     gameState = JSON.parse(saveData);
     log('读取存档成功');
-    updateUI();
+    rebuildDecorations();updateUI();
   } else {
     log('没有找到存档');
   }
@@ -1261,7 +1262,7 @@ document.getElementById('inventory-grid').addEventListener('click', e => {
     gameState.player.inventory[index] = oldEquip;
     log(`装备了 ${item.name}`);
   }
-  updateUI();
+  rebuildDecorations();updateUI();
 });
 
 // ==================== 游戏主循环 ====================
@@ -1280,7 +1281,7 @@ function gameLoop(timestamp) {
 setInterval(spawnMob, 3000);
 
 // 初始化
-updateUI();
+rebuildDecorations();updateUI();
 log('欢迎来到仙途!');
 log('WASD移动,鼠标点击攻击,数字键1-4释放技能');
 log('点击背包中的物品使用或装备');
