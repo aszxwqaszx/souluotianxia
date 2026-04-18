@@ -665,10 +665,8 @@ function checkRealmBreakthrough(oldLevel, newLevel) {
   if (newRealm.name !== oldRealm.name) {
     log('【突破】境界提升至：' + newRealm.name + '！', 'level');
     saveGame(true);
-          checkRealmBreakthrough(p.level - 1, p.level);
   }
 }
-  }
   return REALMS[0];
 }
 
