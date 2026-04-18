@@ -915,6 +915,9 @@ resizeCanvas();
 
 // 装饰物系统
 const decorations = {mountains:[],trees:[],rivers:[],farms:[],grass:[]};
+// ==================== 装饰物系统 ====================
+let decorations = {mountains:[],trees:[],rivers:[],farms:[],grass:[]};
+
 function rebuildDecorations(){
   if(decorations.mountains.length>0)return;// Already built
   const w=canvas.width,h=canvas.height;
