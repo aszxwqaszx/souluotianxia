@@ -663,7 +663,28 @@ function expToLevel(level) {
   if (level <= 50) return 4200 + (level - 40) * 280;
   // 化神51-60: 7600+
   return 7600 + (level - 50) * 500;
-});
+}
+
+function generateEquip(type, qualityIndex, level) {
+  const quality = QUALITIES[qualityIndex];
+  const equipType = EQUIP_TYPES[type];
+  const nameIndex = Math.min(Math.floor(level / 15), EQUIP_NAMES[type].length - 1);
+  
+  const baseAtk = Math.floor(equipType.baseAtk * quality.mult * (1 + level * 0.1));
+  const baseDef = Math.floor(equipType.baseDef * quality.mult * (1 + level * 0.1));
+  
+  // 随机词条 (品质越高词条越多)
+  const affixCount = Math.min(qualityIndex, 3);
+  const affixes = [];
+  const usedStats = new Set();
+  
+  for (let i = 0; i < affixCount; i++) {
+    const availableAffixes = AFFIXES.filter(a => !usedStats.has(a.stat));
+    if (availableAffixes.length === 0) break;
+    const affix = availableAffixes[rand(0, availableAffixes.length - 1)];
+    usedStats.add(affix.stat);
+    const value = rand(affix.min, affix.max) * (qualityIndex + 1);
+    affixes.push({ name: affix.name, stat: affix.stat, value });
   }
   
   return {
