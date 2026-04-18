@@ -1440,6 +1440,24 @@ function useSkill(index) {
 
 // ==================== 存档系统 ====================
 function saveGame(showMsg) {
+// ==================== 存档读取 ====================
+function loadGame() {
+  const raw = localStorage.getItem('xiantu_save');
+  if (!raw) { log('无存档，重新开始', 'info'); return; }
+  try {
+    const data = JSON.parse(raw);
+    if (data.player) {
+      gameState.player = { ...gameState.player, ...data.player };
+      gameState.player.hp = gameState.player.maxHp;
+      gameState.player.mp = gameState.player.maxMp;
+      gameState.mobs = [];
+      updateUI();
+      log('存档已加载 Lv.' + gameState.player.level + ' ' + getRealm(gameState.player.level).name, 'info');
+    }
+  } catch(e) { log('存档读取失败', 'damage'); }
+}
+
+
   const data = JSON.stringify({ player: gameState.player, version: 1 });
   localStorage.setItem('xiantu_save', data);
   gameState.player.lastSave = Date.now();
