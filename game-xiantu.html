@@ -641,8 +641,10 @@ function log(msg, type) {
 function resizeCanvas() {
   const canvas = document.getElementById('game-canvas');
   if (!canvas) return;
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
+  canvas.width = window.innerWidth - 280;
+  canvas.height = window.innerHeight;
+  gameState.player.x = canvas.width / 2;
+  gameState.player.y = canvas.height / 2;
   rebuildDecorations();
 }
 
