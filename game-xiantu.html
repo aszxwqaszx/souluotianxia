@@ -403,10 +403,11 @@ const EQUIP_TYPES = {
 
 const EQUIP_NAMES = {
   weapon: ['木剑', '铁剑', '玄铁剑', '紫电剑', '天雷剑', '仙剑'],
-  armor: ['布衣', '皮甲', '铁甲', '玄甲', '天甲', '神甲'],
   helmet: ['草帽', '皮帽', '铁盔', '玄盔', '天盔', '神盔'],
-  boots: ['草鞋', '布靴', '铁靴', '玄靴', '天靴', '神靴'],
-  shield: ['木盾', '皮盾', '铁盾', '玄盾', '天盾', '神盾'],
+  armor: ['布衣', '皮甲', '铁甲', '玄甲', '天甲', '神甲'],
+  ring: ['铜戒', '银戒', '金戒', '玄戒', '天戒', '神戒'],
+  amulet: ['木坠', '玉坠', '金坠', '玄坠', '天坠', '神坠'],
+  boot: ['草鞋', '布靴', '铁靴', '玄靴', '天靴', '神靴'],
 };
 
 const AFFIXES = [
@@ -415,6 +416,14 @@ const AFFIXES = [
   { name: '生命', stat: 'maxHp', min: 10, max: 50 },
   { name: '暴击', stat: 'crit', min: 1, max: 5 },
   { name: '闪避', stat: 'dodge', min: 1, max: 4 },
+];
+
+
+const SKILLS = [
+  { name: '剑气', type: 'damage', cost: 15, cooldown: 3000, range: 150, mult: 1.8, icon: '⚔️', desc: '释放剑气攻击周围敌人' },
+  { name: '回春', type: 'heal', cost: 20, cooldown: 8000, heal: 40, icon: '💚', desc: '恢复生命值' },
+  { name: '护盾', type: 'buff', cost: 25, cooldown: 15000, duration: 5000, defBonus: 20, icon: '🛡️', desc: '暂时提升防御' },
+  { name: '雷击', type: 'damage', cost: 35, cooldown: 12000, range: 200, mult: 3.0, icon: '⚡', desc: '强力雷击' },
 ];
 
 const REALMS = [
@@ -684,13 +693,18 @@ function processDrop(mob, mobType) {
     gameState.player.guaranteeCounters[counterKey] = 0;
   }
   
-  // Normal drops
+  // Normal drops - 兼容rate和chance
   for (const entry of monster.dropTable) {
-    if (Math.random() < entry.chance) {
+    const chance = entry.chance || entry.rate || 0;
+    if (Math.random() < chance) {
       if (entry.type === 'equip') {
-        const lv = rand(entry.levelRange[0], entry.levelRange[1]);
-        const q = rand(0, entry.maxQuality || 2);
-        drops.push(generateEquip(entry.equipType, q, lv));
+        const lvRange = entry.levelRange || [1, 10];
+        const lv = rand(lvRange[0], lvRange[1]);
+        const qRange = entry.qualityRange || [0, 2];
+        const q = rand(qRange[0], qRange[1]);
+        const types = Object.keys(EQUIP_TYPES);
+        const equipType = entry.equipType || types[rand(0, types.length - 1)];
+        drops.push(generateEquip(equipType, q, lv));
       } else if (entry.type === 'gold') {
         drops.push({ id: Date.now(), type: 'gold', name: '金币', value: entry.value, icon: '\u2696\ufe0f' });
       } else if (entry.type === 'exp') {
@@ -912,16 +926,52 @@ function render() {
     ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
   }
   
-  // Player
+  // Player - 修士形象
   const p = gameState.player;
-  ctx.fillStyle = '#58a6ff';
+  const px = p.x, py = p.y;
+  
+  // 身体（道袍）
+  ctx.fillStyle = '#4a5568';
   ctx.beginPath();
-  ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+  ctx.moveTo(px - 12, py + 5);
+  ctx.lineTo(px - 8, py + 25);
+  ctx.lineTo(px + 8, py + 25);
+  ctx.lineTo(px + 12, py + 5);
+  ctx.closePath();
   ctx.fill();
+  
+  // 头
+  ctx.fillStyle = '#fcd5b8';
+  ctx.beginPath();
+  ctx.arc(px, py - 8, 10, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // 发髻
+  ctx.fillStyle = '#2d3748';
+  ctx.beginPath();
+  ctx.arc(px, py - 16, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // 眼睛
+  ctx.fillStyle = '#1a202c';
+  ctx.fillRect(px - 5, py - 9, 3, 3);
+  ctx.fillRect(px + 2, py - 9, 3, 3);
+  
+  // 剑（右手）
+  ctx.strokeStyle = '#a0aec0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(px + 14, py - 5);
+  ctx.lineTo(px + 25, py - 20);
+  ctx.stroke();
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillRect(px + 22, py - 22, 6, 3);
+  
+  // 名字
   ctx.fillStyle = '#fff';
   ctx.font = '10px Microsoft YaHei';
   ctx.textAlign = 'center';
-  ctx.fillText('你', p.x, p.y + 4);
+  ctx.fillText('Lv.' + p.level, px, py + 38);
   
   // Damage numbers
   ctx.textAlign = 'center';
