@@ -373,27 +373,16 @@ body {
   <button onclick="closeDropModal()">收下</button>
 </div>
 
-<script>
-// ==================== 游戏配置 ====================
-const CONFIG = {
-  TILE_SIZE: 40,
-  PLAYER_SPEED: 3,
-  ATTACK_RANGE: 60,
-  ATTACK_COOLDOWN: 500,
-};
+<script>// ===== 仙途 RPG - Clean Rebuild =====
+// Decorations
+let decorations = {mountains:[],trees:[],rivers:[],farms:[],grass:[]};
 
-// ==================== 数据定义 ====================
-// 境界系统
-const REALMS = [
-  { name: '凡人', minLv: 1, maxLv: 10, hpBonus: 0, atkBonus: 0, defBonus: 0, color: '#9ca3af', bgColor: '#1f2937' },
-  { name: '炼体', minLv: 11, maxLv: 20, hpBonus: 50, atkBonus: 10, defBonus: 5, color: '#86efac', bgColor: '#14532d' },
-  { name: '筑基', minLv: 21, maxLv: 30, hpBonus: 150, atkBonus: 30, defBonus: 15, color: '#60a5fa', bgColor: '#1e3a8a' },
-  { name: '金丹', minLv: 31, maxLv: 40, hpBonus: 300, atkBonus: 60, defBonus: 30, color: '#c084fc', bgColor: '#4c1d95' },
-  { name: '元婴', minLv: 41, maxLv: 50, hpBonus: 500, atkBonus: 100, defBonus: 50, color: '#fbbf24', bgColor: '#78350f' },
-  { name: '化神', minLv: 51, maxLv: 60, hpBonus: 800, atkBonus: 150, defBonus: 80, color: '#f87171', bgColor: '#7f1d1d' },
-];
+// Utilities
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randFloat(min, max) { return Math.random() * (max - min) + min; }
+function distance(x1, y1, x2, y2) { return Math.sqrt((x2-x1)**2 + (y2-y1)**2); }
 
-// 装备品质
+// Data
 const QUALITIES = [
   { name: '白', color: '#9ca3af' },
   { name: '绿', color: '#22c55e' },
@@ -403,7 +392,6 @@ const QUALITIES = [
   { name: '红', color: '#ef4444' },
 ];
 
-// 装备类型
 const EQUIP_TYPES = {
   weapon: { name: '武器', icon: '⚔️', baseAtk: 5, baseDef: 0 },
   helmet: { name: '头盔', icon: '🪖', baseAtk: 0, baseDef: 3 },
@@ -413,7 +401,6 @@ const EQUIP_TYPES = {
   boot: { name: '鞋子', icon: '👢', baseAtk: 0, baseDef: 2 },
 };
 
-// 装备名称库
 const EQUIP_NAMES = {
   weapon: ['木剑', '铁剑', '玄铁剑', '紫电剑', '天雷剑', '仙剑'],
   armor: ['布衣', '皮甲', '铁甲', '玄甲', '天甲', '神甲'],
@@ -422,7 +409,6 @@ const EQUIP_NAMES = {
   shield: ['木盾', '皮盾', '铁盾', '玄盾', '天盾', '神盾'],
 };
 
-// 随机词条
 const AFFIXES = [
   { name: '力量', stat: 'atk', min: 2, max: 10 },
   { name: '守护', stat: 'def', min: 1, max: 8 },
@@ -431,7 +417,15 @@ const AFFIXES = [
   { name: '闪避', stat: 'dodge', min: 1, max: 4 },
 ];
 
-// 怪物定义
+const REALMS = [
+  { name: '凡人', minLv: 1, maxLv: 10, hpBonus: 0, atkBonus: 0, defBonus: 0, color: '#9ca3af', bgColor: '#1f2937' },
+  { name: '炼体', minLv: 11, maxLv: 20, hpBonus: 50, atkBonus: 10, defBonus: 5, color: '#86efac', bgColor: '#14532d' },
+  { name: '筑基', minLv: 21, maxLv: 30, hpBonus: 150, atkBonus: 30, defBonus: 15, color: '#60a5fa', bgColor: '#1e3a8a' },
+  { name: '金丹', minLv: 31, maxLv: 40, hpBonus: 300, atkBonus: 60, defBonus: 30, color: '#c084fc', bgColor: '#4c1d95' },
+  { name: '元婴', minLv: 41, maxLv: 50, hpBonus: 500, atkBonus: 100, defBonus: 50, color: '#fbbf24', bgColor: '#78350f' },
+  { name: '化神', minLv: 51, maxLv: 60, hpBonus: 800, atkBonus: 150, defBonus: 80, color: '#f87171', bgColor: '#7f1d1d' },
+];
+
 const MONSTERS = {
   // 凡人 (Lv 1-10) - 野鸡/山贼/小妖
   chicken: {
@@ -574,34 +568,22 @@ const MONSTERS = {
   },
 };
 
-// 消耗品
-const ITEMS = {
-  hp_potion: { name: '生命药剂', icon: '🧪', effect: { hp: 50 }, stackable: true },
-  mp_potion: { name: '法力药剂', icon: '💧', effect: { mp: 30 }, stackable: true },
-};
-
-// ==================== 游戏状态 ====================
+// Game State
 let gameState = {
   player: {
     name: '无名修士',
     level: 1,
     exp: 0,
-    maxHp: 100,
-    hp: 100,
-    maxMp: 50,
-    mp: 50,
-    baseAtk: 10,
-    baseDef: 5,
-    crit: 5,
-    dodge: 3,
-    gold: 0,
-    kills: 0,
-    x: 400,
-    y: 300,
+    maxHp: 100, hp: 100,
+    maxMp: 50, mp: 50,
+    baseAtk: 10, baseDef: 5,
+    crit: 5, dodge: 3,
+    gold: 0, kills: 0,
+    x: 400, y: 300,
     equipment: { weapon: null, helmet: null, armor: null, ring: null, amulet: null, boot: null },
     inventory: [],
     skillCooldowns: [0, 0, 0, 0],
-    guaranteeCounters: {}, // 保底计数器
+    guaranteeCounters: {},
   },
   mobs: [],
   particles: [],
@@ -609,966 +591,583 @@ let gameState = {
   keys: {},
   mouse: { x: 0, y: 0, down: false },
   paused: false,
-  lastAttackTime: 0,
+  _lastTime: 0,
 };
 
-// ==================== 工具函数 ====================
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randFloat(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function distance(x1, y1, x2, y2) {
-  return Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-}
-
+// Realm helpers
 function getRealm(level) {
   for (let i = REALMS.length - 1; i >= 0; i--) {
     if (level >= REALMS[i].minLv) return REALMS[i];
   }
   return REALMS[0];
 }
-
-// 获得境界名称+层数显示
 function getRealmName(level) {
   const r = getRealm(level);
-  const innerLv = level - r.minLv + 1;
-  const maxInner = r.maxLv - r.minLv + 1;
-  return r.name + innerLv + '层 / ' + maxInner;
+  const inner = level - r.minLv + 1;
+  return r.name + inner + '层 / ' + (r.maxLv - r.minLv + 1);
 }
-
-// 境界突破检查
 function checkRealmBreakthrough(oldLevel, newLevel) {
   const oldRealm = getRealm(oldLevel);
   const newRealm = getRealm(newLevel);
   if (newRealm.name !== oldRealm.name) {
-    log('【突破】境界提升至：' + newRealm.name + '！', 'level');
+    log('突破! 进入' + newRealm.name + '!', 'level');
     saveGame(true);
   }
 }
-
 function expToLevel(level) {
-  // 凡人1-10: 50-200
   if (level <= 10) return 50 + level * 15;
-  // 炼体11-20: 350-750
   if (level <= 20) return 350 + (level - 10) * 40;
-  // 筑基21-30: 1150-2000
   if (level <= 30) return 1150 + (level - 20) * 85;
-  // 金丹31-40: 2200-3800
   if (level <= 40) return 2200 + (level - 30) * 160;
-  // 元婴41-50: 4200-7000
   if (level <= 50) return 4200 + (level - 40) * 280;
-  // 化神51-60: 7600+
   return 7600 + (level - 50) * 500;
 }
 
+// UI log
+function log(msg, type) {
+  const el = document.getElementById('game-log');
+  if (!el) return;
+  const colors = { info: '#58a6ff', damage: '#f85149', level: '#f0c040', skill: '#a371f7', info2: '#3fb950' };
+  const color = colors[type] || '#e0e0e0';
+  const div = document.createElement('div');
+  div.style.color = color;
+  div.textContent = msg;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  while (el.children.length > 50) el.removeChild(el.firstChild);
+}
+
+// Canvas resize
+function resizeCanvas() {
+  const canvas = document.getElementById('game-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  rebuildDecorations();
+}
+
+// Equipment
 function generateEquip(type, qualityIndex, level) {
   const quality = QUALITIES[qualityIndex];
   const equipType = EQUIP_TYPES[type];
+  if (!quality || !equipType) return null;
   const nameIndex = Math.min(Math.floor(level / 15), EQUIP_NAMES[type].length - 1);
-  
   const baseAtk = Math.floor(equipType.baseAtk * quality.mult * (1 + level * 0.1));
   const baseDef = Math.floor(equipType.baseDef * quality.mult * (1 + level * 0.1));
-  
-  // 随机词条 (品质越高词条越多)
   const affixCount = Math.min(qualityIndex, 3);
   const affixes = [];
-  const usedStats = new Set();
-  
   for (let i = 0; i < affixCount; i++) {
-    const availableAffixes = AFFIXES.filter(a => !usedStats.has(a.stat));
-    if (availableAffixes.length === 0) break;
-    const affix = availableAffixes[rand(0, availableAffixes.length - 1)];
-    usedStats.add(affix.stat);
-    const value = rand(affix.min, affix.max) * (qualityIndex + 1);
-    affixes.push({ name: affix.name, stat: affix.stat, value });
+    const affix = AFFIXES[rand(0, AFFIXES.length - 1)];
+    affixes.push({ name: affix.name, stat: affix.stat, value: rand(affix.min, affix.max) * (qualityIndex + 1) });
   }
-  
-  return {
-    id: Date.now() + Math.random(),
-    type,
-    name: EQUIP_NAMES[type][nameIndex],
-    quality: qualityIndex,
-    level,
-    atk: baseAtk,
-    def: baseDef,
-    affixes,
-    icon: equipType.icon,
-  };
+  return { id: Date.now() + Math.random(), type, name: EQUIP_NAMES[type][nameIndex], quality: qualityIndex, level, atk: baseAtk, def: baseDef, affixes, icon: equipType.icon };
 }
 
-// ==================== 掉落处理 ====================
+// Drop processing
 function processDrop(mob, mobType) {
   const drops = [];
   const monster = MONSTERS[mobType];
+  if (!monster || !monster.dropTable) return drops;
   
-  // 更新保底计数器
   const counterKey = mobType;
-  if (!gameState.player.guaranteeCounters[counterKey]) {
-    gameState.player.guaranteeCounters[counterKey] = 0;
-  }
-  gameState.player.guaranteeCounters[counterKey]++;
+  gameState.player.guaranteeCounters[counterKey] = (gameState.player.guaranteeCounters[counterKey] || 0) + 1;
   
-  // 检查保底
+  // Guarantee drop
   if (monster.guarantee && gameState.player.guaranteeCounters[counterKey] >= monster.guarantee.kills) {
     const reward = monster.guarantee.reward;
     if (reward.type === 'equip') {
       const types = Object.keys(EQUIP_TYPES);
-      const type = types[rand(0, types.length - 1)];
-      drops.push(generateEquip(type, reward.quality, reward.level));
+      drops.push(generateEquip(types[rand(0, types.length - 1)], reward.quality, reward.level));
     }
     gameState.player.guaranteeCounters[counterKey] = 0;
   }
   
-  // 随机掉落
-  for (const drop of monster.dropTable) {
-    if (Math.random() < drop.rate) {
-      if (drop.type === 'gold') {
-        const amount = rand(drop.min, drop.max);
-        drops.push({ type: 'gold', amount });
-      } else if (drop.type === 'item') {
-        drops.push({ type: 'item', ...ITEMS[drop.id], id: drop.id });
-      } else if (drop.type === 'equip') {
-        const types = Object.keys(EQUIP_TYPES);
-        const equipType = types[rand(0, types.length - 1)];
-        const quality = rand(drop.qualityRange[0], drop.qualityRange[1]);
-        const level = rand(drop.levelRange[0], drop.levelRange[1]);
-        drops.push(generateEquip(equipType, quality, level));
+  // Normal drops
+  for (const entry of monster.dropTable) {
+    if (Math.random() < entry.chance) {
+      if (entry.type === 'equip') {
+        const lv = rand(entry.levelRange[0], entry.levelRange[1]);
+        const q = rand(0, entry.maxQuality || 2);
+        drops.push(generateEquip(entry.equipType, q, lv));
+      } else if (entry.type === 'gold') {
+        drops.push({ id: Date.now(), type: 'gold', name: '金币', value: entry.value, icon: '\u2696\ufe0f' });
+      } else if (entry.type === 'exp') {
+        gameState.player.exp += entry.value;
+        drops.push({ id: Date.now(), type: 'exp', name: '经验', value: entry.value, icon: '\u2605' });
       }
     }
   }
-  
   return drops;
 }
 
-// ==================== UI 更新 ====================
-function updateUI() {
-  const p = gameState.player;
-  const realm = getRealm(p.level);
-  
-  // 角色信息
-  document.getElementById('player-name').textContent = p.name;
-  document.getElementById('player-realm').textContent = `${realm.name}${p.level - realm.minLv + 1}层 / Lv.${p.level}`;
-  
-  // 血条
-  document.getElementById('hp-text').textContent = `${Math.floor(p.hp)}/${p.maxHp}`;
-  document.getElementById('hp-bar').style.width = `${(p.hp / p.maxHp) * 100}%`;
-  document.getElementById('mp-text').textContent = `${Math.floor(p.mp)}/${p.maxMp}`;
-  document.getElementById('mp-bar').style.width = `${(p.mp / p.maxMp) * 100}%`;
-  
-  // 经验
-  const expNeeded = expToLevel(p.level);
-  document.getElementById('exp-text').textContent = `${p.exp}/${expNeeded}`;
-  document.getElementById('exp-bar').style.width = `${(p.exp / expNeeded) * 100}%`;
-  // ========== 境界进度条 ==========
-  const realm2 = getRealm(gameState.player.level);
-  const innerLv2 = p.level - realm2.minLv + 1;
-  const maxInner2 = realm2.maxLv - realm2.minLv + 1;
-  const realmPct = (innerLv2 / maxInner2) * 100;
-  // 添加或更新境界进度条
-  let realmBarEl = document.getElementById('realm-bar');
-  if (!realmBarEl) {
-    const expBar = document.getElementById('exp-bar');
-    const parent = expBar ? expBar.parentElement : null;
-    if (parent) {
-      realmBarEl = document.createElement('div');
-      realmBarEl.id = 'realm-bar';
-      realmBarEl.style.cssText = 'height:6px;background:#1f2937;border-radius:3px;margin-top:4px;';
-      const fill = document.createElement('div');
-      fill.id = 'realm-bar-fill';
-      fill.style.cssText = 'height:100%;border-radius:3px;transition:width 0.3s;';
-      realmBarEl.appendChild(fill);
-      const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'margin-top:8px;';
-      wrapper.appendChild(realmBarEl);
-      const expText = document.getElementById('exp-text');
-      if (expText && expText.parentElement) {
-        expText.parentElement.appendChild(wrapper);
-      }
-    }
-  }
-  const realmFill = document.getElementById('realm-bar-fill');
-  if (realmFill) {
-    realmFill.style.width = realmPct + '%';
-    realmFill.style.background = realm2.color;
-  }
-  const realmTextEl = document.getElementById('realm-text');
-  if (realmTextEl) {
-    realmTextEl.textContent = realm2.name + innerLv2 + '层 (' + innerLv2 + '/' + maxInner2 + ')';
-    realmTextEl.style.color = realm2.color;
-  }
-
-  
-  // 属性 (基础 + 装备)
-  let totalAtk = p.baseAtk;
-  let totalDef = p.baseDef;
-  let totalCrit = p.crit;
-  let totalDodge = p.dodge;
-  let totalMaxHp = p.maxHp;
-  
-  for (const slot in p.equipment) {
-    const equip = p.equipment[slot];
-    if (equip) {
-      totalAtk += equip.atk;
-      totalDef += equip.def;
-      for (const affix of equip.affixes) {
-        if (affix.stat === 'atk') totalAtk += affix.value;
-        if (affix.stat === 'def') totalDef += affix.value;
-        if (affix.stat === 'crit') totalCrit += affix.value;
-        if (affix.stat === 'dodge') totalDodge += affix.value;
-        if (affix.stat === 'maxHp') totalMaxHp += affix.value;
-      }
-    }
-  }
-  
-  document.getElementById('stat-atk').textContent = totalAtk;
-  document.getElementById('stat-def').textContent = totalDef;
-  document.getElementById('stat-crit').textContent = totalCrit + '%';
-  document.getElementById('stat-dodge').textContent = totalDodge + '%';
-  
-  // 底部状态
-  document.getElementById('pos-text').textContent = `${Math.floor(p.x)}, ${Math.floor(p.y)}`;
-  document.getElementById('gold-text').textContent = p.gold;
-  document.getElementById('kills-text').textContent = p.kills;
-  
-  // 装备槽
-  document.querySelectorAll('.equip-slot').forEach(slot => {
-    const slotType = slot.dataset.slot;
-    const equip = p.equipment[slotType];
-    slot.textContent = equip ? equip.icon : '·';
-    slot.className = 'equip-slot' + (equip ? ' ' + QUALITIES[equip.quality].class : '');
-  });
-  
-  // 背包
-  const invGrid = document.getElementById('inventory-grid');
-  invGrid.innerHTML = '';
-  for (let i = 0; i < 20; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'inv-slot';
-    if (p.inventory[i]) {
-      const item = p.inventory[i];
-      slot.textContent = item.icon;
-      if (item.quality !== undefined) {
-        slot.style.color = QUALITIES[item.quality].color;
-      }
-      if (item.count > 1) {
-        const count = document.createElement('span');
-        count.className = 'item-count';
-        count.textContent = item.count;
-        slot.appendChild(count);
-      }
-      slot.title = item.name;
-    }
-    invGrid.appendChild(slot);
-  }
-  document.getElementById('inv-count').textContent = `(${p.inventory.filter(x => x).length}/20)`;
-  
-  // 技能冷却
-  document.querySelectorAll('.skill-slot').forEach((slot, i) => {
-    const cd = p.skillCooldowns[i];
-    if (cd > 0) {
-      slot.classList.add('on-cooldown');
-      let overlay = slot.querySelector('.cooldown-overlay');
-      if (!overlay) {
-        overlay = document.createElement('span');
-        overlay.className = 'cooldown-overlay';
-        slot.appendChild(overlay);
-      }
-      overlay.textContent = Math.ceil(cd / 1000) + 's';
-    } else {
-      slot.classList.remove('on-cooldown');
-      const overlay = slot.querySelector('.cooldown-overlay');
-      if (overlay) overlay.textContent = '';
-    }
-  });
-}
-
-// ==================== 日志 ====================
-function log(msg, type = '') {
-  const logDiv = document.getElementById('combat-log');
-  const entry = document.createElement('div');
-  entry.className = 'log-item' + (type ? ' log-' + type : '');
-  entry.textContent = msg;
-  logDiv.appendChild(entry);
-  logDiv.scrollTop = logDiv.scrollHeight;
-  
-  // 保留最近100条
-  while (logDiv.children.length > 100) {
-    logDiv.removeChild(logDiv.firstChild);
-  }
-}
-
-// ==================== Canvas 渲染 ====================
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
-
-function resizeCanvas() {
-  canvas.width = canvas.offsetWidth;
-  canvas.height = canvas.offsetHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-// 装饰物系统
-const decorations = {mountains:[],trees:[],rivers:[],farms:[],grass:[]};
-// ==================== 装饰物系统 ====================
-let decorations = {mountains:[],trees:[],rivers:[],farms:[],grass:[]};
-
-function rebuildDecorations(){
-  if(decorations.mountains.length>0)return;// Already built
-  const w=canvas.width,h=canvas.height;
-  // Fixed positions as percentages of canvas size
-  decorations.mountains=[
-    {x:w*0.15,y:h*0.2,w:80,h:100},
-    {x:w*0.7,y:h*0.15,w:70,h:90},
-    {x:w*0.5,y:h*0.6,w:90,h:110},
-    {x:w*0.85,y:h*0.5,w:60,h:80},
-    {x:w*0.25,y:h*0.75,w:75,h:95}
-  ];
-  decorations.trees=[
-    {x:w*0.1,y:h*0.4,size:35},{x:w*0.2,y:h*0.5,size:28},{x:w*0.35,y:h*0.3,size:40},
-    {x:w*0.45,y:h*0.8,size:32},{x:w*0.6,y:h*0.4,size:38},{x:w*0.75,y:h*0.7,size:30},
-    {x:w*0.8,y:h*0.25,size:35},{x:w*0.9,y:h*0.6,size:28},{x:w*0.55,y:h*0.15,size:42},
-    {x:w*0.3,y:h*0.9,size:25}
-  ];
-  decorations.rivers=[{x:w*0.4,y:h*0.5,rx:100,ry:40}];
-  decorations.farms=[
-    {x:w*0.05,y:h*0.05,w:80,h:50},{x:w*0.6,y:h*0.85,w:90,h:55},
-    {x:w*0.15,y:h*0.55,w:70,h:45},{x:w*0.85,y:h*0.35,w:85,h:50}
-  ];
-  decorations.grass=[];
-  for(let i=0;i<15;i++)decorations.grass.push({x:w*(0.05+i*0.06),y:h*(0.1+(i%5)*0.18),size:10+i%8});
-}
-function drawDecorations(){
-  // 山
-  for(const m of decorations.mountains){
-    ctx.fillStyle='#2d333b';
-    ctx.beginPath();
-    ctx.moveTo(m.x,m.y+m.h);
-    ctx.lineTo(m.x-m.w/2,m.y+m.h);
-    ctx.lineTo(m.x,m.y);
-    ctx.lineTo(m.x+m.w/2,m.y+m.h);
-    ctx.closePath();
-    ctx.fill();
-  }
-  // 树
-  for(const t of decorations.trees){
-    ctx.fillStyle='#3d2f1f';
-    ctx.fillRect(t.x-3,t.y,6,t.size);
-    ctx.fillStyle='#238636';
-    ctx.beginPath();
-    ctx.arc(t.x,t.y-t.size*0.3,t.size*0.7,0,Math.PI*2);
-    ctx.fill();
-  }
-  // 河
-  for(const r of decorations.rivers){
-    ctx.fillStyle='#1f6feb';
-    ctx.beginPath();
-    ctx.ellipse(r.x,r.y,r.rx,r.ry,0,0,Math.PI*2);
-    ctx.fill();
-  }
-  // 田
-  for(const f of decorations.farms){
-    ctx.fillStyle='#3d2f1f';
-    ctx.fillRect(f.x,f.y,f.w,f.h);
-    ctx.strokeStyle='#5d4f3f';
-    ctx.lineWidth=1;
-    for(let i=1;i<4;i++){
-      ctx.beginPath();
-      ctx.moveTo(f.x+i*f.w/4,f.y);
-      ctx.lineTo(f.x+i*f.w/4,f.y+f.h);
-      ctx.stroke();
-    }
-  }
-  // 草
-  for(const g of decorations.grass){
-    ctx.fillStyle='rgba(46,160,67,0.35)';
-    ctx.beginPath();
-    ctx.arc(g.x,g.y,g.size,0,Math.PI*2);
-    ctx.fill();
-  }
-}
-
-function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawDecorations();
-  
-  // 绘制网格背景
-  ctx.strokeStyle = '#21262d';
-  ctx.lineWidth = 1;
-  const gridSize = CONFIG.TILE_SIZE;
-  for (let x = 0; x < canvas.width; x += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
-    ctx.stroke();
-  }
-  for (let y = 0; y < canvas.height; y += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width, y);
-    ctx.stroke();
-  }
-  
-  // 绘制怪物
-  for (const mob of gameState.mobs) {
-    // 怪物本体
-    ctx.font = '32px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(mob.icon, mob.x, mob.y + 10);
-    
-    // 血条
-    const hpPercent = mob.hp / mob.maxHp;
-    ctx.fillStyle = '#21262d';
-    ctx.fillRect(mob.x - 25, mob.y - 35, 50, 6);
-    ctx.fillStyle = mob.isBoss ? '#ffa657' : '#f85149';
-    ctx.fillRect(mob.x - 25, mob.y - 35, 50 * hpPercent, 6);
-    
-    // 名字
-    ctx.font = '11px Arial';
-    ctx.fillStyle = mob.isBoss ? '#ffa657' : '#f0f6fc';
-    ctx.fillText(mob.name, mob.x, mob.y - 42);
-  }
-  
-  // 绘制玩家
-  const p = gameState.player;
-  ctx.font = '36px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('🧙', p.x, p.y + 12);
-  
-  // 玩家攻击范围指示
-  if (gameState.mouse.down) {
-    ctx.strokeStyle = 'rgba(88, 166, 255, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, CONFIG.ATTACK_RANGE, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  
-  // 伤害数字
-  for (const dmg of gameState.damageNumbers) {
-    ctx.font = dmg.crit ? 'bold 18px Arial' : '14px Arial';
-    ctx.fillStyle = dmg.color;
-    ctx.textAlign = 'center';
-    ctx.fillText(dmg.text, dmg.x, dmg.y);
-    dmg.y -= 1;
-    dmg.life--;
-  }
-  gameState.damageNumbers = gameState.damageNumbers.filter(d => d.life > 0);
-  
-  // 粒子效果
-  for (const particle of gameState.particles) {
-    ctx.globalAlpha = particle.life / particle.maxLife;
-    ctx.fillStyle = particle.color;
-    ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-    ctx.fill();
-    particle.x += particle.vx;
-    particle.y += particle.vy;
-    particle.life--;
-  }
-  ctx.globalAlpha = 1;
-  gameState.particles = gameState.particles.filter(p => p.life > 0);
-}
-
-// ==================== 游戏逻辑 ====================
+// Mob spawning
 function spawnMob() {
-  // 根据玩家等级动态选择怪物区间
   const lv = gameState.player.level;
   const allTypes = Object.keys(MONSTERS);
-  // 选择与玩家等级匹配的怪物
+  // Prefer matching level monsters
   const matching = allTypes.filter(t => {
     const m = MONSTERS[t];
-    const minL = m.dropTable.find(d => d.type === 'equip');
-    return minL && minL.levelRange && m.dropTable.some(d => d.type === 'equip' && lv >= d.levelRange[0] - 3 && lv <= d.levelRange[1] + 5);
+    return m.dropTable && m.dropTable.some(d => d.type === 'equip' && d.levelRange && lv >= d.levelRange[0] - 3 && lv <= d.levelRange[1] + 5);
   });
-  // 回退：根据等级取附近的怪物
   let candidates = matching.length > 0 ? matching : allTypes;
-  // 优先选当前等级段的怪物
-  const levelFiltered = candidates.filter(t => {
-    const m = MONSTERS[t];
-    return m.dropTable.some(d => d.type === 'equip' && d.levelRange && lv >= d.levelRange[0] - 2 && lv <= d.levelRange[1] + 3);
-  });
-  if (levelFiltered.length > 0) candidates = levelFiltered;
-  // 随机选一个
   const type = candidates[rand(0, candidates.length - 1)];
-  const mob = { ...MONSTERS[type], type, x: 0, y: 0, id: Date.now() + Math.random(), targetX: 0, targetY: 0 };
-  // 缩放属性
+  const base = MONSTERS[type];
+  if (!base) return;
+  
   const scale = 1 + (lv - 1) * 0.08;
-  mob.hp = Math.floor(mob.hp * scale);
-  mob.maxHp = mob.hp;
-  mob.atk = Math.floor(mob.atk * scale);
-  mob.def = Math.floor(mob.def * scale);
-  mob.exp = Math.floor(mob.exp * scale);
-  // 随机出生位置
+  const mob = {
+    ...base,
+    type,
+    x: 0, y: 0,
+    id: Date.now() + Math.random(),
+    hp: Math.floor(base.hp * scale),
+    maxHp: Math.floor(base.hp * scale),
+    atk: Math.floor(base.atk * scale),
+    def: Math.floor(base.def * scale),
+    exp: Math.floor(base.exp * scale),
+    targetX: 0, targetY: 0,
+  };
+  
+  // Spawn around player
   const angle = Math.random() * Math.PI * 2;
   const dist = 150 + Math.random() * 250;
-  mob.x = canvas.width / 2 + Math.cos(angle) * dist;
-  mob.y = canvas.height / 2 + Math.sin(angle) * dist;
+  mob.x = gameState.player.x + Math.cos(angle) * dist;
+  mob.y = gameState.player.y + Math.sin(angle) * dist;
   mob.targetX = mob.x;
   mob.targetY = mob.y;
+  
   gameState.mobs.push(mob);
-});
 }
 
-function resolveCollisions(){
-  const e=[{x:gameState.player.x,y:gameState.player.y,r:28}];
-  for(const m of gameState.mobs) e.push({x:m.x,y:m.y,r:m.isBoss?40:25});
-  for(let i=0;i<e.length;i++){
-    for(let j=i+1;j<e.length;j++){
-      const a=e[i],b=e[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy);
-      if(d>0 && d<a.r+b.r){
-        const p=(a.r+b.r-d)/2,px=dx/d*p,py=dy/d*p;
-        if(i===0){gameState.player.x-=px;gameState.player.y-=py;}
-        else{gameState.mobs[i-1].x-=px;gameState.mobs[i-1].y-=py;}
-        if(j===0){gameState.player.x+=px;gameState.player.y+=py;}
-        else{gameState.mobs[j-1].x+=px;gameState.mobs[j-1].y+=py;}
+// Collision
+function resolveCollisions() {
+  const entities = [
+    { x: gameState.player.x, y: gameState.player.y, r: 28, isPlayer: true }
+  ];
+  for (const m of gameState.mobs) entities.push({ x: m.x, y: m.y, r: m.isBoss ? 40 : 25, mob: m });
+  
+  for (let i = 0; i < entities.length; i++) {
+    for (let j = i + 1; j < entities.length; j++) {
+      const a = entities[i], b = entities[j];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > 0 && d < a.r + b.r) {
+        const overlap = (a.r + b.r - d) / 2;
+        const px = dx / d * overlap, py = dy / d * overlap;
+        if (a.isPlayer) { gameState.player.x -= px; gameState.player.y -= py; }
+        else if (a.mob) { a.mob.x -= px; a.mob.y -= py; }
+        if (b.isPlayer) { gameState.player.x += px; gameState.player.y += py; }
+        else if (b.mob) { b.mob.x += px; b.mob.y += py; }
       }
     }
   }
 }
 
+// Update
 function update(dt) {
   if (gameState.paused) return;
-  resolveCollisions();
-  
   const p = gameState.player;
+  const speed = 3;
+  if (gameState.keys['w'] || gameState.keys['ArrowUp']) p.y -= speed;
+  if (gameState.keys['s'] || gameState.keys['ArrowDown']) p.y += speed;
+  if (gameState.keys['a'] || gameState.keys['ArrowLeft']) p.x -= speed;
+  if (gameState.keys['d'] || gameState.keys['ArrowRight']) p.x += speed;
   
-  // 玩家移动
-  let dx = 0, dy = 0;
-  if (gameState.keys['w'] || gameState.keys['W'] || gameState.keys['ArrowUp']) dy -= 1;
-  if (gameState.keys['s'] || gameState.keys['S'] || gameState.keys['ArrowDown']) dy += 1;
-  if (gameState.keys['a'] || gameState.keys['A'] || gameState.keys['ArrowLeft']) dx -= 1;
-  if (gameState.keys['d'] || gameState.keys['D'] || gameState.keys['ArrowRight']) dx += 1;
-  
-  if (dx !== 0 || dy !== 0) {
-    const len = Math.sqrt(dx*dx + dy*dy);
-    p.x += (dx / len) * CONFIG.PLAYER_SPEED;
-    p.y += (dy / len) * CONFIG.PLAYER_SPEED;
-    // 边界限制
+  // Keep player in bounds
+  const canvas = document.getElementById('game-canvas');
+  if (canvas) {
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x));
     p.y = Math.max(20, Math.min(canvas.height - 20, p.y));
   }
   
-  // 技能冷却
-  for (let i = 0; i < p.skillCooldowns.length; i++) {
-    if (p.skillCooldowns[i] > 0) {
-      p.skillCooldowns[i] -= dt;
-    }
-  }
-  
-  // MP回复
-  p.mp = Math.min(p.maxMp, p.mp + 0.02 * dt / 16);
-  
-  // 怪物AI
+  // Update mobs
   for (const mob of gameState.mobs) {
-    const distToPlayer = distance(mob.x, mob.y, p.x, p.y);
-    
-    if (distToPlayer < 200) {
-      // 追击玩家
-      const angle = Math.atan2(p.y - mob.y, p.x - mob.x);
-      mob.x += Math.cos(angle) * 1.5;
-      mob.y += Math.sin(angle) * 1.5;
-      
-      // 攻击玩家
-      if (distToPlayer < 40 && Date.now() - mob.lastAttack > 1000) {
-        mob.lastAttack = Date.now();
-        // 闪避判定
-        if (Math.random() * 100 < p.dodge) {
-          log(`闪避了 ${mob.name} 的攻击!`);
-          gameState.damageNumbers.push({
-            text: '闪避', x: p.x, y: p.y - 30,
-            color: '#3fb950', life: 40, crit: false
-          });
-        } else {
-          const dmg = Math.max(1, mob.atk - p.baseDef);
-          p.hp -= dmg;
-          log(`${mob.name} 对你造成 ${dmg} 点伤害`, 'damage');
-          gameState.damageNumbers.push({
-            text: '-' + dmg, x: p.x, y: p.y - 30,
-            color: '#f85149', life: 40, crit: false
-          });
-          // 死亡判定
-          if (p.hp <= 0) {
-            log('你已死亡...自动复活中', 'damage');
-            p.hp = p.maxHp;
-            p.mp = p.maxMp;
-            p.gold = Math.floor(p.gold * 0.9);
-          saveGame(true); // 损失10%金币
-          }
-        }
-      }
-    } else {
-      // 随机游荡
-      if (Math.random() < 0.02) {
-        mob.targetX = mob.x + rand(-50, 50);
-        mob.targetY = mob.y + rand(-50, 50);
-      }
-      const angle = Math.atan2(mob.targetY - mob.y, mob.targetX - mob.x);
-      mob.x += Math.cos(angle) * 0.5;
-      mob.y += Math.sin(angle) * 0.5;
+    const dx = p.x - mob.x, dy = p.y - mob.y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d > 50) {
+      mob.x += (dx / d) * 1.5;
+      mob.y += (dy / d) * 1.5;
     }
   }
   
-  // 鼠标攻击
-  if (gameState.mouse.down && Date.now() - gameState.lastAttackTime > CONFIG.ATTACK_COOLDOWN) {
-    const attackX = gameState.mouse.x;
-    const attackY = gameState.mouse.y;
-    
-    // 找最近的目标
-    let nearestMob = null;
-    let nearestDist = CONFIG.ATTACK_RANGE + 50;
-    
-    for (const mob of gameState.mobs) {
-      const dist = distance(mob.x, mob.y, p.x, p.y);
-      const distToMouse = distance(mob.x, mob.y, attackX, attackY);
-      if (dist < CONFIG.ATTACK_RANGE + 30 && distToMouse < nearestDist) {
-        nearestMob = mob;
-        nearestDist = distToMouse;
-      }
-    }
-    
-    if (nearestMob) {
-      gameState.lastAttackTime = Date.now();
-      
-      // 暴击判定
-      const isCrit = Math.random() * 100 < p.crit;
-      let dmg = Math.max(1, p.baseAtk - nearestMob.def);
-      if (isCrit) dmg = Math.floor(dmg * 1.5);
-      
-      nearestMob.hp -= dmg;
-      
-      log(`你对 ${nearestMob.name} 造成 ${dmg}${isCrit ? ' (暴击!)' : ''} 点伤害`, isCrit ? 'damage' : '');
-      gameState.damageNumbers.push({
-        text: (isCrit ? '暴击 ' : '') + dmg,
-        x: nearestMob.x, y: nearestMob.y - 30,
-        color: isCrit ? '#f0f6fc' : '#ffa657',
-        life: 40, crit: isCrit
-      });
-      
-      // 攻击粒子
-      for (let i = 0; i < 5; i++) {
-        gameState.particles.push({
-          x: nearestMob.x, y: nearestMob.y,
-          vx: randFloat(-2, 2), vy: randFloat(-2, 2),
-          color: '#ffa657', size: rand(2, 4),
-          life: 20, maxLife: 20
-        });
-      }
-      
-      // 怪物死亡
-      if (nearestMob.hp <= 0) {
-        log(`击杀了 ${nearestMob.name}!`, 'exp');
-        p.exp += nearestMob.exp;
-        p.gold += nearestMob.gold;
-        p.kills++;
-        
-        // 处理掉落
-        console.log("DEBUG mob_die:", nearestMob.type);
-        const drops = processDrop(nearestMob, nearestMob.type);
-        console.log("DEBUG drops:", JSON.stringify(drops));
-        if (drops.length > 0) {
-          console.log("DEBUG showModal");
-        showDropModal(drops);
+  // Mouse attack
+  if (gameState.mouse.down) {
+    const now = Date.now();
+    if (now - gameState.lastAttackTime > 300) {
+      gameState.lastAttackTime = now;
+      const mx = gameState.mouse.x, my = gameState.mouse.y;
+      const atk = p.baseAtk;
+      for (const mob of gameState.mobs) {
+        if (distance(mx, my, mob.x, mob.y) < 60) {
+          const dmg = Math.max(1, Math.floor(atk * (1 - mob.def / 200)));
+          mob.hp -= dmg;
+          gameState.damageNumbers.push({ text: '-' + dmg, x: mob.x, y: mob.y - 30, color: '#f85149', life: 40, crit: false });
+          gameState.particles.push({ x: mob.x, y: mob.y, vx: randFloat(-2, 2), vy: randFloat(-2, 2), color: '#f85149', size: rand(2, 4), life: 20, maxLife: 20 });
+          if (mob.hp <= 0) onMobDeath(mob);
         }
-        
-        // 升级判定
-        while (p.exp >= expToLevel(p.level)) {
-          p.exp -= expToLevel(p.level);
-          p.level++;
-          p.maxHp += 20;
-          p.hp = p.maxHp;
-          p.maxMp += 10;
-          p.mp = p.maxMp;
-          p.baseAtk += 2;
-          p.baseDef += 1;
-          log(`🎉 升级! 达到 Lv.${p.level}`, 'level');
-        }
-        
-        // 移除怪物
-        gameState.mobs = gameState.mobs.filter(m => m.id !== nearestMob.id);
       }
     }
   }
   
+  // Cooldowns
+  for (let i = 0; i < p.skillCooldowns.length; i++) {
+    if (p.skillCooldowns[i] > 0) p.skillCooldowns[i] -= dt;
+  }
+  
+  // Particles
+  gameState.particles = gameState.particles.filter(pt => {
+    pt.x += pt.vx; pt.y += pt.vy; pt.life--;
+    return pt.life > 0;
+  });
+  gameState.damageNumbers = gameState.damageNumbers.filter(dn => { dn.y -= 0.5; dn.life--; return dn.life > 0; });
+  
+  resolveCollisions();
   updateUI();
 }
 
-// ==================== 掉落弹窗 ====================
-let pendingDrops = [];
-
-function showDropModal(drops) {
-  pendingDrops = pendingDrops.concat(drops);
-  
-  const modal = document.getElementById('drop-modal');
-  const itemsDiv = document.getElementById('drop-items');
-  itemsDiv.innerHTML = '';
-  
-  for (const drop of drops) {
-    const div = document.createElement('div');
-    const q = QUALITIES[drop.quality] || { color: '#9ca3af' };
-    div.style.cssText = 'padding:6px 10px;background:#161b22;border-radius:6px;margin:4px 0;display:flex;align-items:center;gap:10px;border-left:3px solid ' + q.color + ';';
-    
-    if (drop.type === 'gold') {
-      div.innerHTML = '<span style="font-size:22px">💰</span><span style="color:#fbbf24">金币 +' + drop.amount + '</span>';
-    } else if (drop.type === 'item') {
-      div.innerHTML = '<span style="font-size:22px">' + (drop.icon || '?') + '</span><span style="color:#86efac">' + (drop.name || '药剂') + '</span>';
-    } else {
-      const qualName = q.name || '?';
-      const statsStr = (drop.atk ? ' 攻击+' + drop.atk : '') + (drop.def ? ' 防御+' + drop.def : '');
-      div.innerHTML = '<span style="font-size:22px">' + (drop.icon || '?') + '</span><span style="color:' + q.color + '">' + drop.name + ' [' + qualName + ']</span><span style="color:#9ca3af;font-size:11px">Lv.' + drop.level + statsStr + '</span>';
-    }
-    itemsDiv.appendChild(div);
+// Mob death
+function onMobDeath(mob) {
+  const idx = gameState.mobs.indexOf(mob);
+  if (idx >= 0) gameState.mobs.splice(idx, 1);
+  const drops = processDrop(mob, mob.type);
+  if (drops.length > 0) showDropModal(drops);
+  const exp = mob.exp;
+  if (exp) {
+    const oldLevel = gameState.player.level;
+    gameState.player.exp += exp;
+    const newLevel = gameState.player.level;
+    checkRealmBreakthrough(oldLevel, newLevel);
   }
-  
-  modal.classList.add('show');
-}function closeDropModal() {
-  const modal = document.getElementById('drop-modal');
-  modal.classList.remove('show');
-  
-  // 处理掉落物品
-  console.log('DEBUG closeModal, pending:', pendingDrops.length);
-for (const drop of pendingDrops) {
-    if (drop.type === 'gold') {
-      gameState.player.gold += drop.amount;
-    } else if (drop.type === 'item') {
-      addToInventory(drop);
-    } else {
-      addToInventory(drop);
-    }
-  }
-  pendingDrops = [];
-  updateUI();
+  gameState.player.kills++;
+  saveGame(false);
 }
 
-function addToInventory(item) {
-  console.log('DEBUG addToInv:', item.name, item.type);
-
-  // 检查是否可堆叠且已存在
-  if (item.stackable) {
-    const existing = gameState.player.inventory.find(i => i && i.id === item.id);
-    if (existing) {
-      existing.count++;
-      return true;
-    }
+// Render
+function render() {
+  const canvas = document.getElementById('game-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Background
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Decorations
+  for (const r of decorations.rivers) {
+    ctx.fillStyle = 'rgba(100,149,237,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(r.x, r.y, r.rx, r.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (const f of decorations.farms) {
+    ctx.fillStyle = '#3d5c3d';
+    ctx.fillRect(f.x, f.y, f.w || 80, f.h || 40);
+  }
+  for (const m of decorations.mountains) {
+    ctx.fillStyle = '#2d2d44';
+    ctx.beginPath();
+    ctx.moveTo(m.x, m.y + m.h);
+    ctx.lineTo(m.x + m.w / 2, m.y);
+    ctx.lineTo(m.x + m.w, m.y + m.h);
+    ctx.fill();
+  }
+  for (const t of decorations.trees) {
+    ctx.fillStyle = '#1a4a1a';
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.size || 15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (const g of decorations.grass) {
+    ctx.fillStyle = 'rgba(50,100,50,0.4)';
+    ctx.fillRect(g.x, g.y, 3, g.size || 8);
   }
   
-  // 找空位
-  const emptyIndex = gameState.player.inventory.findIndex(i => !i);
-  if (emptyIndex !== -1) {
-    gameState.player.inventory[emptyIndex] = { ...item, count: 1 };
-    return true;
+  // Mobs
+  for (const mob of gameState.mobs) {
+    // Body
+    ctx.fillStyle = mob.isBoss ? '#ff6600' : '#8b0000';
+    ctx.beginPath();
+    ctx.arc(mob.x, mob.y, mob.isBoss ? 22 : 16, 0, Math.PI * 2);
+    ctx.fill();
+    // HP bar
+    const bw = 30, bh = 4;
+    ctx.fillStyle = '#333';
+    ctx.fillRect(mob.x - bw/2, mob.y - 22, bw, bh);
+    ctx.fillStyle = '#f85149';
+    ctx.fillRect(mob.x - bw/2, mob.y - 22, bw * (mob.hp / mob.maxHp), bh);
+    // Name
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px Microsoft YaHei';
+    ctx.textAlign = 'center';
+    ctx.fillText(mob.name, mob.x, mob.y + 28);
   }
   
-  log('背包已满!', 'damage');
-  return false;
-}
-
-// ==================== 技能系统 ====================
-function useSkill(index) {
+  // Particles
+  for (const pt of gameState.particles) {
+    const alpha = pt.life / pt.maxLife;
+    ctx.fillStyle = pt.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+    ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+  }
+  
+  // Player
   const p = gameState.player;
-  if (p.skillCooldowns[index] > 0) {
-    log('技能冷却中...');
-    return;
+  ctx.fillStyle = '#58a6ff';
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '10px Microsoft YaHei';
+  ctx.textAlign = 'center';
+  ctx.fillText('你', p.x, p.y + 4);
+  
+  // Damage numbers
+  ctx.textAlign = 'center';
+  for (const dn of gameState.damageNumbers) {
+    const alpha = dn.life / 40;
+    ctx.fillStyle = dn.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+    ctx.font = '14px Microsoft YaHei';
+    ctx.fillText(dn.text, dn.x, dn.y);
+  }
+}
+
+// Update UI
+function updateUI() {
+  const p = gameState.player;
+  const realm = getRealm(p.level);
+  
+  // Level + realm
+  const lvEl = document.getElementById('player-level');
+  if (lvEl) lvEl.textContent = 'Lv.' + p.level;
+  const realmEl = document.getElementById('player-realm');
+  if (realmEl) realmEl.textContent = realm.name + ' Lv.' + p.level;
+  
+  // HP
+  const hpBar = document.getElementById('hp-bar');
+  if (hpBar) hpBar.style.width = (p.hp / p.maxHp * 100) + '%';
+  const hpText = document.getElementById('hp-text');
+  if (hpText) hpText.textContent = Math.floor(p.hp) + '/' + p.maxHp;
+  
+  // MP
+  const mpBar = document.getElementById('mp-bar');
+  if (mpBar) mpBar.style.width = (p.mp / p.maxMp * 100) + '%';
+  const mpText = document.getElementById('mp-text');
+  if (mpText) mpText.textContent = Math.floor(p.mp) + '/' + p.maxMp;
+  
+  // EXP
+  const expNeeded = expToLevel(p.level);
+  const expBar = document.getElementById('exp-bar');
+  if (expBar) expBar.style.width = (p.exp / expNeeded * 100) + '%';
+  const expText = document.getElementById('exp-text');
+  if (expText) expText.textContent = p.exp + '/' + expNeeded;
+  
+  // Stats
+  const atkEl = document.getElementById('stat-atk');
+  if (atkEl) atkEl.textContent = '攻击' + p.baseAtk;
+  const defEl = document.getElementById('stat-def');
+  if (defEl) defEl.textContent = '防御' + p.baseDef;
+  const critEl = document.getElementById('stat-crit');
+  if (critEl) critEl.textContent = '暴击' + p.crit + '%';
+  const dodgeEl = document.getElementById('stat-dodge');
+  if (dodgeEl) dodgeEl.textContent = '闪避' + p.dodge + '%';
+  
+  // Gold + kills
+  const goldEl = document.getElementById('gold-count');
+  if (goldEl) goldEl.textContent = p.gold;
+  const killsEl = document.getElementById('kill-count');
+  if (killsEl) killsEl.textContent = p.kills;
+  
+  // Inventory
+  const invEl = document.getElementById('inventory-list');
+  if (invEl) {
+    invEl.innerHTML = '';
+    for (const item of p.inventory) {
+      if (!item) continue;
+      const span = document.createElement('span');
+      span.textContent = item.icon || '\u2753';
+      span.title = item.name + ' ' + item.level + '级';
+      invEl.appendChild(span);
+    }
   }
   
-  const skills = [
-    { name: '剑气', mp: 10, cd: 3000, damage: 30, range: 150 },
-    { name: '雷法', mp: 20, cd: 5000, damage: 60, range: 200, aoe: true },
-    { name: '护盾', mp: 15, cd: 8000, heal: 50 },
-    { name: '瞬移', mp: 25, cd: 6000, teleport: true },
-  ];
-  
-  const skill = skills[index];
-  if (p.mp < skill.mp) {
-    log('法力不足!');
+  // Cooldowns
+  for (let i = 0; i < 4; i++) {
+    const cdEl = document.getElementById('skill-cd-' + i);
+    if (cdEl) {
+      const pct = Math.max(0, p.skillCooldowns[i] / (SKILLS[i] ? SKILLS[i].cooldown : 5000) * 100);
+      cdEl.style.width = pct + '%';
+    }
+  }
+}
+
+// Drop modal
+function showDropModal(drops) {
+  const modal = document.getElementById('drop-modal');
+  const list = document.getElementById('drop-list');
+  if (!modal || !list) return;
+  list.innerHTML = '';
+  for (const item of drops) {
+    if (!item) continue;
+    const div = document.createElement('div');
+    if (item.type === 'gold' || item.type === 'exp') {
+      div.textContent = item.icon + ' ' + item.name + ' +' + item.value;
+      div.style.color = '#f0c040';
+    } else {
+      const q = QUALITIES[item.quality] || { color: '#fff' };
+      div.style.color = q.color;
+      div.textContent = (item.icon || '\u2694') + ' ' + item.name + ' ' + item.level + '级';
+      div.style.cursor = 'pointer';
+      div.onclick = () => { addToInventory(item); modal.style.display = 'none'; };
+    }
+    list.appendChild(div);
+  }
+  modal.style.display = 'block';
+  setTimeout(() => { modal.style.display = 'none'; }, 3000);
+}
+
+// Inventory management
+function addToInventory(item) {
+  if (!item) return;
+  const idx = gameState.player.inventory.findIndex(i => !i);
+  if (idx >= 0) {
+    gameState.player.inventory[idx] = item;
+  } else if (gameState.player.inventory.length < 20) {
+    gameState.player.inventory.push(item);
+  } else {
+    log('背包已满!', 'damage');
     return;
   }
+  log('获得: ' + item.name, 'info2');
+  updateUI();
+}
+
+// Skills
+function useSkill(index) {
+  const skill = SKILLS[index];
+  if (!skill) return;
+  const p = gameState.player;
+  if (p.mp < skill.cost) { log('法力不足!', 'damage'); return; }
+  if (p.skillCooldowns[index] > 0) { log(skill.name + ' 冷却中', 'info'); return; }
+  p.mp -= skill.cost;
+  p.skillCooldowns[index] = skill.cooldown;
   
-  p.mp -= skill.mp;
-  p.skillCooldowns[index] = skill.cd;
-  
-  if (skill.damage) {
-    // 找范围内的敌人
+  if (skill.type === 'damage') {
     for (const mob of gameState.mobs) {
-      const dist = distance(mob.x, mob.y, p.x, p.y);
-      if (dist < skill.range) {
-        const dmg = skill.damage + p.baseAtk;
+      if (distance(p.x, p.y, mob.x, mob.y) < skill.range) {
+        const dmg = Math.max(1, Math.floor(p.baseAtk * skill.mult));
         mob.hp -= dmg;
-        log(`${skill.name} 对 ${mob.name} 造成 ${dmg} 点伤害`, 'damage');
-        gameState.damageNumbers.push({
-          text: dmg, x: mob.x, y: mob.y - 30,
-          color: '#a371f7', life: 40, crit: false
-        });
-        
-        if (!skill.aoe) break; // 非AOE只打一个
+        gameState.damageNumbers.push({ text: dmg, x: mob.x, y: mob.y - 30, color: '#a371f7', life: 40, crit: false });
+        if (mob.hp <= 0) onMobDeath(mob);
       }
     }
+  } else if (skill.type === 'heal') {
+    const heal = Math.floor(skill.heal);
+    p.hp = Math.min(p.maxHp, p.hp + heal);
+    gameState.damageNumbers.push({ text: '+' + heal, x: p.x, y: p.y - 30, color: '#3fb950', life: 40, crit: false });
   }
-  
-  if (skill.heal) {
-    p.hp = Math.min(p.maxHp, p.hp + skill.heal);
-    log(`${skill.name} 恢复了 ${skill.heal} 点生命`, 'heal');
-    gameState.damageNumbers.push({
-      text: '+' + skill.heal, x: p.x, y: p.y - 30,
-      color: '#3fb950', life: 40, crit: false
-    });
-  }
-  
-  if (skill.teleport) {
-    // 瞬移到鼠标位置
-    const targetX = gameState.mouse.x;
-    const targetY = gameState.mouse.y;
-    const dist = distance(targetX, targetY, p.x, p.y);
-    if (dist < 200) {
-      p.x = targetX;
-      p.y = targetY;
-      log('瞬移成功!');
-    } else {
-      log('距离过远,瞬移失败');
-      p.mp += skill.mp; // 退还MP
-      p.skillCooldowns[index] = 0;
-    }
-  }
-  
-  log(`使用技能: ${skill.name}`);
+  log('使用技能: ' + skill.name, 'skill');
 }
 
-// ==================== 存档系统 ====================
+// Save/Load
 function saveGame(showMsg) {
-// ==================== 存档读取 ====================
-function loadGame() {
-  const raw = localStorage.getItem('xiantu_save');
-  if (!raw) { log('无存档，重新开始', 'info'); return; }
-  try {
-    const data = JSON.parse(raw);
-    if (data.player) {
-      gameState.player = { ...gameState.player, ...data.player };
-      gameState.player.hp = gameState.player.maxHp;
-      gameState.player.mp = gameState.player.maxMp;
-      gameState.mobs = [];
-      updateUI();
-      log('存档已加载 Lv.' + gameState.player.level + ' ' + getRealm(gameState.player.level).name, 'info');
-    }
-  } catch(e) { log('存档读取失败', 'damage'); }
-}
-
-
   const data = JSON.stringify({ player: gameState.player, version: 1 });
   localStorage.setItem('xiantu_save', data);
   gameState.player.lastSave = Date.now();
-  if (showMsg) log('游戏已自动保存', 'info');
-} else {
-    log('没有找到存档');
-  }
+  if (showMsg) log('游戏已自动存档', 'info');
 }
 
-// ==================== 事件监听 ====================
+function loadGame() {
+  const raw = localStorage.getItem('xiantu_save');
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      if (data.player) {
+        gameState.player = { ...gameState.player, ...data.player };
+        gameState.player.hp = Math.min(gameState.player.hp, gameState.player.maxHp);
+        gameState.player.mp = Math.min(gameState.player.mp, gameState.player.maxMp);
+        gameState.mobs = [];
+        updateUI();
+        log('存档已加载 Lv.' + gameState.player.level + ' ' + getRealm(gameState.player.level).name, 'info');
+        return;
+      }
+    } catch(e) { log('存档读取失败', 'damage'); }
+  }
+  initGame();
+}
+
+function initGame() {
+  const p = gameState.player;
+  p.level = 1; p.exp = 0; p.hp = p.maxHp; p.mp = p.maxMp;
+  p.gold = 0; p.kills = 0;
+  p.equipment = { weapon: null, helmet: null, armor: null, ring: null, amulet: null, boot: null };
+  p.inventory = [];
+  p.skillCooldowns = [0, 0, 0, 0];
+  p.guaranteeCounters = {};
+  gameState.mobs = [];
+  gameState.particles = [];
+  gameState.damageNumbers = [];
+  updateUI();
+  log('新游戏开始! 境界: ' + getRealm(1).name, 'level');
+}
+
+// Decorations
+function rebuildDecorations() {
+  if (decorations.mountains.length > 0) return;
+  const canvas = document.getElementById('game-canvas');
+  if (!canvas) return;
+  const w = canvas.width, h = canvas.height;
+  for (let i = 0; i < 5; i++) decorations.mountains.push({ x: w * (0.1 + i * 0.2), y: h * 0.3, w: 80 + rand(0, 40), h: 60 + rand(0, 30) });
+  for (let i = 0; i < 10; i++) decorations.trees.push({ x: w * (0.05 + Math.random() * 0.9), y: h * (0.1 + Math.random() * 0.8), size: 10 + rand(0, 10) });
+  decorations.rivers.push({ x: w * 0.4, y: h * 0.5, rx: 100, ry: 40 });
+  for (let i = 0; i < 4; i++) decorations.farms.push({ x: w * (0.1 + i * 0.2), y: h * 0.7, w: 80, h: 40 });
+  for (let i = 0; i < 15; i++) decorations.grass.push({ x: w * (0.05 + i * 0.06), y: h * (0.1 + (i % 5) * 0.18), size: 10 + i % 8 });
+}
+
+// Event listeners
 document.addEventListener('keydown', e => {
   gameState.keys[e.key] = true;
-  
-  // 技能快捷键
-  if (e.key >= '1' && e.key <= '4') {
-    useSkill(parseInt(e.key) - 1);
-  }
+  if (e.key >= '1' && e.key <= '4') useSkill(parseInt(e.key) - 1);
 });
+document.addEventListener('keyup', e => { gameState.keys[e.key] = false; });
 
-document.addEventListener('keyup', e => {
-  gameState.keys[e.key] = false;
-});
-
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  gameState.mouse.x = e.clientX - rect.left;
-  gameState.mouse.y = e.clientY - rect.top;
-});
-
-canvas.addEventListener('mousedown', e => {
-  gameState.mouse.down = true;
-});
-
-canvas.addEventListener('mouseup', e => {
-  gameState.mouse.down = false;
-});
-
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-
+const canvas = document.getElementById('game-canvas');
+if (canvas) {
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    gameState.mouse.x = e.clientX - rect.left;
+    gameState.mouse.y = e.clientY - rect.top;
+  });
+  canvas.addEventListener('mousedown', e => { gameState.mouse.down = true; });
+  canvas.addEventListener('mouseup', e => { gameState.mouse.down = false; });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+}
 document.getElementById('btn-pause').addEventListener('click', () => {
   gameState.paused = !gameState.paused;
-  document.getElementById('btn-pause').textContent = gameState.paused ? '▶️' : '⏸️';
-  log(gameState.paused ? '游戏暂停' : '游戏继续');
+  document.getElementById('btn-pause').textContent = gameState.paused ? '\u25b6\ufe0f 继续' : '\u23f8\ufe0f 暂停';
 });
-
-document.getElementById('btn-save').addEventListener('click', saveGame);
+document.getElementById('btn-save').addEventListener('click', () => { saveGame(true); });
 document.getElementById('btn-load').addEventListener('click', loadGame);
 
-// 背包点击使用物品
-document.getElementById('inventory-grid').addEventListener('click', e => {
-  if (!e.target.classList.contains('inv-slot')) return;
-  const index = Array.from(e.target.parentElement.children).indexOf(e.target);
-  const item = gameState.player.inventory[index];
-  if (!item) return;
-  
-  if (item.effect) {
-    // 消耗品
-    if (item.effect.hp) {
-      gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + item.effect.hp);
-      log(`使用 ${item.name} 恢复 ${item.effect.hp} HP`, 'heal');
-    }
-    if (item.effect.mp) {
-      gameState.player.mp = Math.min(gameState.player.maxMp, gameState.player.mp + item.effect.mp);
-      log(`使用 ${item.name} 恢复 ${item.effect.mp} MP`, 'heal');
-    }
-    item.count--;
-    if (item.count <= 0) {
-      gameState.player.inventory[index] = null;
-    }
-  } else if (item.type) {
-    // 装备 - 装备到对应槽位
-    const slot = item.type;
-    const oldEquip = gameState.player.equipment[slot];
-    gameState.player.equipment[slot] = item;
-    gameState.player.inventory[index] = oldEquip;
-    log(`装备了 ${item.name}`);
-  }
-  updateUI();
-});
+// ===== STARTUP =====
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+rebuildDecorations();
+loadGame();
 
-// ==================== 游戏主循环 ====================
-let lastTime = 0;
 function gameLoop(timestamp) {
-  const dt = timestamp - lastTime;
-  lastTime = timestamp;
-  
-  update(dt);
-  render();
-  
+  if (!gameState.paused) {
+    const dt = Math.min(timestamp - (gameState._lastTime || timestamp), 50);
+    gameState._lastTime = timestamp;
+    update(dt);
+    render();
+  }
   requestAnimationFrame(gameLoop);
 }
-
-// 定期生成怪物
+requestAnimationFrame(gameLoop);
 setInterval(spawnMob, 3000);
 
-// 初始化
-rebuildDecorations();
-console.log('DEBUG: decorations ready');
-loadGame();
-console.log('DEBUG: game loaded');
-updateUI();
-console.log('DEBUG: UI updated, canvas width:', canvas.width, 'height:', canvas.height);
-requestAnimationFrame(function(t) {
-  console.log('DEBUG: first frame at', t);
-  gameLoop(t);
-});
 log('欢迎来到仙途!');
-log('WASD移动,鼠标点击攻击,数字键1-4释放技能');
-log('点击背包中的物品使用或装备');
-requestAnimationFrame(gameLoop);
+log('WASD移动, 鼠标攻击, 数字键1-4释放技能');
 </script>
 </body>
 </html>
-
-<!-- force rebuild: c8505727 -->
