@@ -1132,6 +1132,21 @@ function saveGame(showMsg) {
   if (showMsg) log('游戏已自动存档', 'info');
 }
 
+function newPlayer() {
+  return {
+    x: 400, y: 300,
+    hp: 100, maxHp: 100,
+    mp: 50, maxMp: 50,
+    level: 1, exp: 0,
+    realm: 0, realmLayer: 1,
+    atk: 10, def: 5,
+    equipment: {},
+    inventory: [],
+    gold: 0,
+    guaranteeCounters: {},
+  };
+}
+
 function loadGame() {
   const raw = localStorage.getItem('xiantu_save');
   if (raw) {
