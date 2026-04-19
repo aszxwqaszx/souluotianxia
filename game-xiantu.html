@@ -830,6 +830,9 @@ function update(dt) {
     if (p.skillCooldowns[i] > 0) p.skillCooldowns[i] -= dt;
   }
   
+  // MP regeneration (1 MP per 100ms = 10 MP per second)
+  p.mp = Math.min(p.maxMp, p.mp + dt * 0.01);
+  
   // Particles
   gameState.particles = gameState.particles.filter(pt => {
     pt.x += pt.vx; pt.y += pt.vy; pt.life--;
@@ -1096,12 +1099,13 @@ function addToInventory(item) {
 // Skills
 function useSkill(index) {
   const skill = SKILLS[index];
-  if (!skill) return;
+  if (!skill) { log('技能不存在', 'damage'); return; }
   const p = gameState.player;
-  if (p.mp < skill.cost) { log('法力不足!', 'damage'); return; }
-  if (p.skillCooldowns[index] > 0) { log(skill.name + ' 冷却中', 'info'); return; }
+  if (p.mp < skill.cost) { log('法力不足! 需要' + skill.cost + 'MP', 'damage'); return; }
+  if (p.skillCooldowns[index] > 0) { log(skill.name + ' 冷却中(' + Math.ceil(p.skillCooldowns[index]/1000) + 's)', 'info'); return; }
   p.mp -= skill.cost;
   p.skillCooldowns[index] = skill.cooldown;
+  log('>>> 释放技能: ' + skill.name + ' ' + skill.icon, 'skill');
   
   if (skill.type === 'damage') {
     for (const mob of gameState.mobs) {
