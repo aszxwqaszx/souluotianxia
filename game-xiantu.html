@@ -826,8 +826,8 @@ function update(dt) {
   }
   
   // Cooldowns
-  for (let i = 0; i < p.skillCooldowns.length; i++) {
-    if (p.skillCooldowns[i] > 0) p.skillCooldowns[i] -= dt;
+  for (let i = 0; i < skillCooldowns.length; i++) {
+    if (skillCooldowns[i] > 0) skillCooldowns[i] = Math.max(0, skillCooldowns[i] - dt);
   }
   
   // MP regeneration (1 MP per 100ms = 10 MP per second)
@@ -1102,9 +1102,9 @@ function useSkill(index) {
   if (!skill) { log('技能不存在', 'damage'); return; }
   const p = gameState.player;
   if (p.mp < skill.cost) { log('法力不足! 需要' + skill.cost + 'MP', 'damage'); return; }
-  if (p.skillCooldowns[index] > 0) { log(skill.name + ' 冷却中(' + Math.ceil(p.skillCooldowns[index]/1000) + 's)', 'info'); return; }
+  if (skillCooldowns[index] > 0) { log(skill.name + ' 冷却中(' + Math.ceil(skillCooldowns[index]/1000) + 's)', 'info'); return; }
   p.mp -= skill.cost;
-  p.skillCooldowns[index] = skill.cooldown;
+  skillCooldowns[index] = skill.cooldown;
   log('>>> 释放技能: ' + skill.name + ' ' + skill.icon, 'skill');
   
   if (skill.type === 'damage') {
@@ -1210,6 +1210,14 @@ resizeCanvas();
 rebuildDecorations();
 loadGame();
 
+
+
+function init() {
+  loadGame();
+  rebuildDecorations();
+  requestAnimationFrame(gameLoop);
+}
+
 function gameLoop(timestamp) {
   if (!gameState.paused) {
     const dt = Math.min(timestamp - (gameState._lastTime || timestamp), 50);
@@ -1224,6 +1232,10 @@ setInterval(spawnMob, 3000);
 
 log('欢迎来到仙途!');
 log('WASD移动, 鼠标攻击, 数字键1-4释放技能');
+
+
+// Startup
+init();
 </script>
 </body>
 </html>
