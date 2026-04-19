@@ -790,7 +790,7 @@ function update(dt) {
   if (gameState.keys['d'] || gameState.keys['ArrowRight']) p.x += speed;
   
   // Keep player in bounds
-  const canvas = document.getElementById('game-canvas');
+  canvas = document.getElementById('game-canvas');
   if (canvas) {
     p.x = Math.max(20, Math.min(canvas.width - 20, p.x));
     p.y = Math.max(20, Math.min(canvas.height - 20, p.y));
@@ -863,7 +863,7 @@ function onMobDeath(mob) {
 
 // Render
 function render() {
-  const canvas = document.getElementById('game-canvas');
+  canvas = document.getElementById('game-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1184,7 +1184,7 @@ function initGame() {
 // Decorations
 function rebuildDecorations() {
   if (decorations.mountains.length > 0) return;
-  const canvas = document.getElementById('game-canvas');
+  canvas = document.getElementById('game-canvas');
   if (!canvas) return;
   const w = canvas.width, h = canvas.height;
   for (let i = 0; i < 5; i++) decorations.mountains.push({ x: w * (0.1 + i * 0.2), y: h * 0.3, w: 80 + rand(0, 40), h: 60 + rand(0, 30) });
@@ -1201,7 +1201,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => { gameState.keys[e.key] = false; });
 
-const canvas = document.getElementById('game-canvas');
+canvas = document.getElementById('game-canvas');
 if (canvas) {
   canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
