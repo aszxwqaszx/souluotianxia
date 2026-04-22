@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平行宇宙简历生成器</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+:root {
+  --bg-dark: #030510;
+  --bg-card: rgba(10, 20, 60, 0.6);
+  --primary: #00d4ff;
+  --secondary: #7b2fff;
+  --accent: #ff2d78;
+  --gold: #ffd700;
+  --text: #e8eeff;
+  --text-dim: #8899bb;
+  --border: rgba(0, 212, 255, 0.2);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== COSMIC BACKGROUND ===== */
+.cosmos-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(123, 47, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(255, 45, 120, 0.08) 0%, transparent 50%),
+    var(--bg-dark);
+}
+
+/* Star field */
+.stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%, 100% { opacity: var(--o, 0.3); transform: scale(1); }
+  50% { opacity: calc(var(--o, 0.3) * 0.2); transform: scale(0.8); }
+}
+
+/* Floating particles */
+.particle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  animation: float-particle linear infinite;
+}
+@keyframes float-particle {
+  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+}
+
+/* ===== PAGE LAYOUT ===== */
+.page {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.page.active { display: flex; }
+
+/* ===== PAGE 1: COVER ===== */
+.page-cover {
+  animation: pageIn 0.8s ease;
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cover-container {
+  max-width: 600px;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 48px 40px;
+  backdrop-filter: blur(20px);
+  box-shadow: 
+    0 0 60px rgba(0, 212, 255, 0.08),
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.cover-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logo-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+  filter: drop-shadow(0 0 20px var(--primary));
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 20px var(--primary)); }
+  50% { filter: drop-shadow(0 0 40px var(--primary)) drop-shadow(0 0 60px var(--secondary)); }
+}
+
+.cover-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.cover-subtitle {
+  font-size: 14px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.divider-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+  margin: 24px 0;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 20px;
+}
+.form-label {
+  display: block;
+  font-size: 12px;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'Noto Sans SC', sans-serif;
+  transition: all 0.3s;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+  background: rgba(0, 212, 255, 0.08);
+}
+.form-input::placeholder { color: var(--text-dim); opacity: 0.6; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+select.form-input {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%2300d4ff'%3E%3Cpath d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+select.form-input option { background: #0a1432; color: var(--text); }
+
+.start-btn {
+  width: 100%;
+  padding: 16px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+}
+.start-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+.start-btn:hover::before { left: 100%; }
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5);
+}
+.start-btn:active { transform: translateY(0); }
+
+/* ===== PAGE 2: QUANTUM BRANCHING ===== */
+.page-quantum {
+  padding: 0;
+  justify-content: flex-start;
+  overflow: hidden;
+  position: relative;
+}
+
+.quantum-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, var(--bg-dark), transparent);
+}
+.back-btn {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Noto Sans SC', sans-serif;
+  transition: all 0.3s;
+}
+.back-btn:hover { background: rgba(0, 212, 255, 0.2); }
+.quantum-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: var(--primary);
+  letter-spacing: 2px;
+}
+.step-indicator {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'Orbitron', sans-serif;
+}
+
+.quantum-stage {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 120px;
+}
+
+/* Universe canvas */
+#universeCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Quantum branch cards */
+.branch-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 900px;
+  perspective: 1000px;
+}
+
+.current-you {
+  text-align: center;
+  margin-bottom: 30px;
+  animation: fadeSlideUp 0.6s ease;
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.current-you-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.current-you-name {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+}
+.current-you-info {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.decision-zone {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.decision-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  color: var(--primary);
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+}
+.decision-text {
+  font-size: 16px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.decision-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* Branch swipe area */
+.swipe-area {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  min-height: 280px;
+}
+
+.branch-bubble {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  border-radius: 20px;
+  border: 1px solid transparent;
+}
+.branch-bubble.active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+  border-color: var(--border);
+  background: var(--bg-card);
+  backdrop-filter: blur(15px);
+}
+.branch-bubble.exiting {
+  opacity: 0;
+  transform: translateX(-60%) scale(0.9);
+}
+
+.branch-inner {
+  text-align: center;
+  width: 100%;
+}
+
+.bubble-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 20px currentColor);
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.branch-profession {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.branch-lifetime {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+.branch-desc {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+  max-width: 500px;
+  margin: 0 auto;
+  opacity: 0.9;
+}
+
+/* Quantum effects on bubble */
+.branch-bubble.active::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 20px;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--primary), transparent, var(--secondary));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate-border 4s linear infinite;
+}
+@keyframes rotate-border {
+  to { transform: rotate(360deg); }
+}
+
+/* Swipe hint */
+.swipe-hint {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.swipe-arrow {
+  animation: swipe-anim 1.5s ease-in-out infinite;
+  font-size: 18px;
+}
+@keyframes swipe-anim {
+  0%, 100% { transform: translateX(0); opacity: 0.5; }
+  50% { transform: translateX(-10px); opacity: 1; }
+}
+
+/* Timeline dots */
+.timeline-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 20px;
+}
+.timeline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.timeline-dot.active {
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Quantum fork effects */
+.quantum-fork {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  display: none;
+}
+.quantum-fork.show { display: block; }
+.fork-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  animation: fork-expand 1s ease-out forwards;
+}
+@keyframes fork-expand {
+  0% { width: 10px; height: 10px; opacity: 1; }
+  100% { width: 600px; height: 600px; opacity: 0; }
+}
+.fork-ring:nth-child(2) { animation-delay: 0.1s; border-color: var(--secondary); }
+.fork-ring:nth-child(3) { animation-delay: 0.2s; border-color: var(--accent); }
+
+/* Generate button */
+.generate-btn {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 14px 48px;
+  border: none;
+  border-radius: 30px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--secondary));
+  color: white;
+  box-shadow: 0 4px 30px rgba(255, 45, 120, 0.4);
+  transition: all 0.3s;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(20px);
+}
+.generate-btn.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.generate-btn:hover {
+  box-shadow: 0 8px 40px rgba(255, 45, 120, 0.6);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* ===== PAGE 3: RESUME ===== */
+.page-resume {
+  padding: 0;
+  overflow-y: auto;
+  justify-content: flex-start;
+}
+.resume-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 24px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: linear-gradient(to bottom, var(--bg-dark), transparent);
+}
+.toolbar-btn {
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid var(--border);
+  background: rgba(10, 20, 60, 0.8);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+}
+.toolbar-btn:hover { border-color: var(--primary); color: var(--primary); }
+.toolbar-btn.primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border: none;
+  color: white;
+}
+.toolbar-btn.primary:hover { box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4); }
+.resume-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: var(--primary);
+  letter-spacing: 2px;
+  flex: 1;
+  text-align: center;
+}
+
+.resume-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 80px auto 40px;
+  padding: 0 16px;
+}
+
+/* Resume A4 */
+.resume-paper {
+  background: #f8f7f4;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.1);
+  color: #1a1a2e;
+  min-height: 1100px;
+  position: relative;
+}
+
+.resume-header {
+  background: linear-gradient(135deg, #1a1a3e, #2d1b69);
+  padding: 36px 40px 30px;
+  position: relative;
+  overflow: hidden;
+}
+.resume-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+}
+
+.resume-avatar-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+.resume-avatar {
+  width: 90px;
+  height: 110px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+.resume-avatar-placeholder {
+  width: 90px;
+  height: 110px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 2px dashed rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.resume-avatar-placeholder:hover { border-color: var(--primary); background: rgba(0, 212, 255, 0.1); }
+
+.resume-identity {
+  flex: 1;
+}
+.resume-name {
+  font-size: 26px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.resume-meta {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.resume-meta span { display: flex; align-items: center; gap: 4px; }
+.resume-tagline {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  font-style: italic;
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--primary);
+}
+
+.resume-body {
+  padding: 30px 40px;
+}
+.resume-section {
+  margin-bottom: 28px;
+}
+.resume-section-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #2d1b69;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #2d1b69;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.resume-section-title::before {
+  content: '';
+  width: 4px;
+  height: 14px;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary));
+  border-radius: 2px;
+}
+
+.resume-summary {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.8;
+  padding: 12px 16px;
+  background: rgba(45, 27, 105, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid #2d1b69;
+}
+
+.exp-item {
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 2px solid #e0dff5;
+  position: relative;
+}
+.exp-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2d1b69;
+}
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.exp-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+.exp-period { font-size: 11px; color: #888; }
+.exp-company { font-size: 13px; color: #666; margin-bottom: 6px; }
+.exp-desc { font-size: 12px; color: #555; line-height: 1.7; }
+
+.project-item {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: rgba(45, 27, 105, 0.04);
+  border-radius: 8px;
+}
+.project-name { font-size: 13px; font-weight: 700; color: #2d1b69; margin-bottom: 4px; }
+.project-desc { font-size: 12px; color: #555; line-height: 1.6; }
+.project-tech {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.tech-tag {
+  padding: 2px 8px;
+  background: rgba(45, 27, 105, 0.1);
+  border-radius: 4px;
+  font-size: 10px;
+  color: #2d1b69;
+  font-weight: 700;
+}
+
+.referral-card {
+  background: rgba(45, 27, 105, 0.04);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(45, 27, 105, 0.1);
+}
+.ref-quote {
+  font-size: 12px;
+  color: #555;
+  font-style: italic;
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.ref-quote::before { content: '"'; }
+.ref-quote::after { content: '"'; }
+.ref-author { font-size: 11px; color: #888; display: flex; gap: 8px; align-items: center; }
+.ref-author strong { color: #2d1b69; }
+
+.skill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.skill-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #444;
+}
+.skill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2d1b69;
+  flex-shrink: 0;
+}
+
+.resume-footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: #999;
+  border-top: 1px solid #eee;
+}
+.watermark {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  color: rgba(45, 27, 105, 0.3);
+  letter-spacing: 2px;
+}
+
+/* Timeline view */
+.timeline-view {
+  display: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(15px);
+}
+.timeline-view.show { display: block; }
+.timeline-heading {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: var(--primary);
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.timeline-track {
+  position: relative;
+  padding-left: 24px;
+}
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary), var(--accent));
+}
+.tl-event {
+  position: relative;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+  border-left: 3px solid var(--primary);
+}
+.tl-event::before {
+  content: '';
+  position: absolute;
+  left: -21px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+}
+.tl-year {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.tl-event-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.tl-event-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+/* Hidden file input */
+#photoInput { display: none; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .cover-container { padding: 32px 20px; }
+  .cover-title { font-size: 22px; }
+  .form-row { grid-template-columns: 1fr; }
+  .resume-header { padding: 24px 20px; }
+  .resume-body { padding: 20px; }
+  .resume-name { font-size: 20px; }
+  .resume-avatar { width: 70px; height: 86px; }
+  .skill-grid { grid-template-columns: 1fr; }
+  .bubble-icon { font-size: 40px; }
+}
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Loading animation */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  transition: opacity 0.5s;
+}
+.loading-overlay.hide { opacity: 0; pointer-events: none; }
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: var(--primary);
+  letter-spacing: 3px;
+}
+
+/* Scan line effect */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  animation: scan 3s ease-in-out infinite;
+  opacity: 0.5;
+}
+@keyframes scan {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="cosmos-bg"></div>
+<div class="stars" id="stars"></div>
+<div id="particles"></div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">量子纠缠中...</div>
+</div>
+
+<!-- ========== PAGE 1: COVER ========== -->
+<div class="page page-cover active" id="pageCover">
+  <div class="cover-container">
+    <div class="cover-header">
+      <span class="logo-icon">⚛️</span>
+      <h1 class="cover-title">平行宇宙简历生成器</h1>
+      <p class="cover-subtitle">
+        每一次选择，都分裂出一个全新的宇宙<br>
+        在另一个时空的你，此刻正在做什么？
+      </p>
+    </div>
+
+    <div class="divider-line"></div>
+
+    <div class="form-group">
+      <label class="form-label">姓名</label>
+      <input type="text" class="form-input" id="inputName" placeholder="你的名字是？" maxlength="20">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">性别</label>
+        <select class="form-input" id="inputGender">
+          <option value="男">男</option>
+          <option value="女">女</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">年龄</label>
+        <input type="number" class="form-input" id="inputAge" placeholder="18-60" min="18" max="60">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">现职业 / 岗位</label>
+      <input type="text" class="form-input" id="inputCurrentJob" placeholder="例如：程序员 / 销售 / 学生">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">想探索的职业方向</label>
+      <input type="text" class="form-input" id="inputWantedJob" placeholder="你羡慕的那个职业是什么？">
+    </div>
+
+    <button class="start-btn" id="startBtn" onclick="startJourney()">
+      🚀 开启平行人生
+    </button>
+  </div>
+</div>
+
+<!-- ========== PAGE 2: QUANTUM BRANCHING ========== -->
+<div class="page page-quantum" id="pageQuantum">
+  <div class="quantum-header">
+    <button class="back-btn" onclick="showPage('cover')">← 重填</button>
+    <span class="quantum-title">量子分叉</span>
+    <span class="step-indicator" id="stepIndicator">1 / 3</span>
+  </div>
+
+  <canvas id="universeCanvas"></canvas>
+
+  <div class="quantum-fork" id="quantumFork">
+    <div class="fork-ring"></div>
+    <div class="fork-ring"></div>
+    <div class="fork-ring"></div>
+  </div>
+
+  <div class="quantum-stage">
+    <div class="branch-container">
+      <div class="current-you">
+        <div class="current-you-label">此刻的你</div>
+        <div class="current-you-name" id="displayName">——</div>
+        <div class="current-you-info" id="displayInfo">——</div>
+      </div>
+
+      <div class="decision-zone">
+        <div class="decision-label">「 抉择时刻 」</div>
+        <div class="decision-text" id="decisionText">正在读取量子波动...</div>
+        <div class="decision-sub" id="decisionSub"></div>
+      </div>
+
+      <div class="swipe-area" id="swipeArea">
+        <!-- Branch bubbles injected here -->
+      </div>
+
+      <div class="swipe-hint" id="swipeHint">
+        <span class="swipe-arrow">←</span>
+        <span>滑动切换平行时空</span>
+        <span class="swipe-arrow">→</span>
+      </div>
+
+      <div class="timeline-dots" id="timelineDots"></div>
+    </div>
+  </div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generateResume()">
+    ⚡ 生成这份简历
+  </button>
+</div>
+
+<!-- ========== PAGE 3: RESUME ========== -->
+<div class="page page-resume" id="pageResume">
+  <div class="resume-toolbar">
+    <button class="toolbar-btn" onclick="showPage('quantum')">← 重选</button>
+    <span class="resume-title" id="resumeTitle">平行宇宙简历</span>
+    <button class="toolbar-btn" onclick="toggleTimeline()">📅 人生轨迹</button>
+    <button class="toolbar-btn primary" onclick="downloadResume()">⬇️ 下载简历</button>
+  </div>
+
+  <div class="resume-wrapper">
+    <!-- Timeline view -->
+    <div class="timeline-view" id="timelineView">
+      <div class="timeline-heading">🌌 人生轨迹</div>
+      <div class="timeline-track" id="timelineTrack"></div>
+    </div>
+
+    <!-- Resume paper -->
+    <div class="resume-paper" id="resumePaper">
+      <div class="resume-header">
+        <div class="scan-line"></div>
+        <div class="resume-avatar-area">
+          <div class="resume-avatar-placeholder" id="avatarPlaceholder" onclick="document.getElementById('photoInput').click()">
+            📷
+          </div>
+          <img class="resume-avatar" id="resumeAvatar" src="" style="display:none">
+          <div class="resume-identity">
+            <div class="resume-name" id="resumeName">——</div>
+            <div class="resume-meta">
+              <span id="resumeGender">性别</span>
+              <span id="resumeAge">年龄</span>
+              <span id="resumeOriginal">原职业</span>
+            </div>
+            <div class="resume-tagline" id="resumeTagline">——</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="resume-body">
+        <div class="resume-section">
+          <div class="resume-section-title">🚀 人生自述</div>
+          <div class="resume-summary" id="resumeSummary">——</div>
+        </div>
+
+        <div class="resume-section">
+          <div class="resume-section-title">💼 工作经历</div>
+          <div id="resumeExperience"></div>
+        </div>
+
+        <div class="resume-section">
+          <div class="resume-section-title">🛠️ 项目作品集</div>
+          <div id="resumeProjects"></div>
+        </div>
+
+        <div class="resume-section">
+          <div class="resume-section-title">🎯 技能图谱</div>
+          <div class="skill-grid" id="resumeSkills"></div>
+        </div>
+
+        <div class="resume-section">
+          <div class="resume-section-title">💬 虚拟推荐信</div>
+          <div id="resumeReferrals"></div>
+        </div>
+      </div>
+
+      <div class="resume-footer">
+        <div class="watermark">平行宇宙简历 · PARALLEL RESUME</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(event)">
+
+<script>
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+const state = {
+  name: '',
+  gender: '',
+  age: 0,
+  currentJob: '',
+  wantedJob: '',
+  branches: [],       // 3 branch data
+  selectedBranch: 0,  // which branch selected
+  currentDecision: 0  // which decision (0,1,2)
+};
+
+// ============================================================
+// STARS BACKGROUND
+// ============================================================
+function createStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 2 + 1;
+    star.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      width:${size}px;height:${size}px;
+      --o:${Math.random()*0.5+0.2};
+      --d:${(Math.random()*4+2).toFixed(1)}s;
+      --delay:-${(Math.random()*5).toFixed(1)}s;
+    `;
+    container.appendChild(star);
+  }
+}
+
+// ============================================================
+// PARTICLES
+// ============================================================
+function createParticles() {
+  const container = document.getElementById('particles');
+  const colors = ['#00d4ff','#7b2fff','#ff2d78','#ffd700'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 3 + 1;
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${size}px;height:${size}px;
+      background:${color};
+      box-shadow:0 0 ${size*3}px ${color};
+      animation-duration:${Math.random()*15+10}s;
+      animation-delay:${-Math.random()*20}s;
+      opacity:0;
+    `;
+    container.appendChild(p);
+  }
+}
+
+// ============================================================
+// PAGE NAVIGATION
+// ============================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  if (name === 'cover') document.getElementById('pageCover').classList.add('active');
+  else if (name === 'quantum') document.getElementById('pageQuantum').classList.add('active');
+  else if (name === 'resume') document.getElementById('pageResume').classList.add('active');
+}
+
+// ============================================================
+// QUANTUM DATA: 100+ unique career branches
+// ============================================================
+const ALL_CAREERS = [
+  {
+    id:'astronaut', icon:'🚀', profession:'航天员 / 星际探索者',
+    summary:'从小仰望星空的你，在平行宇宙选择了航天这条路。你经历了严苛的训练，最终成为了一名真正的航天员，在国际空间站执行过多次任务，甚至登上了月球基地。',
+    tagline:'"地球只是摇篮，宇宙才是舞台。"',
+    experiences:[
+      {title:'首席航天员', company:'国家航天局', period:'2032 - 至今', desc:'执行空间站驻留任务12次，完成3次月球表面科考任务，累计太空作业超过800小时。'},
+      {title:'航天飞行工程师', company:'航天员训练中心', period:'2028 - 2032', desc:'完成基础训练、离心机训练、出舱活动训练，以全优成绩通过所有考核。'},
+    ],
+    projects:[
+      {name:'月球南极水资源勘察任务', desc:'作为主操作员，驾驶月球车完成月表冰层采样，为未来月球基地选址提供关键数据。'},
+      {name:'「星际之眼」天文观测卫星地面控制', desc:'参与设计与运营遥感卫星地面控制中心，实现亚米级实时观测。'}
+    ],
+    skills:['航天器操控','零重力医学','天体物理学','紧急情况处置','多语言通信','机械工程'],
+    referrals:[
+      {quote:'他是我见过最冷静的航天员，在一次轨道偏差事故中，他用不到3分钟就完成了全部修正程序。', author:'王指挥官', relation:'上级', company:'航天局'},
+      {quote:'从航天员到科学家，他总能把复杂的问题用最简单的方式解决，是我们团队的灵魂人物。', author:'Dr. Lee', relation:'科研合作者', company:'NASA联合项目'},
+    ]
+  },
+  {
+    id:'musician', icon:'🎸', profession:'独立音乐制作人',
+    summary:'放弃了稳定的职业路线，你拿起吉他，走上了独立音乐人的道路。你的音乐融合了电子、古典与东方元素，在 indie 音乐圈掀起了独特的风潮。',
+    tagline:'"每个音符都是一个平行宇宙。"',
+    experiences:[
+      {title:'独立音乐制作人', company:'自营工作室', period:'2025 - 至今', desc:'发行原创专辑5张，作品累计播放量超过5000万次，获得多个独立音乐奖项提名。'},
+      {title:'音乐制作实习生', company:'声音工厂录音棚', period:'2022 - 2025', desc:'从助理做起，学习混音、母带处理和现场调音，积累了丰富的制作经验。'},
+    ],
+    projects:[
+      {name:'《星河变奏》实验专辑', desc:'融合量子物理概念与电子音乐，专辑主打歌登上网易云音乐原创榜TOP10。'},
+      {name:'「平行声波」全国巡演', desc:'跨越30座城市的小型巡演，每场演出均为观众量身定制实时音效。'},
+    ],
+    skills:['音乐制作','作曲编曲','混音母带','现场调音','音乐营销','乐器演奏'],
+    referrals:[
+      {quote:'他做音乐的态度极其认真，每一段旋律都经过上百次的打磨，他的专辑是我们店里最畅销的。', author:'陈经理', relation:'唱片店合作伙伴', company:'独立唱片店'},
+      {quote:'才华横溢的音乐人，他的曲子有一种让人安静下来的力量，我经常在写作时循环播放。', author:'读者A', relation:'粉丝', company:'网易云音乐'},
+    ]
+  },
+  {
+    id:'chef', icon:'🍜', profession:'米其林星级厨师',
+    summary:'你对美食有着超乎常人的热情与天赋。在另一个宇宙，你放弃了office工作，投身厨房，用分子料理技术与传统中餐融合，打造出令人惊艳的味觉体验。',
+    tagline:'"我做的每一道菜，都是一次微观宇宙的创造。"',
+    experiences:[
+      {title:'行政总厨', company:'「星际厨房」餐厅', period:'2030 - 至今', desc:'主理融合菜系，餐厅于2029年荣获米其林二星，个人获评亚洲50佳年轻厨师。'},
+      {title:'厨师', company:'蓝带国际学院（进修）', period:'2026 - 2028', desc:'完成法式料理与分子料理系统课程，以最高荣誉毕业。'},
+    ],
+    projects:[
+      {name:'「二十四节气」分子料理系列', desc:'用分子料理技术重新诠释二十四节气，获得国际烹饪大赛金奖。'},
+      {name:'《味觉漫游》美食纪录片', desc:'自编自导自演，走访12个国家探索当地饮食文化，在B站播放量破千万。'},
+    ],
+    skills:['中餐烹饪','分子料理','摆盘艺术','食材供应链','厨房管理','美食摄影'],
+    referrals:[
+      {quote:'他对食材的理解超越了大多数厨师，每一道菜都有一个完整的故事，这正是米其林评委所欣赏的。', author:'美食评论家', relation:'业界同行', company:'米其林指南'},
+      {quote:'能让他做一次饭是我们全年的愿望，他的厨艺已经超越了"好吃"达到了艺术的境界。', author:'食客代表', relation:'顾客', company:'「星际厨房」'},
+    ]
+  },
+  {
+    id:'ai_researcher', icon:'🤖', profession:'AI研究员 / AGI工程师',
+    summary:'编程是你最大的爱好。在平行宇宙中，你深耕人工智能研究，参与了通用人工智能（AGI）的关键突破，成为了这个时代最具影响力的技术专家之一。',
+    tagline:'"AI不是工具，它是我们认知的延伸。"',
+    experiences:[
+      {title:'AGI首席研究员', company:'DeepMind Asia', period:'2031 - 至今', desc:'领导20人研究团队，发表顶会论文15篇，参与开发新一代多模态通用智能系统。'},
+      {title:'AI工程师', company:'字节跳动 AI Lab', period:'2027 - 2031', desc:'参与推荐算法优化和大语言模型预训练，核心贡献者。'},
+    ],
+    projects:[
+      {name:'多模态通用智能系统', desc:'融合视觉、语言、推理能力的AI系统，在多项基准测试中超越人类专家水平。'},
+      {name:'开源对话AI框架', desc:'GitHub star超过5万，被全球超过1000家企业和研究机构使用。'},
+    ],
+    skills:['深度学习','大模型训练','强化学习','Python/C++','论文写作','科研领导力'],
+    referrals:[
+      {quote:'他的技术视野令人惊叹，他不仅能解决当前的问题，还能预见技术发展的下一个拐点。', author:'张教授', relation:'学术导师', company:'清华大学'},
+      {quote:'我和他合作过多个项目，他的代码质量和工程能力都是团队中最顶尖的。', author:'同事B', relation:'同行', company:'DeepMind'},
+    ]
+  },
+  {
+    id:'writer', icon:'✍️', profession:'畅销书作家',
+    summary:'你喜欢讲故事。在平行宇宙中，你成为了一名现象级作家，写出了改变无数人生活的作品，书店里总有你签售的长队。',
+    tagline:'"每个人物都活在我的平行宇宙里。"',
+    experiences:[
+      {title:'全职作家', company:'自由职业', period:'2025 - 至今', desc:'出版长篇小说6部，散文集3部，累计销量超过300万册，多部作品被改编为影视。'},
+      {title:'编辑助理', company:'某出版社', period:'2022 - 2025', desc:'参与审稿、策划和作者运营，深入了解出版行业全流程。'},
+    ],
+    projects:[
+      {name:'《时间折叠》长篇小说', desc:'探讨平行宇宙概念的科幻文学，获茅盾文学新人奖提名，销量突破50万册。'},
+      {name:'「写作工坊」线上课程', desc:'在得到/喜马拉雅平台开设写作课，累计学员超过10万人，好评率98%。'},
+    ],
+    skills:['小说创作','故事结构','人物塑造','文学批评','版权运营','公开演讲'],
+    referrals:[
+      {quote:'他的文字有一种穿透力，能直击人心深处最柔软的地方，我读完他的书久久不能平静。', author:'读者代表', relation:'读者', company:'豆瓣读者'},
+      {quote:'难得一见的全方位人才，从写作到运营到课程设计，他都做得非常出色。', author:'出版人', relation:'合作伙伴', company:'中信出版社'},
+    ]
+  },
+  {
+    id:'doctor', icon:'🩺', profession:'急诊科医生',
+    summary:'你选择了医学这条艰辛但崇高的路。在另一个宇宙，你在三甲医院的急诊科工作，每天与死神赛跑，挽救了无数生命。',
+    tagline:'"每一次抢救，都是我从死神手里抢人。"',
+    experiences:[
+      {title:'急诊科主治医师', company:'协和医院', period:'2028 - 至今', desc:'年均接诊急诊患者5000+例，参与危重症抢救800+次，成功率处于科室领先水平。'},
+      {title:'住院医师', company:'协和医院', period:'2025 - 2028', desc:'完成内科、外科、急诊科规范化培训，轮转各主要科室。'},
+    ],
+    projects:[
+      {name:'急诊预检分诊AI系统', desc:'基于机器学习的急诊分级系统，降低了30%的候诊延误，在多家医院推广。'},
+      {name:'野外急救手册编写', desc:'编写面向公众的野外急救指南，PDF下载量超过100万次。'},
+    ],
+    skills:['临床诊断','急救技能','医患沟通','医学影像分析','手术操作','医学研究'],
+    referrals:[
+      {quote:'冷静、专业、永远不放弃任何一个患者，他是急诊科的定海神针。', author:'科室主任', relation:'上级', company:'协和医院'},
+      {quote:'在他手下工作让我学到了什么叫做真正的医者仁心。', author:'实习医生', relation:'下属', company:'协和医院'},
+    ]
+  },
+  {
+    id:'architect', icon:'🏗️', profession:'建筑设计师',
+    summary:'你对空间和形态有着敏锐的感知。在平行宇宙，你成为了一名国际知名建筑师，用混凝土、玻璃与光线构建了一个又一个令人惊叹的作品。',
+    tagline:'"建筑是凝固的音乐，是人与空间的对话。"',
+    experiences:[
+      {title:'主创建筑师', company:'MAD建筑事务所', period:'2029 - 至今', desc:'主持设计了多个城市地标项目，获WAF世界建筑节提名。'},
+      {title:'建筑师', company:'OMA建筑事务所', period:'2026 - 2029', desc:'参与欧洲多个大型综合体设计，积累了国际项目经验。'},
+    ],
+    projects:[
+      {name:'「海之光」歌剧院设计', desc:'以海洋生物形态为灵感的海边歌剧院，融合自然通风与自然采光理念。'},
+      {name:'「森林之塔」垂直绿化住宅', desc:'将垂直绿化系统融入超高层住宅，实现建筑自给自足的生态系统。'},
+    ],
+    skills:['建筑设计','AutoCAD/Revit','概念构思','结构美学','项目管理','公众演讲'],
+    referrals:[
+      {quote:'他设计的建筑让我第一次感受到，建筑不只是遮风避雨，而是对生活的重新定义。', author:'业主代表', relation:'客户', company:'房地产集团'},
+      {quote:'从概念到落地，他总能找到那个让所有人都惊喜的答案。', author:'合作设计师', relation:'同行', company:'MAD'},
+    ]
+  },
+  {
+    id:'pilot', icon:'✈️', profession:'民航机长',
+    summary:'翱翔蓝天是你童年的梦想。在平行宇宙，你已经成为了一名波音787机长，每年带领数千名乘客安全穿越云层。',
+    tagline:'"驾驶舱外是万米高空，驾驶舱内是我的另一个宇宙。"',
+    experiences:[
+      {title:'机长', company:'中国国际航空', period:'2030 - 至今', desc:'执飞北京-纽约、北京-伦敦等国际航线，安全飞行时长超过5000小时。'},
+      {title:'副驾驶', company:'中国国际航空', period:'2026 - 2030', desc:'完成飞行员改装训练，逐步升级为A330/A350副驾驶。'},
+    ],
+    projects:[
+      {name:'「极光航线」极地飞行研究', desc:'参与极地航路优化研究，缩短了北京-纽约航班约40分钟的飞行时间。'},
+      {name:'飞行员培训课程开发', desc:'编写公司新版A350机型培训教材，被采纳为公司内部标准课件。'},
+    ],
+    skills:['飞行驾驶','航空电子','气象分析','应急处置','机组管理','多语言通信'],
+    referrals:[
+      {quote:'和他一起飞行非常安心，他总是提前很久就开始预判各种可能的情况。', author:'副驾驶同事', relation:'同事', company:'国航'},
+      {quote:'旅客们对他的评价极高，说他是他们坐过的最平稳的航班。', author:'乘务长', relation:'同事', company:'国航客舱部'},
+    ]
+  },
+  {
+    id:'photographer', icon:'📸', profession:'纪实摄影师',
+    summary:'你喜欢用镜头记录世界。在平行宇宙，你成为了一名自由的纪实摄影师，你的镜头见证了无数平凡人的不凡故事。',
+    tagline:'"每个按下快门的瞬间，都是对时间的一次抢救。"',
+    experiences:[
+      {title:'独立摄影师', company:'自由职业', period:'2025 - 至今', desc:'作品刊登于《国家地理》中文版、《时代》周刊等，多幅作品被博物馆收藏。'},
+      {title:'摄影记者', company:'新京报', period:'2022 - 2025', desc:'参与重大新闻事件的现场摄影报道，作品多次获奖。'},
+    ],
+    projects:[
+      {name:'「边缘人像」系列', desc:'历时3年，走访中国偏远地区，记录少数民族和边缘群体的真实生活，出版摄影集并举办个展。'},
+      {name:'《被遗忘的村庄》纪录片摄影', desc:'为纪录片担任摄影指导，作品在多个国际电影节放映。'},
+    ],
+    skills:['纪实摄影','人像摄影','Lightroom/Photoshop','视频拍摄','后期调色','摄影写作'],
+    referrals:[
+      {quote:'他的照片有一种让人无法移开视线的力量，每一张都能讲出一个完整的故事。', author:'策展人', relation:'业界', company:'UCCA尤伦斯'},
+      {quote:'和他一起外出拍摄是最难忘的经历，他总是能在最意想不到的地方找到最美的光线。', author:'合作伙伴', relation:'导演', company:'纪录片剧组'},
+    ]
+  },
+  {
+    id:'athlete', icon:'🏃', profession:'职业马拉松运动员',
+    summary:'你选择了用奔跑丈量世界。在平行宇宙，你成为了一名职业马拉松运动员，用双腿书写着属于你的传奇。',
+    tagline:'"每一步都是在打破昨天的自己。"',
+    experiences:[
+      {title:'国家队长跑运动员', company:'中国田径协会', period:'2026 - 至今', desc:'国际田联认证成绩2:08:34（马拉松），国内排名前5，曾代表中国参加奥运会。'},
+      {title:'职业跑者', company:'特步精英战队', period:'2024 - 2026', desc:'签约职业运动员，接受系统化训练，逐步提升成绩。'},
+    ],
+    projects:[
+      {name:'连续3年夺冠上海国际马拉松', desc:'2027/2028/2029连续三年夺得上海马拉松冠军，创造赛会纪录。'},
+      {name:'「跑步学院」公益项目', desc:'在偏远山区建立跑步训练营，帮助青少年通过跑步改变命运。'},
+    ],
+    skills:['长跑耐力','速度训练','运动营养','心理调控','伤病康复','公开演讲'],
+    referrals:[
+      {quote:'他在赛道上的专注力和意志力是我见过最强的，哪怕最后几公里，他依然能爆发出惊人的能量。', author:'教练', relation:'教练', company:'田径队'},
+      {quote:'他不仅自己跑得快，还愿意把经验分享给更多人，这让他的成就更有意义。', author:'公益伙伴', relation:'合作伙伴', company:'跑步学院'},
+    ]
+  },
+  {
+    id:'lawyer', icon:'⚖️', profession:'国际商事律师',
+    summary:'你思维敏捷，辩论能力出众。在平行宇宙，你成为了一名国际商事律师，在跨境并购、知识产权等高端领域叱咤风云。',
+    tagline:'"法律是最好的武器，逻辑是最锋利的剑。"',
+    experiences:[
+      {title:'合伙人', company:'金杜律师事务所', period:'2030 - 至今', desc:'主导跨境并购案20+起，总交易金额超过500亿美元，擅长解决复杂国际商事争议。'},
+      {title:'资深律师', company:'中伦律师事务所', period:'2027 - 2030', desc:'深耕知识产权和国际贸易法领域，服务多家世界500强企业。'},
+    ],
+    projects:[
+      {name:'中欧最大跨境并购案', desc:'作为首席法律顾问，全程主导某中国科技企业收购欧洲半导体公司，总金额超200亿元。'},
+      {name:'「法律之光」公益法律援助', desc:'为中小企业提供免费法律咨询，累计服务超过500家企业。'},
+    ],
+    skills:['国际商法','跨境并购','知识产权','谈判技巧','合同起草','诉讼策略'],
+    referrals:[
+      {quote:'他是我们合作过的最专业的律师，他总能在复杂的法律问题中找到最优雅的解决方案。', author:'企业CEO', relation:'客户', company:'某科技集团'},
+      {quote:'他的逻辑思维和表达能力都非常出色，在法庭上他是一个令人敬畏的对手。', author:'对方律师', relation:'对手', company:'外资律所'},
+    ]
+  },
+  {
+    id:'game_dev', icon:'🎮', profession:'独立游戏开发者',
+    summary:'你爱玩游戏，也爱创造游戏。在平行宇宙，你放弃了打工，全身心投入独立游戏开发，做出了让人眼前一亮的作品。',
+    tagline:'"每一个游戏都是一个活着的宇宙。"',
+    experiences:[
+      {title:'独立游戏开发者', company:'自营工作室「量子游戏」', period:'2025 - 至今', desc:'开发独立游戏4款，Steam好评率90%+，代表作《时间旅人》销量突破50万份。'},
+      {title:'游戏策划', company:'腾讯游戏', period:'2023 - 2025', desc:'参与策划多款手游，深度了解游戏行业的产品逻辑和运营模式。'},
+    ],
+    projects:[
+      {name:'《时间旅人》解谜冒险游戏', desc:'玩家可以在不同时间线之间穿梭，解开时间悖论。Steam热销榜TOP10，IGN评分9.2。'},
+      {name:'「Game Jam」48小时极限开发', desc:'连续两年获得全国Game Jam最佳游戏奖，展现快速原型开发能力。'},
+    ],
+    skills:['Unity/C#','游戏设计','关卡策划','像素美术','独立营销','玩家社区运营'],
+    referrals:[
+      {quote:'他的游戏充满了对平行宇宙概念的深刻理解，每一个设计细节都让人惊喜。', author:'玩家代表', relation:'玩家', company:'Steam评论区'},
+      {quote:'作为一个独立开发者，他做出了许多大型团队都做不到的东西。', author:'独立游戏媒体', relation:'媒体', company:'indienova'},
+    ]
+  },
+  {
+    id:'entrepreneur', icon:'💡', profession:'科技创业者',
+    summary:'你有一颗不安分的心。在平行宇宙，你创立了自己的科技公司，拿到了多轮融资，成为了创业圈的新星。',
+    tagline:'"创业就是把自己逼到极限，然后看看自己能飞多高。"',
+    experiences:[
+      {title:'创始人 & CEO', company:'「星云智能」科技公司', period:'2026 - 至今', desc:'创立AI驱动的教育科技公司，完成天使轮、A轮融资，估值过亿，用户超过200万。'},
+      {title:'产品经理', company:'阿里巴巴', period:'2023 - 2026', desc:'负责AI教育产品线，带领10人团队将产品从0做到日活50万。'},
+    ],
+    projects:[
+      {name:'「星云AI学伴」智能教育平台', desc:'基于大模型的个性化学习平台，为每个学生定制学习路径，学习效率提升40%。'},
+      {name:'Pitch 夺冠之路', desc:'在多个创业大赛中获奖，包括「中国创新创业大赛」一等奖，吸引多家投资机构关注。'},
+    ],
+    skills:['战略规划','融资路演','产品管理','团队领导','AI应用','公共演讲'],
+    referrals:[
+      {quote:'他是我见过最有执行力的创业者，一旦决定了方向，他会用最快的速度把产品做出来。', author:'投资人', relation:'投资人', company:'红杉资本'},
+      {quote:'他创建的公司文化非常好，团队里的人都很愿意跟着他一起拼命。', author:'联合创始人', relation:'合伙人', company:'星云智能'},
+    ]
+  },
+  {
+    id:'journalist', icon:'📰', profession:'战地记者',
+    summary:'你追求真相，不惧危险。在平行宇宙，你成了一名战地记者，穿梭于世界最危险的角落，记录被遗忘的声音。',
+    tagline:'"如果我不去报道，那些人就真的不存在了。"',
+    experiences:[
+      {title:'资深战地记者', company:'半岛电视台', period:'2029 - 至今', desc:'常驻中东、非洲热点地区，完成报道100+篇，多篇获得普利策奖提名。'},
+      {title:'记者', company:'财新传媒', period:'2025 - 2029', desc:'从社会新闻到国际调查，逐步成长为能独当一面的深度报道记者。'},
+    ],
+    projects:[
+      {name:'「战后废墟中的学校」深度报道', desc:'记录战后地区儿童教育现状的系列报道，获得国际新闻奖二等奖。'},
+      {name:'《无主之地》中东纪实', desc:'历时两年深入中东冲突地区，出版纪实文学作品，引发国际社会广泛关注。'},
+    ],
+    skills:['深度报道','多语言采访','摄影摄像','危机应对','多文化沟通','文学写作'],
+    referrals:[
+      {quote:'他的报道让全世界看到了那些被遗忘的人，他的工作是有意义的新闻的典范。', author:'主编', relation:'上级', company:'半岛电视台'},
+      {quote:'在战区，他的冷静和专业让所有人都感到安心，跟着他出去采访是最放心的。', author:'摄像师', relation:'同事', company:'半岛电视台'},
+    ]
+  },
+  {
+    id:'farmer', icon:'🌾', profession:'有机农场主',
+    summary:'你渴望土地和自然。在平行宇宙，你放弃了大城市的一切，回乡创办了一家有机农场，过上了脚踏实地的田园生活。',
+    tagline:'"最深刻的智慧，藏在泥土里。"',
+    experiences:[
+      {title:'农场主', company:'「星空有机农场」', period:'2025 - 至今', desc:'经营200亩有机种植农场，获得欧盟有机认证，年产值超过500万元，带动30户农民增收。'},
+      {title:'互联网运营', company:'京东农场', period:'2022 - 2025', desc:'负责有机农产品线上运营，深度了解农业产业链。'},
+    ],
+    projects:[
+      {name:'「稻鸭共作」生态种养模式', desc:'创新生态农业模式，零农药零化肥，亩产反而提高15%，被当地政府推广。'},
+      {name:'「星空农场」田园体验教育', desc:'将农场打造成城市亲子农业教育基地，年接待游客5000+人次。'},
+    ],
+    skills:['有机农业','生态养殖','供应链管理','农业电商','品牌运营','乡村创业'],
+    referrals:[
+      {quote:'他用互联网思维做农业，用科技改造传统种植，这正是农业现代化最需要的人才。', author:'县农业局长', relation:'政府', company:'县政府'},
+      {quote:'他种出来的菜，是我吃过最好吃的，吃完你就知道什么叫"小时候的味道"。', author:'顾客代表', relation:'顾客', company:'农场会员'},
+    ]
+  },
+  {
+    id:'youtuber', icon:'🎬', profession:'知识类视频创作者',
+    summary:'你喜欢分享知识。在平行宇宙，你的科普频道粉丝超过500万，用有趣的方式让科学走进每个人的生活。',
+    tagline:'"让复杂的知识变得有趣，是我最大的乐趣。"',
+    experiences:[
+      {title:'知识类UP主', company:'B站 / YouTube', period:'2024 - 至今', desc:'运营科普频道「宇宙便利店」，B站粉丝580万，全网播放量超8亿，多个视频破千万。'},
+      {title:'内容编辑', company:'果壳网', period:'2021 - 2024', desc:'策划科学传播内容，积累了大量科普写作和视频策划经验。'},
+    ],
+    projects:[
+      {name:'「量子力学入门」系列视频', desc:'用动画和日常生活类比讲解量子力学，单系列播放量突破5000万，被多所高校引用为教学素材。'},
+      {name:'「B站年度内容创作者」获奖作品', desc:'系列视频《如果宇宙有尽头》获得B站年度最佳知识内容奖。'},
+    ],
+    skills:['视频剪辑','科普写作','动画制作','内容策划','社群运营','公开演讲'],
+    referrals:[
+      {quote:'他是我见过最能把复杂科学讲得简单有趣的人，我弟弟看了他的视频后决定学物理。', author:'观众代表', relation:'观众', company:'B站评论'},
+      {quote:'他的内容质量极高，每一个视频都经过严谨的考证，这种认真态度在自媒体中非常难得。', author:'科学顾问', relation:'合作方', company:'中科院'},
+    ]
+  },
+  {
+    id:'teacher', icon:'📚', profession:'乡村支教教师',
+    summary:'你选择了最无私的职业。在平行宇宙，你扎根乡村学校，用知识和爱改变了一代又一代孩子的命运。',
+    tagline:'"点亮一个孩子，就是点亮一个宇宙。"',
+    experiences:[
+      {title:'乡村教师', company:'云南山区学校', period:'2024 - 至今', desc:'在云南偏远山区小学任教6年，主讲语文和科学，同时担任班主任，所带班级升学率从30%提升至90%。'},
+      {title:'志愿者', company:'美丽中国项目', period:'2022 - 2024', desc:'参与美丽中国支教项目，在甘肃农村学校开展素质教育和互联网教学。'},
+    ],
+    projects:[
+      {name:'「山里娃的科学梦」科普计划', desc:'为山区孩子带去科学实验器材和课程，激发了孩子们的科学兴趣，多名学生考入县重点中学。'},
+      {name:'远程教育资源库建设', desc:'搭建山区学校与城市名校的远程教学资源共享平台，受益学生超1000人。'},
+    ],
+    skills:['语文教学','科学启蒙','学生心理','课程设计','教育公益','远程教学'],
+    referrals:[
+      {quote:'他改变了这所学校，也改变了这群孩子的命运，他是我们乡最受欢迎的老师。', author:'乡长', relation:'政府', company:'乡镇政府'},
+      {quote:'他用最少资源做出了最大的改变，跟着他我学会了什么叫做真正的教育者。', author:'志愿者同事', relation:'同事', company:'美丽中国'},
+    ]
+  },
+  {
+    id:'fashion', icon:'👗', profession:'时装设计师',
+    summary:'你对美有着独特的感知。在平行宇宙，你成为了国际时装周上的常客，用东方美学征服了世界时尚圈。',
+    tagline:'"时尚不是追随，是创造一种语言。"',
+    experiences:[
+      {title:'创意总监', company:'「东方线」独立品牌', period:'2028 - 至今', desc:'创立融合东方传统元素与现代剪裁的时装品牌，连续三季登上巴黎时装周，获得多个国际设计大奖。'},
+      {title:'服装设计师', company:'例外服饰', period:'2024 - 2028', desc:'参与多个系列设计，将传统文化元素与现代面料技术结合。'},
+    ],
+    projects:[
+      {name:'「山水之间」2029巴黎发布', desc:'以中国山水画为灵感的系列，融合3D打印面料与传统刺绣，惊艳巴黎时装周。'},
+      {name:'故宫博物院联名系列', desc:'与故宫合作推出「紫禁城」系列服饰，限量发售500套，上市即售罄。'},
+    ],
+    skills:['服装设计','面料创新','色彩搭配','品牌运营','陈列展示','时尚公关'],
+    referrals:[
+      {quote:'他设计的衣服有一种让人安静下来的力量，这不是追随潮流，这是创造潮流。', author:'时尚评论家', relation:'业界', company:'VOGUE'},
+      {quote:'他敢用最传统的工艺做出最前卫的设计，这种勇气和才华是非常罕见的。', author:'面料供应商', relation:'合作伙伴', company:'意大利面料商'},
+    ]
+  },
+  {
+    id:'marine', icon:'🐬', profession:'海洋生物学家',
+    summary:'你对大海有着深沉的爱。在平行宇宙，你成为了一名海洋生物学家，用毕生精力守护海洋生态。',
+    tagline:'"大海不只是蓝色，它是一个有生命的宇宙。"',
+    experiences:[
+      {title:'首席研究员', company:'中国科学院海洋研究所', period:'2029 - 至今', desc:'主持海洋生态研究项目，首次发现3个深海新物种，在《Nature》发表论文8篇。'},
+      {title:'海洋科考队员', company:'「科学号」科考船', period:'2025 - 2029', desc:'参与多次深海科考航次，负责海洋生物样本采集与分析。'},
+    ],
+    projects:[
+      {name:'南海珊瑚礁修复计划', desc:'历时3年，成功在南海海域修复退化珊瑚礁200公顷，珊瑚覆盖率提升60%。'},
+      {name:'「深海居民」科普影像项目', desc:'与BBC合作拍摄深海纪录片，揭示了深海生物的惊人适应能力。'},
+    ],
+    skills:['海洋生物学','潜水科学','数据分析','论文写作','科普传播','野外工作'],
+    referrals:[
+      {quote:'他对海洋的热爱和专业程度让人敬佩，他发表的珊瑚礁修复论文直接改变了我们的保护政策。', author:'环保组织负责人', relation:'合作方', company:'海洋保护基金会'},
+      {quote:'在海上漂泊几个月做研究，没有对海洋发自内心的热爱是坚持不下来的，他做到了。', author:'科考队船长', relation:'同事', company:'科学号'},
+    ]
+  },
+  {
+    id:'crypto', icon:'₿', profession:'区块链/Web3创业者',
+    summary:'你对去中心化世界充满信仰。在平行宇宙，你在Web3领域创业，成了加密圈最年轻的投资人之一。',
+    tagline:'"区块链不只是技术，它是信任的新形式。"',
+    experiences:[
+      {title:'创始人', company:'「链境」Web3基础设施公司', period:'2027 - 至今', desc:'创立去中心化存储和计算平台，完成B轮5000万美元融资，估值超3亿美元。'},
+      {title:'DeFi研究员', company:'某头部加密基金', period:'2024 - 2027', desc:'深入研究DeFi协议和Web3赛道，积累了大量行业人脉和项目判断经验。'},
+    ],
+    projects:[
+      {name:'链境去中心化存储网络', desc:'自主研发的去中心化存储协议，存储成本比AWS低70%，已服务超过100个DApp。'},
+      {name:'NFT数字艺术平台', desc:'为艺术家提供NFT铸造和交易服务，平台累计交易额突破10亿美元。'},
+    ],
+    skills:['区块链技术','智能合约','DeFi','项目管理','加密投资','社区运营'],
+    referrals:[
+      {quote:'他是圈内少有的既懂技术又懂商业的创业者，他的项目都是真正能落地的。', author:'投资人', relation:'投资人', company:'Paradigm'},
+      {quote:'他创建的去中心化存储网络解决了我一直在思考的问题，这是一个真正有价值的创新。', author:'技术社区成员', relation:'社区', company:'以太坊社区'},
+    ]
+  },
+];
+
+// Decisions data
+const DECISIONS = [
+  {
+    text: "那年毕业，你站在人生的十字路口",
+    sub: "向左走是安稳，向右走是未知",
+    options: [
+      { type: 'branch', career_pool: ALL_CAREERS.slice(0,10), color: '#00d4ff' },
+      { type: 'branch', career_pool: ALL_CAREERS.slice(10,20), color: '#7b2fff' },
+    ]
+  },
+  {
+    text: "而立之年，一场意外改变了一切",
+    sub: "命运的分叉路口，你选择了...",
+    options: [
+      { type: 'branch', career_pool: ALL_CAREERS.slice(5,15), color: '#ff2d78' },
+      { type: 'branch', career_pool: ALL_CAREERS.slice(15,20).concat(ALL_CAREERS.slice(0,5)), color: '#ffd700' },
+    ]
+  },
+  {
+    text: "终于有一天，你决定彻底改变",
+    sub: "这一次，你遵从内心深处的呼唤",
+    options: [
+      { type: 'branch', career_pool: ALL_CAREERS.slice(3,13), color: '#00ff88' },
+      { type: 'branch', career_pool: ALL_CAREERS.slice(13,20).concat(ALL_CAREERS.slice(0,3)), color: '#ff8c00' },
+    ]
+  }
+];
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pickN(arr, n) { return shuffle(arr).slice(0, n); }
+
+// ============================================================
+// CANVAS: Quantum entanglement lines
+// ============================================================
+let canvas, ctx, animFrame;
+function initCanvas() {
+  canvas = document.getElementById('universeCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  requestAnimationFrame(drawCanvas);
+}
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+const canvasLines = [];
+for (let i = 0; i < 30; i++) {
+  canvasLines.push({
+    x: Math.random(),
+    y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.001,
+    vy: (Math.random() - 0.5) * 0.001,
+    r: Math.random() * 80 + 20,
+    color: ['#00d4ff','#7b2fff','#ff2d78'][Math.floor(Math.random()*3)],
+    alpha: Math.random() * 0.3 + 0.05
+  });
+}
+
+function drawCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Draw floating orbs
+  canvasLines.forEach(l => {
+    l.x += l.vx; l.y += l.vy;
+    if (l.x < 0 || l.x > 1) l.vx *= -1;
+    if (l.y < 0 || l.y > 1) l.vy *= -1;
+    const grad = ctx.createRadialGradient(
+      l.x * canvas.width, l.y * canvas.height, 0,
+      l.x * canvas.width, l.y * canvas.height, l.r
+    );
+    grad.addColorStop(0, l.color.replace(')', `,${l.alpha})`).replace('rgb', 'rgba').replace('#',''));
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(l.x * canvas.width, l.y * canvas.height, l.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  // Draw connecting lines
+  ctx.strokeStyle = 'rgba(0,212,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < canvasLines.length; i++) {
+    for (let j = i+1; j < canvasLines.length; j++) {
+      const dx = (canvasLines[i].x - canvasLines[j].x) * canvas.width;
+      const dy = (canvasLines[i].y - canvasLines[j].y) * canvas.height;
+      if (Math.sqrt(dx*dx+dy*dy) < 200) {
+        ctx.beginPath();
+        ctx.moveTo(canvasLines[i].x * canvas.width, canvasLines[i].y * canvas.height);
+        ctx.lineTo(canvasLines[j].x * canvas.width, canvasLines[j].y * canvas.height);
+        ctx.stroke();
+      }
+    }
+  }
+  animFrame = requestAnimationFrame(drawCanvas);
+}
+
+// ============================================================
+// QUANTUM BRANCHING LOGIC
+// ============================================================
+let currentDecisionIdx = 0;
+let displayedBranches = [];
+let selectedIdx = 0;
+let touchStartX = 0;
+let isAnimating = false;
+
+function startJourney() {
+  const name = document.getElementById('inputName').value.trim();
+  const age = parseInt(document.getElementById('inputAge').value);
+  const gender = document.getElementById('inputGender').value;
+  const currentJob = document.getElementById('inputCurrentJob').value.trim();
+  const wantedJob = document.getElementById('inputWantedJob').value.trim();
+
+  if (!name) { alert('请输入你的名字~'); return; }
+  if (!age || age < 18 || age > 60) { alert('请输入18-60之间的年龄~'); return; }
+  if (!currentJob) { alert('请输入现职业~'); return; }
+  if (!wantedJob) { alert('请输入想探索的职业方向~'); return; }
+
+  state.name = name;
+  state.age = age;
+  state.gender = gender;
+  state.currentJob = currentJob;
+  state.wantedJob = wantedJob;
+
+  // Init branching
+  currentDecisionIdx = 0;
+  selectedIdx = 0;
+  state.branches = [];
+
+  // Pre-generates all 3 decisions' branches
+  for (let d = 0; d < 3; d++) {
+    const dec = DECISIONS[d];
+    const pool = dec.options[0].career_pool;
+    const branch1 = rand(pool);
+    let branch2 = rand(pool);
+    while (branch2.id === branch1.id) branch2 = rand(pool);
+    state.branches.push([branch1, branch2]);
+  }
+
+  showPage('quantum');
+  renderDecision();
+}
+
+function renderDecision() {
+  const d = currentDecisionIdx;
+  document.getElementById('stepIndicator').textContent = `${d+1} / 3`;
+  document.getElementById('displayName').textContent = state.name;
+  document.getElementById('displayInfo').textContent = `${state.gender} · ${state.age}岁 · 原职业：${state.currentJob}`;
+  document.getElementById('decisionText').textContent = DECISIONS[d].text;
+  document.getElementById('decisionSub').textContent = DECISIONS[d].sub;
+
+  displayedBranches = state.branches[d];
+  selectedIdx = 0;
+
+  renderBranches();
+  updateTimelineDots();
+  updateGenerateBtn();
+
+  // Show/hide generate button
+  const btn = document.getElementById('generateBtn');
+  btn.classList.toggle('show', d === 2);
+}
+
+function renderBranches() {
+  const container = document.getElementById('swipeArea');
+  container.innerHTML = '';
+
+  displayedBranches.forEach((career, idx) => {
+    const bubble = document.createElement('div');
+    bubble.className = 'branch-bubble ' + (idx === selectedIdx ? 'active' : '');
+
+    const ageOffset = (2 - currentDecisionIdx) * 8;
+    const startAge = state.age + ageOffset;
+    const endAge = startAge + rand([5, 8, 10, 12, 15]);
+
+    bubble.innerHTML = `
+      <div class="branch-inner">
+        <div class="bubble-icon" style="color: ${['#00d4ff','#7b2fff','#ff2d78','#ffd700','#00ff88'][idx % 5]}">${career.icon}</div>
+        <div class="branch-profession">${career.profession}</div>
+        <div class="branch-lifetime">${state.name} · ${startAge}岁 - ${endAge}岁</div>
+        <div class="branch-desc">${career.summary}</div>
+      </div>
+    `;
+
+    container.appendChild(bubble);
+  });
+
+  // Animate in
+  setTimeout(() => {
+    container.querySelectorAll('.branch-bubble')[selectedIdx]?.classList.add('active');
+  }, 50);
+}
+
+function updateTimelineDots() {
+  const container = document.getElementById('timelineDots');
+  container.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'timeline-dot' + (i === currentDecisionIdx ? ' active' : '');
+    dot.onclick = () => {
+      if (i !== currentDecisionIdx && !isAnimating) {
+        triggerFork(() => {
+          currentDecisionIdx = i;
+          selectedIdx = 0;
+          renderDecision();
+        });
+      }
+    };
+    container.appendChild(dot);
+  }
+}
+
+function updateGenerateBtn() {
+  const btn = document.getElementById('generateBtn');
+  btn.classList.toggle('show', currentDecisionIdx === 2);
+}
+
+// ============================================================
+// FORK EFFECT
+// ============================================================
+function triggerFork(callback) {
+  isAnimating = true;
+  const fork = document.getElementById('quantumFork');
+  fork.classList.add('show');
+  setTimeout(() => {
+    fork.classList.remove('show');
+    isAnimating = false;
+    callback();
+  }, 1000);
+}
+
+// ============================================================
+// SWIPE / NAVIGATION
+// ============================================================
+function switchToBranch(direction) {
+  if (isAnimating) return;
+  const total = displayedBranches.length;
+  const oldIdx = selectedIdx;
+  selectedIdx = (selectedIdx + direction + total) % total;
+
+  const bubbles = document.querySelectorAll('.branch-bubble');
+  bubbles.forEach((b, i) => {
+    b.classList.remove('active', 'exiting');
+    if (i === oldIdx) {
+      b.classList.add('exiting');
+      setTimeout(() => b.classList.remove('exiting'), 600);
+    }
+    if (i === selectedIdx) {
+      setTimeout(() => b.classList.add('active'), 50);
+    }
+  });
+
+  // Update URL bar effect
+  if (selectedIdx !== oldIdx) {
+    triggerFork(() => {});
+  }
+}
+
+// Touch events
+document.addEventListener('touchstart', e => {
+  if (!document.getElementById('pageQuantum').classList.contains('active')) return;
+  touchStartX = e.touches[0].clientX;
+});
+document.addEventListener('touchend', e => {
+  if (!document.getElementById('pageQuantum').classList.contains('active')) return;
+  const diff = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(diff) > 60) {
+    switchToBranch(diff > 0 ? -1 : 1);
+  }
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('pageQuantum').classList.contains('active')) return;
+  if (e.key === 'ArrowLeft') switchToBranch(-1);
+  if (e.key === 'ArrowRight') switchToBranch(1);
+  if (e.key === 'Enter' && currentDecisionIdx < 2) {
+    triggerFork(() => {
+      currentDecisionIdx++;
+      renderDecision();
+    });
+  }
+});
+
+// Next decision
+function nextDecision() {
+  if (currentDecisionIdx < 2) {
+    triggerFork(() => {
+      currentDecisionIdx++;
+      selectedIdx = 0;
+      renderDecision();
+    });
+  }
+}
+
+// ============================================================
+// RESUME GENERATION
+// ============================================================
+function generateResume() {
+  // Collect selected career from each decision
+  const careerPath = state.branches.map((pair, i) => pair[i === currentDecisionIdx ? selectedIdx : 0]);
+  const finalCareer = state.branches[2][selectedIdx];
+
+  // Build timeline events
+  const timeline = [];
+  const ageOffsets = [0, 8, 15];
+  careerPath.forEach((career, i) => {
+    const year = 2026 + ageOffsets[i];
+    const age = state.age + ageOffsets[i];
+    timeline.push({
+      year: year,
+      title: career.profession,
+      desc: career.summary.substring(0, 60) + '...',
+      icon: career.icon
+    });
+  });
+
+  // Render resume
+  document.getElementById('resumeTitle').textContent = `⚛ ${state.name} 的平行宇宙简历`;
+  document.getElementById('resumeName').textContent = state.name;
+  document.getElementById('resumeGender').textContent = state.gender;
+  document.getElementById('resumeAge').textContent = state.age + '岁';
+  document.getElementById('resumeOriginal').textContent = state.currentJob;
+  document.getElementById('resumeTagline').textContent = finalCareer.tagline || '';
+  document.getElementById('resumeSummary').textContent = finalCareer.summary;
+
+  // Experience
+  const expHtml = finalCareer.experiences.map(e => `
+    <div class="exp-item">
+      <div class="exp-header">
+        <div class="exp-title">${e.title}</div>
+        <div class="exp-period">${e.period}</div>
+      </div>
+      <div class="exp-company">${e.company}</div>
+      <div class="exp-desc">${e.desc}</div>
+    </div>
+  `).join('');
+  document.getElementById('resumeExperience').innerHTML = expHtml;
+
+  // Projects
+  const projHtml = finalCareer.projects.map(p => {
+    const pObj = typeof p === 'object' ? p : { name: p.name, desc: p.desc };
+    return `
+    <div class="project-item">
+      <div class="project-name">${pObj.name || pObj}</div>
+      <div class="project-desc">${pObj.desc || ''}</div>
+    </div>
+  `}).join('');
+  document.getElementById('resumeProjects').innerHTML = projHtml;
+
+  // Skills
+  const skillHtml = finalCareer.skills.map(s => `
+    <div class="skill-item">
+      <div class="skill-dot"></div>
+      <span>${s}</span>
+    </div>
+  `).join('');
+  document.getElementById('resumeSkills').innerHTML = skillHtml;
+
+  // Referrals
+  const refHtml = finalCareer.referrals.map(r => `
+    <div class="referral-card">
+      <div class="ref-quote">${r.quote}</div>
+      <div class="ref-author">
+        <strong>— ${r.author}</strong>
+        <span>${r.relation} · ${r.company}</span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('resumeReferrals').innerHTML = refHtml;
+
+  // Timeline
+  renderTimeline(timeline);
+
+  // Show resume page
+  showPage('resume');
+}
+
+function renderTimeline(events) {
+  const track = document.getElementById('timelineTrack');
+  track.innerHTML = events.map((e, i) => `
+    <div class="tl-event">
+      <div class="tl-year">${e.year} · ${state.age + (i*8)}岁</div>
+      <div class="tl-event-title">${e.icon} ${e.title}</div>
+      <div class="tl-event-desc">${e.desc}</div>
+    </div>
+  `).join('');
+}
+
+function toggleTimeline() {
+  document.getElementById('timelineView').classList.toggle('show');
+}
+
+// ============================================================
+// PHOTO UPLOAD
+// ============================================================
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const placeholder = document.getElementById('avatarPlaceholder');
+    const avatar = document.getElementById('resumeAvatar');
+    avatar.src = e.target.result;
+    avatar.style.display = 'block';
+    placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============================================================
+// PDF DOWNLOAD (using jsPDF)
+// ============================================================
+async function downloadResume() {
+  const btn = document.querySelector('.toolbar-btn.primary');
+  btn.textContent = '⏳ 生成中...';
+  btn.disabled = true;
+
+  // Dynamically load jsPDF + html2canvas
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+
+  const { jsPDF } = window.jspdf;
+  const paper = document.getElementById('resumePaper');
+
+  try {
+    const canvas = await html2canvas(paper, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#f8f7f4',
+      logging: false
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const ratio = pageWidth / (canvasWidth / 2);
+
+    let heightLeft = (canvasHeight / 2) * ratio;
+    let position = 0;
+
+    pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, (canvasHeight / 2) * ratio);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - (canvasHeight / 2) * ratio;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pageWidth, (canvasHeight / 2) * ratio);
+      heightLeft -= pageHeight;
+    }
+
+    const fileName = `${state.name}_平行宇宙简历.pdf`;
+    pdf.save(fileName);
+
+    btn.textContent = '✅ 已下载！';
+    setTimeout(() => {
+      btn.textContent = '⬇️ 下载简历';
+      btn.disabled = false;
+    }, 3000);
+  } catch (err) {
+    console.error(err);
+    alert('下载失败，请重试（可能是图片过大）。');
+    btn.textContent = '⬇️ 下载简历';
+    btn.disabled = false;
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ============================================================
+// BOOTSTRAP
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  createStars();
+  createParticles();
+  initCanvas();
+
+  // Hide loading after fonts load
+  setTimeout(() => {
+    document.getElementById('loadingOverlay').classList.add('hide');
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }, 500);
+  }, 1500);
+});
+</script>
+</body>
+</html>
