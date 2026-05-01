@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 AI壁纸生成器 - 搜罗天下</title>
+    <meta name="description" content="AI智能壁纸生成器，输入文字描述即可生成高清壁纸，手机电脑全适配，免费无限量下载。">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --bg: #0a0a1a;
+            --card-bg: rgba(15,5,40,0.85);
+            --accent: #7c3aed;
+            --accent2: #db2777;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --border: rgba(139,92,246,0.25);
+        }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+        
+        .header { background: rgba(10,10,30,0.95); border-bottom: 1px solid rgba(139,92,246,0.15); }
+        
+        .main-layout {
+            display: flex; gap: 24px; max-width: 1300px; margin: 0 auto; padding: 28px 20px;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .controls {
+            width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px;
+        }
+        .ctrl-card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+        }
+        .ctrl-card h3 {
+            font-size: 13px; color: #a78bfa; margin: 0 0 12px 0;
+            display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;
+        }
+        
+        .prompt-input {
+            width: 100%; padding: 12px 14px; border-radius: 10px;
+            border: 1px solid var(--border); background: rgba(10,10,30,0.8);
+            color: #fff; font-size: 14px; font-family: inherit;
+            resize: none; height: 80px; transition: border-color 0.2s;
+        }
+        .prompt-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 12px rgba(139,92,246,0.15); }
+        .prompt-input::placeholder { color: #555; }
+        
+        .style-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .style-tag {
+            padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border);
+            background: transparent; color: var(--text2); font-size: 12px; cursor: pointer;
+            transition: all 0.2s; font-family: inherit; white-space: nowrap;
+        }
+        .style-tag:hover { border-color: var(--accent2); color: #c4b5fd; }
+        .style-tag.active { background: rgba(139,92,246,0.2); color: #fff; border-color: var(--accent); }
+        
+        .quality-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .quality-tag {
+            padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);
+            background: transparent; color: var(--text2); font-size: 11px; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .quality-tag:hover { border-color: var(--accent2); }
+        .quality-tag.active { background: rgba(219,39,119,0.15); color: #f472b6; border-color: rgba(219,39,119,0.4); }
+        
+        .res-btns { display: flex; gap: 6px; }
+        .res-btn {
+            flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid var(--border);
+            background: transparent; color: var(--text2); font-size: 12px; cursor: pointer;
+            text-align: center; transition: all 0.2s; font-family: inherit;
+        }
+        .res-btn:hover { border-color: var(--accent2); }
+        .res-btn.active { background: rgba(139,92,246,0.2); color: #fff; border-color: var(--accent); }
+        
+        .btn {
+            width: 100%; padding: 14px; border-radius: 12px; border: none;
+            font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-generate {
+            background: linear-gradient(135deg, #7c3aed, #db2777);
+            color: #fff; margin-top: 4px;
+        }
+        .btn-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,58,237,0.35); }
+        .btn-generate:active { transform: translateY(0); }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .btn-download {
+            background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3);
+        }
+        .btn-download:hover { background: rgba(139,92,246,0.25); }
+        
+        .btn-random {
+            background: transparent; color: var(--text2); border: 1px dashed var(--border);
+            padding: 10px; font-size: 13px; font-weight: 400;
+        }
+        .btn-random:hover { border-color: var(--accent2); color: #c4b5fd; }
+        
+        .preview-area {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 400px;
+        }
+        .preview-wrapper {
+            position: relative; width: 100%; max-width: 800px; border-radius: 16px;
+            overflow: hidden; border: 1px solid var(--border);
+            background: rgba(10,10,30,0.6); min-height: 300px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .preview-img {
+            width: 100%; display: none; transition: opacity 0.3s; max-height: 80vh; object-fit: contain;
+        }
+        .preview-placeholder {
+            text-align: center; color: #555; padding: 60px 40px; width: 100%;
+        }
+        .preview-placeholder .icon { font-size: 64px; margin-bottom: 16px; display: block; }
+        .preview-placeholder .text { font-size: 16px; margin-bottom: 8px; display: block; }
+        .preview-placeholder .hint { font-size: 13px; color: #444; display: block; }
+        .preview-placeholder .status-line { font-size: 13px; color: #7c3aed; margin-top: 12px; display: block; }
+        
+        .loading-overlay {
+            position: absolute; inset: 0; background: rgba(10,10,30,0.85);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 16px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .loading-overlay.show { opacity: 1; pointer-events: auto; }
+        .spinner {
+            width: 48px; height: 48px; border: 3px solid rgba(139,92,246,0.2);
+            border-top-color: #7c3aed; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-status { color: #a78bfa; font-size: 14px; }
+        .loading-sub { color: #555; font-size: 12px; }
+        
+        .info-row { 
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 0; font-size: 12px; color: #555;
+        }
+        
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: rgba(124,58,237,0.9); color: #fff; padding: 12px 28px;
+            border-radius: 30px; font-size: 14px; z-index: 999; transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; }
+            .controls { width: 100%; }
+            .preview-wrapper { min-height: 250px; }
+            .prompt-input { height: 60px; }
+        }
+        /* History */
+        .history-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .history-thumb {
+            aspect-ratio: 9/16; border-radius: 6px; cursor: pointer; overflow: hidden;
+            position: relative; border: 1px solid var(--border); transition: all 0.2s;
+            background: rgba(10,10,30,0.8);
+        }
+        .history-thumb:hover { border-color: var(--accent2); transform: scale(1.05); z-index: 5; }
+        .history-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .history-thumb .hint-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85));
+            color: #ccc; font-size: 10px; padding: 8px 5px 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .history-thumb .del-btn {
+            position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+            border-radius: 50%; background: rgba(0,0,0,0.7); color: #ef4444;
+            border: none; font-size: 12px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;
+        }
+        .history-thumb:hover .del-btn { opacity: 1; }
+        .history-empty { color: #555; font-size: 12px; text-align: center; display: block; grid-column: 1/-1; padding: 16px 0; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <a href="index.html" style="color:#fff;text-decoration:none;font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px;">
+                <span>🔮</span> 搜罗天下
+            </a>
+            <nav style="display:flex;gap:20px;font-size:14px;">
+                <a href="index.html" style="color:#94a3b8;text-decoration:none;">首页</a>
+                <a href="deals.html" style="color:#94a3b8;text-decoration:none;">优惠折扣</a>
+                <a href="wallpapers.html" style="color:#94a3b8;text-decoration:none;">壁纸头像</a>
+                <a href="ai-wallpaper.html" style="color:#c4b5fd;text-decoration:none;">🤖 AI壁纸</a>
+                <a href="ai-tools.html" style="color:#94a3b8;text-decoration:none;">AI工具</a>
+                <a href="games.html" style="color:#94a3b8;text-decoration:none;">🎮 游戏</a>
+                <a href="about.html" style="color:#94a3b8;text-decoration:none;">关于我们</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="controls">
+            <div class="ctrl-card">
+                <h3>✏️ 描述你想要的壁纸</h3>
+                <textarea class="prompt-input" id="promptInput" placeholder="例如：日落时分的海边灯塔，油画风格...&#10;或者直接点下面的风格标签快速生成 👇"></textarea>
+            </div>
+            
+            <div class="ctrl-card">
+                <h3>🎨 风格预设</h3>
+                <div class="style-tags" id="styleTags">
+                    <button class="style-tag active" data-style="">🌅 不限</button>
+                    <button class="style-tag" data-style="cyberpunk city at night, neon lights, rain, 4k">🌆 赛博朋克</button>
+                    <button class="style-tag" data-style="beautiful nature landscape, mountains, lake, sunlight, 4k">🏔️ 自然风光</button>
+                    <button class="style-tag" data-style="minimalist, clean, soft pastel colors, aesthetic">🌸 极简清新</button>
+                    <button class="style-tag" data-style="anime style, studio ghibli, beautiful scenery">🎨 动漫风景</button>
+                    <button class="style-tag" data-style="city night view, skyscrapers, city lights, 4k">🌃 都市夜景</button>
+                    <button class="style-tag" data-style="space, galaxy, nebula, stars, sci-fi, 4k">🌌 太空科幻</button>
+                    <button class="style-tag" data-style="traditional chinese ink painting, mountains, mist, elegant">🏯 古风水墨</button>
+                    <button class="style-tag" data-style="dark abstract, geometric, gradient, modern">🔮 暗黑抽象</button>
+                    <button class="style-tag" data-style="ocean waves, beach, sunset, tropical, 4k">🌊 海洋落日</button>
+                    <button class="style-tag" data-style="cherry blossoms, spring, pink, dreamy, soft focus">🌸 樱花季</button>
+                    <button class="style-tag" data-style="autumn forest, golden leaves, warm colors, cozy">🍂 秋色森林</button>
+                </div>
+            </div>
+            
+            <div class="ctrl-card">
+                <h3>🎯 画质风格</h3>
+                <div class="quality-tags" id="qualityTags">
+                    <button class="quality-tag" data-quality="">默认</button>
+                    <button class="quality-tag active" data-quality="photorealistic, 8k, highly detailed">📸 超写实</button>
+                    <button class="quality-tag" data-quality="oil painting, masterpiece, artistic">🖼️ 油画</button>
+                    <button class="quality-tag" data-quality="anime, illustration, vibrant">🎌 动漫</button>
+                    <button class="quality-tag" data-quality="watercolor, soft, dreamy">🖌️ 水彩</button>
+                    <button class="quality-tag" data-quality="3d render, cinema 4d, octane render">🎮 3D渲染</button>
+                    <button class="quality-tag" data-quality="pixel art, retro, 16-bit">👾 像素风</button>
+                </div>
+            </div>
+            
+            <div class="ctrl-card">
+                <h3>📱 分辨率</h3>
+                <div class="res-btns" id="resBtns">
+                    <button class="res-btn active" data-w="1080" data-h="1920">📱 手机<br><small>1080×1920</small></button>
+                    <button class="res-btn" data-w="1920" data-h="1080">💻 电脑<br><small>1920×1080</small></button>
+                    <button class="res-btn" data-w="1080" data-h="1080">⬜ 方形<br><small>1080×1080</small></button>
+                </div>
+            </div>
+            
+            <button class="btn btn-generate" id="btnGenerate">✨ 生成壁纸</button>
+            <button class="btn btn-random" id="btnRandom">🎲 随机灵感</button>
+            <button class="btn btn-download" id="btnDownload" disabled>📥 下载壁纸 (PNG)</button>
+            
+            <div class="ctrl-card history-card">
+                <h3>📜 历史记录 <span style="font-size:10px;color:#555;font-weight:400;" id="historyCount"></span></h3>
+                <div class="history-grid" id="historyGrid">
+                    <span class="history-empty">生成壁纸后自动保存</span>
+                </div>
+            </div>
+            
+            <div class="info-row">
+                <span>已生成 <strong id="countSpan" style="color:#a78bfa;">0</strong> 张</span>
+                <span style="color:#444;">Powered by Pollinations.ai</span>
+            </div>
+        </div>
+        
+        <div class="preview-area">
+            <div class="preview-wrapper" id="previewWrapper">
+                <div class="preview-placeholder" id="placeholder">
+                    <span class="icon">🎨</span>
+                    <span class="text">输入描述，点击生成</span>
+                    <span class="hint">AI将为你创作独一无二的壁纸</span>
+                    <span class="status-line" style="display:none;"></span>
+                </div>
+                <img class="preview-img" id="previewImg" alt="AI生成的壁纸">
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <span class="loading-status" id="loadingStatus">🎨 AI正在创作中...</span>
+                    <span class="loading-sub" id="loadingSub">通常需要 5-15 秒</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function() {
+    var MAX_RETRIES = 12;
+    var RETRY_DELAY = 4000;
+    var MAX_HISTORY = 12;
+
+    var state = {
+        style: '',
+        quality: 'photorealistic, 8k, highly detailed',
+        width: 1080,
+        height: 1920,
+        genCount: 0,
+        currentImageUrl: null
+    };
+
+    var $pid = document.getElementById('placeholder');
+    var $pimg = document.getElementById('previewImg');
+    var $load = document.getElementById('loadingOverlay');
+    var $lstat = document.getElementById('loadingStatus');
+    var $lsub = document.getElementById('loadingSub');
+    var $pstat = $pid.querySelector('.status-line');
+    var $btnG = document.getElementById('btnGenerate');
+    var $btnD = document.getElementById('btnDownload');
+    var $btnR = document.getElementById('btnRandom');
+    var $cnt = document.getElementById('countSpan');
+    var $ipt = document.getElementById('promptInput');
+    var $toast = document.getElementById('toast');
+    var $hgrid = document.getElementById('historyGrid');
+    var $hcount = document.getElementById('historyCount');
+
+    var loadingTimer = null;
+    var loadStart = 0;
+    var historyList = [];
+
+    var randomPrompts = [
+        '孤独的宇航员站在紫色星球上仰望星空',
+        '雨后东京涉谷十字路口霓虹灯倒影',
+        '挪威峡湾极光下的红色小木屋',
+        '樱花树下的日式神社鸟居晨雾',
+        '蒸汽朋克飞艇穿越金色云层日落',
+        '水晶洞穴中的蓝色荧光蘑菇森林',
+        '雪山之巅的古老寺庙云雾缭绕',
+        '深海巨型水母发出幽蓝光芒',
+        '秋日枫叶林中的蜿蜒小溪',
+        '月球表面的未来城市穹顶建筑',
+        '蝴蝶在薰衣草田中飞舞的阳光午后',
+        '沙漠中的巨大月亮和仙人掌剪影',
+        '龙猫在雨夜公交站等车',
+        '维多利亚时代的空中花园',
+        '夜晚瀑布前的篝火营地星空',
+        '可爱的猫咪坐在窗台看下雨天',
+        '极简风格的白色建筑和蓝色泳池',
+        '竹林中熊猫在吃竹子的可爱场景',
+        '浮在云端的天空之城城堡',
+        '赛博朋克唐人街夜晚集市'
+    ];
+
+    function buildFullPrompt() {
+        var parts = [];
+        var up = $ipt.value.trim();
+        if (up) parts.push(up);
+        if (state.style) parts.push(state.style);
+        if (state.quality) parts.push(state.quality);
+        if (parts.length === 0) parts.push('beautiful wallpaper, 4k');
+        return parts.join(', ');
+    }
+
+    function showPlaceholder(icon, text, hint, status) {
+        $pid.style.display = 'block';
+        $pimg.style.display = 'none';
+        var kids = $pid.children;
+        kids[0].textContent = icon || '🎨';
+        kids[1].textContent = text || '';
+        kids[2].textContent = hint || '';
+        if (status) {
+            $pstat.style.display = 'block';
+            $pstat.textContent = status;
+        } else {
+            $pstat.style.display = 'none';
+        }
+    }
+
+    function formatTime(ms) {
+        var s = Math.floor(ms/1000);
+        if (s < 60) return s + ' 秒';
+        return Math.floor(s/60) + ' 分 ' + (s%60) + ' 秒';
+    }
+
+    function updateLoadStatus(retry, max, elapsed) {
+        $lstat.textContent = '🎨 AI正在创作中... (第' + retry + '/' + max + '次尝试)';
+        $lsub.textContent = '已等待 ' + formatTime(elapsed) + ' | 大图需要更多时间';
+    }
+
+    function tryLoadImage(url, retriesLeft) {
+        if (retriesLeft < MAX_RETRIES) {
+            updateLoadStatus(MAX_RETRIES - retriesLeft + 1, MAX_RETRIES, Date.now() - loadStart);
+        }
+
+        var testImg = new Image();
+        var done = false;
+
+        function finish(success) {
+            if (done) return;
+            done = true;
+            testImg.onload = null;
+            testImg.onerror = null;
+            testImg.onabort = null;
+
+            if (success) {
+                clearTimeout(loadingTimer);
+                $pimg.src = url;
+                $pimg.style.display = 'block';
+                $pid.style.display = 'none';
+                $load.classList.remove('show');
+                $btnG.disabled = false;
+                $btnD.disabled = false;
+                state.genCount++;
+                $cnt.textContent = state.genCount;
+                state.currentImageUrl = url;
+            } else {
+                if (retriesLeft > 0) {
+                    updateLoadStatus(MAX_RETRIES - retriesLeft + 1, MAX_RETRIES, Date.now() - loadStart);
+                    loadingTimer = setTimeout(function() {
+                        tryLoadImage(url, retriesLeft - 1);
+                    }, RETRY_DELAY);
+                } else {
+                    clearTimeout(loadingTimer);
+                    $load.classList.remove('show');
+                    $btnG.disabled = false;
+                    $btnD.disabled = true;
+                    var elapsed = formatTime(Date.now() - loadStart);
+                    showPlaceholder('😢',
+                        '生成失败：尝试了 ' + MAX_RETRIES + ' 次共 ' + elapsed,
+                        '请检查网络连接，或尝试不同的描述词',
+                        '提示：可以试试英文关键词 "sunset ocean"'
+                    );
+                }
+            }
+        }
+
+        testImg.onload = function() {
+            var promptText = buildFullPrompt();
+            finish(true);
+            // Save thumbnail to history
+            saveToHistory(promptText, url, state.width, state.height);
+        };
+        testImg.onerror = function() { finish(false); };
+        testImg.onabort = function() { finish(false); };
+
+        // 超时处理：单次加载超过30秒则重试
+        var timeout = setTimeout(function() {
+            if (!done) finish(false);
+        }, 30000);
+
+        testImg.src = url;
+    }
+
+    function generate() {
+        var fullPrompt = buildFullPrompt();
+        var encoded = encodeURIComponent(fullPrompt);
+        var seed = Math.floor(Math.random() * 999999);
+        // 通过本地代理请求 Pollinations，绕过浏览器网络限制
+        var url = 'http://localhost:8889/proxy?prompt=' + encoded +
+            '&w=' + state.width + '&h=' + state.height +
+            '&seed=' + seed;
+
+        $pid.style.display = 'none';
+        $pimg.style.display = 'none';
+        $load.classList.add('show');
+        $lstat.textContent = '🎨 AI正在创作中...';
+        $lsub.textContent = '代理模式 | 服务器代下载 | 大图需 10-40 秒';
+        $btnG.disabled = true;
+        $btnD.disabled = true;
+        loadStart = Date.now();
+
+        tryLoadImage(url, MAX_RETRIES - 1);
+    }
+
+    function downloadWallpaper() {
+        if (!state.currentImageUrl) return;
+        var a = document.createElement('a');
+        a.href = state.currentImageUrl;
+        a.download = 'ai-wallpaper-' + Date.now() + '.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        $toast.textContent = '✅ 下载成功！';
+        $toast.classList.add('show');
+        setTimeout(function() { $toast.classList.remove('show'); }, 1800);
+    }
+
+    function randomGenerate() {
+        var rp = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
+        $ipt.value = rp;
+        generate();
+    }
+
+    $btnG.addEventListener('click', generate);
+    $btnD.addEventListener('click', downloadWallpaper);
+    $btnR.addEventListener('click', randomGenerate);
+
+    $ipt.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            generate();
+        }
+    });
+
+    // 风格标签
+    var styleTags = document.querySelectorAll('#styleTags .style-tag');
+    for (var i = 0; i < styleTags.length; i++) {
+        styleTags[i].addEventListener('click', function() {
+            for (var j = 0; j < styleTags.length; j++) styleTags[j].classList.remove('active');
+            this.classList.add('active');
+            state.style = this.dataset.style;
+            $ipt.placeholder = this.dataset.style ? '可选：补充更多描述...' : '例如：日落时分的海边灯塔，油画风格...\n或者直接点下面的风格标签快速生成 👇';
+        });
+    }
+
+    // 画质标签
+    var qtags = document.querySelectorAll('#qualityTags .quality-tag');
+    for (var k = 0; k < qtags.length; k++) {
+        qtags[k].addEventListener('click', function() {
+            for (var m = 0; m < qtags.length; m++) qtags[m].classList.remove('active');
+            this.classList.add('active');
+            state.quality = this.dataset.quality;
+        });
+    }
+
+    // 分辨率
+    var rbtns = document.querySelectorAll('#resBtns .res-btn');
+    for (var n = 0; n < rbtns.length; n++) {
+        rbtns[n].addEventListener('click', function() {
+            for (var p = 0; p < rbtns.length; p++) rbtns[p].classList.remove('active');
+            this.classList.add('active');
+            state.width = parseInt(this.dataset.w);
+            state.height = parseInt(this.dataset.h);
+        });
+    }
+
+    // --- History Functions ---
+    function saveToHistory(promptText, imgUrl, w, h) {
+        var img = document.getElementById('previewImg');
+        if (!img || !img.complete || img.naturalWidth === 0) return;
+        
+        // Create thumbnail via canvas
+        var canvas = document.createElement('canvas');
+        var maxSize = 200;
+        var ratio = Math.min(maxSize / w, maxSize / h);
+        canvas.width = Math.round(w * ratio);
+        canvas.height = Math.round(h * ratio);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        var thumbData = canvas.toDataURL('image/jpeg', 0.7);
+        
+        historyList.unshift({
+            prompt: promptText.substring(0, 120),
+            url: imgUrl,
+            thumb: thumbData,
+            w: w, h: h,
+            time: Date.now()
+        });
+        
+        if (historyList.length > MAX_HISTORY) historyList.length = MAX_HISTORY;
+        
+        try { localStorage.setItem('aiwall_history', JSON.stringify(historyList)); } catch(e) {}
+        renderHistory();
+    }
+
+    function loadHistory() {
+        try {
+            var d = localStorage.getItem('aiwall_history');
+            if (d) historyList = JSON.parse(d);
+        } catch(e) { historyList = []; }
+        if (!Array.isArray(historyList)) historyList = [];
+    }
+
+    function renderHistory() {
+        $hcount.textContent = historyList.length ? '(' + historyList.length + '/' + MAX_HISTORY + ')' : '';
+        $hgrid.innerHTML = '';
+        if (historyList.length === 0) {
+            $hgrid.innerHTML = '<span class="history-empty">生成壁纸后自动保存</span>';
+            return;
+        }
+        for (var i = 0; i < historyList.length; i++) {
+            (function(idx) {
+                var e = historyList[idx];
+                var div = document.createElement('div');
+                div.className = 'history-thumb';
+                div.title = e.prompt;
+                div.innerHTML = '<img src="' + e.thumb + '" loading="lazy"><div class="hint-overlay">' + e.prompt.substring(0, 18) + '</div><button class="del-btn">×</button>';
+                
+                div.querySelector('img').addEventListener('click', function() {
+                    $ipt.value = e.prompt;
+                    generate();
+                });
+                div.querySelector('.del-btn').addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    removeHistory(idx);
+                });
+                $hgrid.appendChild(div);
+            })(i);
+        }
+    }
+
+    function removeHistory(index) {
+        historyList.splice(index, 1);
+        try { localStorage.setItem('aiwall_history', JSON.stringify(historyList)); } catch(e) {}
+        renderHistory();
+    }
+
+    // Init history
+    loadHistory();
+    renderHistory();
+
+    })();
+    </script>
+</body>
+</html>

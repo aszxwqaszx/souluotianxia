@@ -6,317 +6,199 @@
 <title>仙途 - 简约修仙打宝RPG</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { 
-  background: #0a0a0f; 
-  color: #e0e0e0; 
-  font-family: 'Microsoft YaHei', sans-serif;
+html, body {
+  width: 100%; height: 100%;
   overflow: hidden;
+  background: #0a0a0f;
+  color: #e0e0e0;
+  font-family: 'Microsoft YaHei', sans-serif;
   user-select: none;
 }
 #game-container {
-  position: relative;
+  display: flex;
   width: 100vw;
   height: 100vh;
-  display: flex;
+  overflow: hidden;
 }
+/* Canvas - 固定最大宽度，右侧栏永远可见 */
 #game-canvas {
-  flex: 1;
-  background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+  width: 100%;
+  height: 100vh;
+  display: block;
+  background: #0d1117;
+  /* 最关键：这句限制canvas宽度永远不超过 屏幕宽度-260px */
+  max-width: calc(100vw - 260px);
 }
 /* 右侧面板 */
 #side-panel {
-  width: 280px;
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
   background: #0d1117;
   border-left: 1px solid #30363d;
   display: flex;
   flex-direction: column;
-  font-size: 13px;
-}
-.panel-section {
-  padding: 12px;
-  border-bottom: 1px solid #30363d;
-}
-.panel-title {
-  color: #58a6ff;
   font-size: 12px;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
 }
-/* 角色状态 */
-#player-name { font-size: 16px; font-weight: bold; color: #f0f6fc; }
-#player-realm { color: #ffa500; font-size: 12px; }
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  margin: 4px 0;
+.panel-section { padding: 8px 10px; border-bottom: 1px solid #21262d; flex-shrink: 0; }
+.panel-title {
+  color: #58a6ff; font-size: 10px; margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: 1px;
 }
+#player-name { font-size: 14px; font-weight: bold; color: #f0f6fc; }
+#player-realm { color: #ffa500; font-size: 11px; }
+.stat-row { display: flex; justify-content: space-between; margin: 2px 0; font-size: 11px; }
 .stat-bar {
-  height: 6px;
-  background: #21262d;
-  border-radius: 3px;
-  margin-top: 2px;
-  overflow: hidden;
+  height: 8px; background: #21262d; border-radius: 4px;
+  margin-top: 2px; overflow: hidden; position: relative;
 }
-.stat-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s;
+.stat-fill { height: 100%; border-radius: 4px; transition: width 0.3s; position: relative; }
+.stat-fill::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+  background: rgba(255,255,255,0.15); border-radius: 4px 4px 0 0;
 }
-.hp-fill { background: linear-gradient(90deg, #da3633, #f85149); }
-.mp-fill { background: linear-gradient(90deg, #1f6feb, #58a6ff); }
-.exp-fill { background: linear-gradient(90deg, #238636, #3fb950); }
-/* 装备槽 */
-.equip-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
+.hp-fill { background: linear-gradient(180deg,#f85149 0%,#da3633 100%); }
+.mp-fill { background: linear-gradient(180deg,#58a6ff 0%,#1f6feb 100%); }
+.exp-fill { background: linear-gradient(180deg,#3fb950 0%,#238636 100%); }
+.equip-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 3px; }
 .equip-slot {
-  aspect-ratio: 1;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  cursor: pointer;
-  position: relative;
+  aspect-ratio: 1; background: #161b22; border: 1px solid #30363d;
+  border-radius: 4px; display: flex; align-items: center;
+  justify-content: center; font-size: 16px; cursor: pointer;
 }
 .equip-slot:hover { border-color: #58a6ff; }
-.equip-slot.quality-green { border-color: #3fb950; }
-.equip-slot.quality-blue { border-color: #58a6ff; }
-.equip-slot.quality-purple { border-color: #a371f7; }
-.equip-slot.quality-orange { border-color: #d29922; }
-.equip-slot.quality-red { border-color: #f85149; }
-/* 技能栏 */
-.skill-bar {
-  display: flex;
-  gap: 6px;
-}
+.equip-slot.q-green { border-color: #3fb950; background: rgba(63,185,80,0.12); }
+.equip-slot.q-blue { border-color: #58a6ff; background: rgba(88,166,255,0.12); }
+.equip-slot.q-purple { border-color: #a371f7; background: rgba(163,113,247,0.12); }
+.equip-slot.q-orange { border-color: #d29922; background: rgba(210,153,34,0.12); }
+.equip-slot.q-red { border-color: #f85149; background: rgba(248,81,73,0.12); }
+.skill-bar { display: flex; gap: 4px; }
 .skill-slot {
-  width: 44px;
-  height: 44px;
-  background: #161b22;
-  border: 2px solid #30363d;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  cursor: pointer;
-  position: relative;
+  width: 40px; height: 40px; background: #161b22;
+  border: 2px solid #30363d; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer; position: relative;
 }
 .skill-slot:hover { border-color: #58a6ff; }
-.skill-slot.on-cooldown {
-  opacity: 0.5;
+.skill-slot.on-cooldown { opacity: 0.5; }
+.skill-slot .cd-timer {
+  position: absolute; bottom: 1px; right: 2px;
+  font-size: 9px; color: #f85149; font-weight: bold;
 }
-.skill-slot .cooldown-overlay {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  font-size: 10px;
-  color: #f85149;
-}
-.skill-key {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  font-size: 10px;
-  color: #8b949e;
-}
-/* 背包 */
-#inventory-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 3px;
-  max-height: 200px;
-  overflow-y: auto;
-}
+.skill-key { position: absolute; top: 1px; left: 2px; font-size: 9px; color: #8b949e; }
+#inventory-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 2px; }
 .inv-slot {
-  aspect-ratio: 1;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  cursor: pointer;
-  position: relative;
+  aspect-ratio: 1; background: #161b22; border: 1px solid #30363d;
+  border-radius: 3px; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; cursor: pointer; position: relative;
 }
 .inv-slot:hover { border-color: #58a6ff; }
-.inv-slot .item-count {
-  position: absolute;
-  bottom: 1px;
-  right: 2px;
-  font-size: 10px;
-  color: #f0f6fc;
-}
-/* 日志 */
+.inv-slot .item-count { position: absolute; bottom: 0; right: 1px; font-size: 9px; color: #f0f6fc; }
 #combat-log {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 12px;
-  font-size: 11px;
-  line-height: 1.6;
+  flex: 1; overflow-y: auto; padding: 5px 10px;
+  font-size: 10px; line-height: 1.5; min-height: 0;
 }
-.log-item { margin: 2px 0; }
+.log-item { margin: 1px 0; }
 .log-damage { color: #f85149; }
 .log-heal { color: #3fb950; }
 .log-drop { color: #ffa657; }
 .log-exp { color: #a371f7; }
-.log-level { color: #f0f6fc; font-weight: bold; }
-/* 掉落弹窗 */
+.log-level { color: #ffd700; font-weight: bold; }
+.log-realm { color: #ff69b4; font-weight: bold; }
 #drop-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #0d1117;
-  border: 2px solid #30363d;
-  border-radius: 12px;
-  padding: 20px;
-  min-width: 300px;
-  display: none;
-  z-index: 100;
-  text-align: center;
+  position: fixed; top: 50%; left: calc(50% - 130px);
+  transform: translate(-50%,-50%);
+  background: #0d1117; border: 2px solid #d29922;
+  border-radius: 12px; padding: 16px; min-width: 280px;
+  display: none; z-index: 200; text-align: center;
+  box-shadow: 0 0 40px rgba(210,153,34,0.3);
 }
 #drop-modal.show { display: block; }
-#drop-modal h3 { color: #ffa657; margin-bottom: 12px; }
-#drop-items { margin: 12px 0; }
-.drop-item {
-  padding: 8px;
-  margin: 4px 0;
-  background: #161b22;
-  border-radius: 6px;
-}
+#drop-modal h3 { color: #ffa657; margin-bottom: 10px; }
+#drop-items { margin: 10px 0; }
+.drop-item { padding: 6px; margin: 3px 0; background: #161b22; border-radius: 4px; }
 #drop-modal button {
-  margin-top: 12px;
-  padding: 8px 24px;
-  background: #238636;
-  border: none;
-  border-radius: 6px;
-  color: #fff;
-  cursor: pointer;
+  margin-top: 10px; padding: 6px 24px; background: #238636;
+  border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 13px;
 }
-/* 底部状态栏 */
+#drop-modal button:hover { background: #2ea043; }
+#realm-modal {
+  position: fixed; top: 50%; left: calc(50% - 130px);
+  transform: translate(-50%,-50%);
+  background: #0d1117; border: 2px solid #ffd700;
+  border-radius: 16px; padding: 24px 32px; display: none;
+  z-index: 300; text-align: center;
+  box-shadow: 0 0 60px rgba(255,215,0,0.5);
+  animation: realmPopIn 0.5s ease-out;
+}
+#realm-modal.show { display: block; }
+#realm-modal h2 { color: #ffd700; font-size: 20px; margin-bottom: 6px; }
+#realm-modal h3 { color: #ffa500; font-size: 28px; margin-bottom: 6px; }
+#realm-modal p { color: #8b949e; font-size: 12px; margin: 4px 0; }
+#realm-modal .reward { color: #3fb950; font-size: 13px; }
+#realm-modal button {
+  margin-top: 16px; padding: 8px 32px;
+  background: linear-gradient(135deg,#d29922,#ffa500);
+  border: none; border-radius: 8px; color: #0a0a0f;
+  font-weight: bold; font-size: 14px; cursor: pointer;
+}
+@keyframes realmPopIn {
+  0% { transform: translate(-50%,-50%) scale(0.5); opacity: 0; }
+  100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+}
 #bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 280px;
-  height: 40px;
-  background: #161b22;
-  border-top: 1px solid #30363d;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 20px;
-  font-size: 12px;
+  position: fixed; bottom: 0; left: 0;
+  right: 0; height: 32px;
+  background: rgba(22,27,34,0.95); border-top: 1px solid #30363d;
+  display: flex; align-items: center; padding: 0 12px;
+  gap: 16px; font-size: 11px; z-index: 10;
 }
 #bottom-bar .coord { color: #8b949e; }
 #bottom-bar .gold { color: #ffa657; }
 #bottom-bar .kills { color: #f85149; }
-/* 暂停/设置按钮 */
 #top-controls {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  display: flex;
-  gap: 8px;
-  z-index: 50;
+  position: fixed; top: 8px; left: 8px;
+  display: flex; gap: 6px; z-index: 50;
 }
 .ctrl-btn {
-  width: 36px;
-  height: 36px;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  color: #8b949e;
-  cursor: pointer;
-  font-size: 16px;
+  width: 32px; height: 32px; background: rgba(22,27,34,0.9);
+  border: 1px solid #30363d; border-radius: 6px;
+  color: #8b949e; cursor: pointer; font-size: 14px;
 }
 .ctrl-btn:hover { border-color: #58a6ff; color: #f0f6fc; }
-/* 怪物血条 */
-.mob-hp-bar {
-  position: absolute;
-  width: 50px;
-  height: 4px;
-  background: #21262d;
-  border-radius: 2px;
-  transform: translateX(-50%);
+#realm-hint {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  background: rgba(13,17,23,0.9); border: 1px solid #30363d;
+  border-radius: 8px; padding: 6px 16px; font-size: 12px;
+  color: #8b949e; z-index: 10; pointer-events: none;
 }
-.mob-hp-fill {
-  height: 100%;
-  background: #f85149;
-  border-radius: 2px;
-}
-.mob-name {
-  position: absolute;
-  font-size: 10px;
-  color: #f0f6fc;
-  white-space: nowrap;
-  transform: translateX(-50%);
-}
-/* 伤害数字 */
-.damage-number {
-  position: absolute;
-  font-weight: bold;
-  font-size: 14px;
-  pointer-events: none;
-  animation: floatUp 0.8s ease-out forwards;
-}
-@keyframes floatUp {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-30px); }
-}
-.dmg-player { color: #f85149; }
-.dmg-mob { color: #ffa657; }
-.dmg-crit { color: #f0f6fc; font-size: 18px; }
-.dmg-heal { color: #3fb950; }
 </style>
 </head>
 <body>
 
 <div id="game-container">
   <canvas id="game-canvas"></canvas>
-  
   <div id="side-panel">
-    <!-- 角色信息 -->
     <div class="panel-section">
       <div id="player-name">无名修士</div>
       <div id="player-realm">凡人境 Lv.1</div>
-      <div class="stat-row" style="margin-top:8px;">
-        <span>生命</span>
-        <span id="hp-text">100/100</span>
-      </div>
+      <div class="stat-row" style="margin-top:6px;"><span>❤️ 生命</span><span id="hp-text">100/100</span></div>
       <div class="stat-bar"><div class="stat-fill hp-fill" id="hp-bar" style="width:100%"></div></div>
-      
-      <div class="stat-row">
-        <span>法力</span>
-        <span id="mp-text">50/50</span>
-      </div>
+      <div class="stat-row"><span>💧 法力</span><span id="mp-text">50/50</span></div>
       <div class="stat-bar"><div class="stat-fill mp-fill" id="mp-bar" style="width:100%"></div></div>
-      
-      <div class="stat-row">
-        <span>经验</span>
-        <span id="exp-text">0/100</span>
-      </div>
+      <div class="stat-row"><span>⭐ 经验</span><span id="exp-text">0/100</span></div>
       <div class="stat-bar"><div class="stat-fill exp-fill" id="exp-bar" style="width:0%"></div></div>
     </div>
-    
-    <!-- 属性 -->
     <div class="panel-section">
       <div class="panel-title">属性</div>
-      <div class="stat-row"><span>攻击</span><span id="stat-atk">10</span></div>
-      <div class="stat-row"><span>防御</span><span id="stat-def">5</span></div>
-      <div class="stat-row"><span>暴击</span><span id="stat-crit">5%</span></div>
-      <div class="stat-row"><span>闪避</span><span id="stat-dodge">3%</span></div>
+      <div class="stat-row"><span>⚔️ 攻击</span><span id="stat-atk">10</span></div>
+      <div class="stat-row"><span>🛡️ 防御</span><span id="stat-def">5</span></div>
+      <div class="stat-row"><span>💥 暴击</span><span id="stat-crit">5%</span></div>
+      <div class="stat-row"><span>💨 闪避</span><span id="stat-dodge">3%</span></div>
     </div>
-    
-    <!-- 装备 -->
     <div class="panel-section">
       <div class="panel-title">装备</div>
       <div class="equip-grid">
@@ -325,11 +207,9 @@ body {
         <div class="equip-slot" data-slot="armor" title="护甲">🥋</div>
         <div class="equip-slot" data-slot="ring" title="戒指">💍</div>
         <div class="equip-slot" data-slot="amulet" title="项链">📿</div>
-        <div class="equip-slot" data-slot="boots" title="鞋子">👢</div>
+        <div class="equip-slot" data-slot="boot" title="鞋子">👢</div>
       </div>
     </div>
-    
-    <!-- 技能 -->
     <div class="panel-section">
       <div class="panel-title">技能</div>
       <div class="skill-bar">
@@ -339,918 +219,720 @@ body {
         <div class="skill-slot" data-skill="3" title="瞬移"><span class="skill-key">4</span>💨</div>
       </div>
     </div>
-    
-    <!-- 背包 -->
     <div class="panel-section">
       <div class="panel-title">背包 <span id="inv-count">(0/20)</span></div>
       <div id="inventory-grid"></div>
     </div>
-    
-    <!-- 战斗日志 -->
     <div id="combat-log"></div>
   </div>
 </div>
 
-<!-- 底部状态栏 -->
 <div id="bottom-bar">
   <span class="coord">📍 <span id="pos-text">0, 0</span></span>
   <span class="gold">💰 <span id="gold-text">0</span></span>
-  <span class="kills">⚔️ 击杀: <span id="kills-text">0</span></span>
+  <span class="kills">⚔️ <span id="kills-text">0</span></span>
   <span style="margin-left:auto;color:#8b949e;">WASD移动 | 鼠标攻击 | 1-4技能</span>
 </div>
+<div id="realm-hint"></div>
 
-<!-- 顶部控制 -->
 <div id="top-controls">
   <button class="ctrl-btn" id="btn-pause" title="暂停">⏸️</button>
   <button class="ctrl-btn" id="btn-save" title="存档">💾</button>
   <button class="ctrl-btn" id="btn-load" title="读档">📂</button>
 </div>
 
-<!-- 掉落弹窗 -->
 <div id="drop-modal">
   <h3>🎉 战利品</h3>
   <div id="drop-items"></div>
   <button onclick="closeDropModal()">收下</button>
 </div>
 
-<script>// ===== 仙途 RPG - Clean Rebuild =====
-// Decorations
-let decorations = {mountains:[],trees:[],rivers:[],farms:[],grass:[]};
+<div id="realm-modal">
+  <h2>✨ 境界突破! ✨</h2>
+  <h3 id="realm-modal-name"></h3>
+  <p id="realm-modal-desc"></p>
+  <p class="reward" id="realm-modal-reward"></p>
+  <button onclick="closeRealmModal()">踏入新境</button>
+</div>
 
-// Utilities
-function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function randFloat(min, max) { return Math.random() * (max - min) + min; }
-function distance(x1, y1, x2, y2) { return Math.sqrt((x2-x1)**2 + (y2-y1)**2); }
+<script>
+// ===== 游戏配置 =====
+const CONFIG = {
+  PLAYER_SPEED: 3,
+  ATTACK_RANGE: 80,
+  ATTACK_COOLDOWN: 400,
+  COLLISION_RADIUS: 28,
+};
 
-// Data
+// ===== 境界系统 =====
+const REALMS = [
+  { name:'凡人',minLv:1,maxLv:10, bgGradient:['#0d1117','#161b22'], particleColor:'#666',particleColor2:'#888',glowColor:'rgba(100,100,100,0.3)',playerIcon:'🧙',playerGlow:'#555',hint:'平凡之躯，踏上修仙路',atkBonus:0,defBonus:0,hpBonus:0,mpBonus:0 },
+  { name:'筑基',minLv:11,maxLv:25, bgGradient:['#0a1520','#0d2035'], particleColor:'#00d4ff',particleColor2:'#0099cc',glowColor:'rgba(0,212,255,0.3)',playerIcon:'🧙',playerGlow:'#00d4ff',hint:'丹田凝聚，真气初成',atkBonus:5,defBonus:3,hpBonus:50,mpBonus:20 },
+  { name:'金丹',minLv:26,maxLv:40, bgGradient:['#150a20','#251040'], particleColor:'#a855f7',particleColor2:'#7c3aed',glowColor:'rgba(168,85,247,0.4)',playerIcon:'🧘',playerGlow:'#a855f7',hint:'金丹结成，法力无边',atkBonus:15,defBonus:8,hpBonus:150,mpBonus:60 },
+  { name:'元婴',minLv:41,maxLv:55, bgGradient:['#1a0a2e','#2d1060'], particleColor:'#f59e0b',particleColor2:'#d97706',glowColor:'rgba(245,158,11,0.4)',playerIcon:'🧚',playerGlow:'#f59e0b',hint:'元婴出窍，神游太虚',atkBonus:35,defBonus:18,hpBonus:400,mpBonus:150 },
+  { name:'化神',minLv:56,maxLv:70, bgGradient:['#1e0030','#3d0070'], particleColor:'#ec4899',particleColor2:'#be185d',glowColor:'rgba(236,72,153,0.4)',playerIcon:'🦸',playerGlow:'#ec4899',hint:'化凡为神，移山倒海',atkBonus:70,defBonus:35,hpBonus:900,mpBonus:300 },
+  { name:'大乘',minLv:71,maxLv:85, bgGradient:['#001a40','#003080'], particleColor:'#0ea5e9',particleColor2:'#0284c7',glowColor:'rgba(14,165,233,0.5)',playerIcon:'🦸',playerGlow:'#0ea5e9',hint:'大乘境界，一念之间',atkBonus:130,defBonus:65,hpBonus:1800,mpBonus:600 },
+  { name:'渡劫',minLv:86,maxLv:100, bgGradient:['#200010','#500030'], particleColor:'#ef4444',particleColor2:'#dc2626',glowColor:'rgba(239,68,68,0.5)',playerIcon:'🔥',playerGlow:'#ef4444',hint:'渡劫飞升，问鼎仙途',atkBonus:250,defBonus:120,hpBonus:3500,mpBonus:1200 },
+];
+
 const QUALITIES = [
-  { name: '白', color: '#9ca3af' },
-  { name: '绿', color: '#22c55e' },
-  { name: '蓝', color: '#3b82f6' },
-  { name: '紫', color: '#a855f7' },
-  { name: '橙', color: '#f97316' },
-  { name: '红', color: '#ef4444' },
+  { name:'普通',  color:'#8b949e', mult:1,   class:'' },
+  { name:'优秀',  color:'#3fb950', mult:1.3,  class:'q-green' },
+  { name:'精良',  color:'#58a6ff', mult:1.8,  class:'q-blue' },
+  { name:'史诗',  color:'#a371f7', mult:2.5,  class:'q-purple' },
+  { name:'传说',  color:'#d29922', mult:3.5,  class:'q-orange' },
+  { name:'神话',  color:'#f85149', mult:5,    class:'q-red' },
 ];
 
 const EQUIP_TYPES = {
-  weapon: { name: '武器', icon: '⚔️', baseAtk: 5, baseDef: 0 },
-  helmet: { name: '头盔', icon: '🪖', baseAtk: 0, baseDef: 3 },
-  armor: { name: '护甲', icon: '🥋', baseAtk: 0, baseDef: 5 },
-  ring: { name: '戒指', icon: '💍', baseAtk: 2, baseDef: 1 },
-  amulet: { name: '项链', icon: '📿', baseAtk: 1, baseDef: 2 },
-  boot: { name: '鞋子', icon: '👢', baseAtk: 0, baseDef: 2 },
+  weapon:{name:'武器',icon:'⚔️',baseAtk:5,baseDef:0},
+  helmet:{name:'头盔',icon:'🪖',baseAtk:0,baseDef:3},
+  armor:{name:'护甲',icon:'🥋',baseAtk:0,baseDef:5},
+  ring:{name:'戒指',icon:'💍',baseAtk:2,baseDef:1},
+  amulet:{name:'项链',icon:'📿',baseAtk:1,baseDef:2},
+  boot:{name:'鞋子',icon:'👢',baseAtk:0,baseDef:2},
 };
-
 const EQUIP_NAMES = {
-  weapon: ['木剑', '铁剑', '玄铁剑', '紫电剑', '天雷剑', '仙剑'],
-  helmet: ['草帽', '皮帽', '铁盔', '玄盔', '天盔', '神盔'],
-  armor: ['布衣', '皮甲', '铁甲', '玄甲', '天甲', '神甲'],
-  ring: ['铜戒', '银戒', '金戒', '玄戒', '天戒', '神戒'],
-  amulet: ['木坠', '玉坠', '金坠', '玄坠', '天坠', '神坠'],
-  boot: ['草鞋', '布靴', '铁靴', '玄靴', '天靴', '神靴'],
+  weapon:['木剑','铁剑','精钢剑','玄铁剑','灵剑','仙剑','神剑'],
+  helmet:['布帽','铁盔','精钢盔','玄铁盔','灵盔','仙冠','神冠'],
+  armor:['布衣','铁甲','精钢甲','玄铁甲','灵甲','仙甲','神甲'],
+  ring:['铜戒','银戒','金戒','灵戒','仙戒','神戒','圣戒'],
+  amulet:['铜坠','银坠','金坠','灵坠','仙坠','神坠','圣坠'],
+  boot:['布鞋','铁靴','精钢靴','玄铁靴','灵靴','仙靴','神靴'],
 };
-
 const AFFIXES = [
-  { name: '力量', stat: 'atk', min: 2, max: 10 },
-  { name: '守护', stat: 'def', min: 1, max: 8 },
-  { name: '生命', stat: 'maxHp', min: 10, max: 50 },
-  { name: '暴击', stat: 'crit', min: 1, max: 5 },
-  { name: '闪避', stat: 'dodge', min: 1, max: 4 },
-];
-
-
-const SKILLS = [
-  { name: '剑气', type: 'damage', cost: 15, cooldown: 3000, range: 150, mult: 1.8, icon: '⚔️', desc: '释放剑气攻击周围敌人' },
-  { name: '回春', type: 'heal', cost: 20, cooldown: 8000, heal: 40, icon: '💚', desc: '恢复生命值' },
-  { name: '护盾', type: 'buff', cost: 25, cooldown: 15000, duration: 5000, defBonus: 20, icon: '🛡️', desc: '暂时提升防御' },
-  { name: '雷击', type: 'damage', cost: 35, cooldown: 12000, range: 200, mult: 3.0, icon: '⚡', desc: '强力雷击' },
-];
-
-const REALMS = [
-  { name: '凡人', minLv: 1, maxLv: 10, hpBonus: 0, atkBonus: 0, defBonus: 0, color: '#9ca3af', bgColor: '#1f2937' },
-  { name: '炼体', minLv: 11, maxLv: 20, hpBonus: 50, atkBonus: 10, defBonus: 5, color: '#86efac', bgColor: '#14532d' },
-  { name: '筑基', minLv: 21, maxLv: 30, hpBonus: 150, atkBonus: 30, defBonus: 15, color: '#60a5fa', bgColor: '#1e3a8a' },
-  { name: '金丹', minLv: 31, maxLv: 40, hpBonus: 300, atkBonus: 60, defBonus: 30, color: '#c084fc', bgColor: '#4c1d95' },
-  { name: '元婴', minLv: 41, maxLv: 50, hpBonus: 500, atkBonus: 100, defBonus: 50, color: '#fbbf24', bgColor: '#78350f' },
-  { name: '化神', minLv: 51, maxLv: 60, hpBonus: 800, atkBonus: 150, defBonus: 80, color: '#f87171', bgColor: '#7f1d1d' },
+  {name:'力量',stat:'atk',min:2,max:10},
+  {name:'守护',stat:'def',min:1,max:8},
+  {name:'生命',stat:'maxHp',min:10,max:50},
+  {name:'暴击',stat:'crit',min:1,max:5},
+  {name:'闪避',stat:'dodge',min:1,max:4},
 ];
 
 const MONSTERS = {
-  // 凡人 (Lv 1-10) - 野鸡/山贼/小妖
-  chicken: {
-    name: '野鸡', icon: '🐔', hp: 25, atk: 4, def: 1, exp: 12, gold: 4,
-    dropTable: [
-      { type: 'gold', min: 3, max: 10, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.25 },
-      { type: 'equip', qualityRange: [0, 0], levelRange: [1, 5], rate: 0.20 },
-      { type: 'equip', qualityRange: [0, 1], levelRange: [1, 8], rate: 0.12 },
-    ],
-    guarantee: { kills: 5, reward: { type: 'equip', quality: 0, level: 5 } }
-  },
-  bandit: {
-    name: '山贼', icon: '💀', hp: 40, atk: 7, def: 2, exp: 20, gold: 8,
-    dropTable: [
-      { type: 'gold', min: 5, max: 15, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.30 },
-      { type: 'item', id: 'mp_potion', rate: 0.10 },
-      { type: 'equip', qualityRange: [0, 1], levelRange: [1, 8], rate: 0.18 },
-    ],
-    guarantee: { kills: 4, reward: { type: 'equip', quality: 1, level: 8 } }
-  },
-  goblin: {
-    name: '小妖', icon: '👺', hp: 55, atk: 10, def: 3, exp: 28, gold: 12,
-    dropTable: [
-      { type: 'gold', min: 8, max: 20, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.35 },
-      { type: 'equip', qualityRange: [0, 1], levelRange: [3, 10], rate: 0.22 },
-    ],
-    guarantee: { kills: 3, reward: { type: 'equip', quality: 1, level: 10 } }
-  },
-  // 炼体 (Lv 11-20) - 妖兽/邪修
-  wildBeast: {
-    name: '妖兽', icon: '🐺', hp: 100, atk: 18, def: 8, exp: 60, gold: 25,
-    dropTable: [
-      { type: 'gold', min: 15, max: 35, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.40 },
-      { type: 'item', id: 'mp_potion', rate: 0.15 },
-      { type: 'equip', qualityRange: [1, 1], levelRange: [11, 18], rate: 0.28 },
-      { type: 'equip', qualityRange: [1, 2], levelRange: [11, 20], rate: 0.15 },
-    ],
-    guarantee: { kills: 3, reward: { type: 'equip', quality: 2, level: 18 } }
-  },
-  evilCultivator: {
-    name: '邪修', icon: '🧙', hp: 130, atk: 22, def: 10, exp: 75, gold: 32,
-    dropTable: [
-      { type: 'gold', min: 20, max: 45, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.45 },
-      { type: 'item', id: 'mp_potion', rate: 0.20 },
-      { type: 'equip', qualityRange: [1, 2], levelRange: [12, 20], rate: 0.30 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 2, level: 20 } }
-  },
-  // 筑基 (Lv 21-30)
-  ghost: {
-    name: '怨灵', icon: '👻', hp: 180, atk: 30, def: 14, exp: 110, gold: 48,
-    dropTable: [
-      { type: 'gold', min: 30, max: 60, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.50 },
-      { type: 'item', id: 'mp_potion', rate: 0.25 },
-      { type: 'equip', qualityRange: [1, 2], levelRange: [18, 28], rate: 0.30 },
-      { type: 'equip', qualityRange: [2, 3], levelRange: [21, 30], rate: 0.12 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 3, level: 28 } }
-  },
-  skeletonWarrior: {
-    name: '骷髅战士', icon: '💀', hp: 220, atk: 36, def: 16, exp: 135, gold: 58,
-    dropTable: [
-      { type: 'gold', min: 35, max: 75, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.50 },
-      { type: 'equip', qualityRange: [2, 3], levelRange: [21, 30], rate: 0.28 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 3, level: 30 } }
-  },
-  // 金丹 (Lv 31-40)
-  fireDemon: {
-    name: '火魔', icon: '🔥', hp: 320, atk: 48, def: 22, exp: 200, gold: 85,
-    dropTable: [
-      { type: 'gold', min: 50, max: 100, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.55 },
-      { type: 'item', id: 'mp_potion', rate: 0.30 },
-      { type: 'equip', qualityRange: [2, 3], levelRange: [28, 38], rate: 0.30 },
-      { type: 'equip', qualityRange: [3, 4], levelRange: [31, 40], rate: 0.15 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 4, level: 38 } }
-  },
-  iceWraith: {
-    name: '冰魄', icon: '❄️', hp: 380, atk: 55, def: 26, exp: 240, gold: 100,
-    dropTable: [
-      { type: 'gold', min: 60, max: 120, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.60 },
-      { type: 'item', id: 'mp_potion', rate: 0.35 },
-      { type: 'equip', qualityRange: [3, 4], levelRange: [31, 40], rate: 0.32 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 4, level: 40 } }
-  },
-  // 元婴 (Lv 41-50)
-  dragon: {
-    name: '妖龙', icon: '🐉', hp: 550, atk: 70, def: 35, exp: 380, gold: 160,
-    dropTable: [
-      { type: 'gold', min: 80, max: 160, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.65 },
-      { type: 'item', id: 'mp_potion', rate: 0.40 },
-      { type: 'equip', qualityRange: [3, 4], levelRange: [38, 48], rate: 0.35 },
-      { type: 'equip', qualityRange: [4, 5], levelRange: [41, 50], rate: 0.18 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 5, level: 48 } }
-  },
-  celestial: {
-    name: '天兵', icon: '⚔️', hp: 650, atk: 80, def: 40, exp: 450, gold: 190,
-    dropTable: [
-      { type: 'gold', min: 100, max: 200, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.70 },
-      { type: 'item', id: 'mp_potion', rate: 0.45 },
-      { type: 'equip', qualityRange: [4, 5], levelRange: [41, 50], rate: 0.38 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 5, level: 50 } }
-  },
-  // 化神 (Lv 51-60)
-  immortal: {
-    name: '散仙', icon: '✨', hp: 900, atk: 100, def: 55, exp: 650, gold: 280,
-    dropTable: [
-      { type: 'gold', min: 150, max: 300, rate: 1.0 },
-      { type: 'item', id: 'hp_potion', rate: 0.75 },
-      { type: 'item', id: 'mp_potion', rate: 0.50 },
-      { type: 'equip', qualityRange: [4, 5], levelRange: [48, 58], rate: 0.40 },
-      { type: 'equip', qualityRange: [5, 5], levelRange: [51, 60], rate: 0.25 },
-    ],
-    guarantee: { kills: 1, reward: { type: 'equip', quality: 5, level: 58 } }
-  },
-  demonLord: {
-    name: '魔尊', icon: '👹', hp: 1200, atk: 120, def: 65, exp: 900, gold: 400,
-    isBoss: true,
-    dropTable: [
-      { type: 'gold', min: 200, max: 500, rate: 1.0 },
-      { type: 'equip', qualityRange: [4, 5], levelRange: [48, 60], rate: 0.60 },
-      { type: 'equip', qualityRange: [5, 5], levelRange: [51, 60], rate: 0.35 },
-    ],
-    guarantee: { kills: 2, reward: { type: 'equip', quality: 5, level: 60 } }
-  },
+  bat:{name:'幽冥蝠',icon:'🦇',hp:30,atk:5,def:2,exp:15,gold:5,color:'#666',
+    dropTable:[{type:'gold',min:3,max:8,rate:1},{type:'item',id:'hp_potion',rate:0.15},{type:'equip',qualityRange:[0,1],levelRange:[1,5],rate:0.02}],
+    guarantee:{kills:50,reward:{type:'equip',quality:1,level:3}}},
+  ghost:{name:'游魂',icon:'👻',hp:45,atk:8,def:3,exp:25,gold:10,color:'#aaa',
+    dropTable:[{type:'gold',min:5,max:15,rate:1},{type:'item',id:'hp_potion',rate:0.2},{type:'item',id:'mp_potion',rate:0.1},{type:'equip',qualityRange:[0,1],levelRange:[1,8],rate:0.03}],
+    guarantee:{kills:40,reward:{type:'equip',quality:1,level:5}}},
+  bloodBat:{name:'血蝠',icon:'🩸',hp:120,atk:25,def:10,exp:80,gold:35,color:'#cc2222',
+    dropTable:[{type:'gold',min:20,max:50,rate:1},{type:'item',id:'hp_potion',rate:0.25},{type:'equip',qualityRange:[1,2],levelRange:[8,15],rate:0.04}],
+    guarantee:{kills:30,reward:{type:'equip',quality:2,level:12}}},
+  skeleton:{name:'骷髅战士',icon:'💀',hp:180,atk:35,def:15,exp:120,gold:50,color:'#dddddd',
+    dropTable:[{type:'gold',min:30,max:80,rate:1},{type:'item',id:'hp_potion',rate:0.3},{type:'equip',qualityRange:[1,2],levelRange:[10,20],rate:0.05}],
+    guarantee:{kills:25,reward:{type:'equip',quality:2,level:15}}},
+  boss_ghost:{name:'幽冥王',icon:'👿',hp:500,atk:40,def:20,exp:500,gold:200,color:'#ffa500',isBoss:true,
+    dropTable:[{type:'gold',min:150,max:300,rate:1},{type:'equip',qualityRange:[2,3],levelRange:[10,15],rate:0.5},{type:'equip',qualityRange:[3,4],levelRange:[15,20],rate:0.15}],
+    guarantee:{kills:1,reward:{type:'equip',quality:3,level:15}}},
 };
 
-// Game State
-let gameState = {
-  player: {
-    name: '无名修士',
-    level: 1,
-    exp: 0,
-    maxHp: 100, hp: 100,
-    maxMp: 50, mp: 50,
-    baseAtk: 10, baseDef: 5,
-    crit: 5, dodge: 3,
-    gold: 0, kills: 0,
-    x: 400, y: 300,
-    equipment: { weapon: null, helmet: null, armor: null, ring: null, amulet: null, boot: null },
-    inventory: [],
-    skillCooldowns: [0, 0, 0, 0],
-    guaranteeCounters: {},
-  },
-  mobs: [],
-  particles: [],
-  damageNumbers: [],
-  keys: {},
-  mouse: { x: 0, y: 0, down: false },
-  paused: false,
-  _lastTime: 0,
+const ITEMS = {
+  hp_potion:{name:'回血丹',icon:'💊',effect:{hp:50},stackable:true},
+  mp_potion:{name:'回气丹',icon:'🧪',effect:{mp:30},stackable:true},
 };
 
-// Realm helpers
-function getRealm(level) {
-  for (let i = REALMS.length - 1; i >= 0; i--) {
-    if (level >= REALMS[i].minLv) return REALMS[i];
-  }
-  return REALMS[0];
-}
-function getRealmName(level) {
-  const r = getRealm(level);
-  const inner = level - r.minLv + 1;
-  return r.name + inner + '层 / ' + (r.maxLv - r.minLv + 1);
-}
-function checkRealmBreakthrough(oldLevel, newLevel) {
-  const oldRealm = getRealm(oldLevel);
-  const newRealm = getRealm(newLevel);
-  if (newRealm.name !== oldRealm.name) {
-    log('突破! 进入' + newRealm.name + '!', 'level');
-    saveGame(true);
-  }
-}
-function expToLevel(level) {
-  if (level <= 10) return 50 + level * 15;
-  if (level <= 20) return 350 + (level - 10) * 40;
-  if (level <= 30) return 1150 + (level - 20) * 85;
-  if (level <= 40) return 2200 + (level - 30) * 160;
-  if (level <= 50) return 4200 + (level - 40) * 280;
-  return 7600 + (level - 50) * 500;
-}
+// ===== 游戏状态 =====
+let gs = {
+  player:{
+    name:'无名修士',level:1,exp:0,maxHp:100,hp:100,maxMp:50,mp:50,
+    baseAtk:10,baseDef:5,crit:5,dodge:3,gold:0,kills:0,
+    x:300,y:250,facing:0,attackAnim:0,realmIndex:0,
+    equipment:{weapon:null,helmet:null,armor:null,ring:null,amulet:null,boot:null},
+    inventory:[],skillCooldowns:[0,0,0,0],guaranteeCounters:{},
+  },
+  mobs:[],particles:[],damageNumbers:[],
+  keys:{},mouse:{x:0,y:0,down:false},
+  paused:false,lastAttackTime:0,realmFlash:0,realmParticles:[],
+};
 
-// UI log
-function log(msg, type) {
-  const el = document.getElementById('game-log');
-  if (!el) return;
-  const colors = { info: '#58a6ff', damage: '#f85149', level: '#f0c040', skill: '#a371f7', info2: '#3fb950' };
-  const color = colors[type] || '#e0e0e0';
-  const div = document.createElement('div');
-  div.style.color = color;
-  div.textContent = msg;
-  el.appendChild(div);
-  el.scrollTop = el.scrollHeight;
-  while (el.children.length > 50) el.removeChild(el.firstChild);
+// ===== 工具函数 =====
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function randF(a,b){return Math.random()*(b-a)+a;}
+function dist(x1,y1,x2,y2){return Math.sqrt((x2-x1)**2+(y2-y1)**2);}
+function getRealm(lv){
+  for(let i=REALMS.length-1;i>=0;i--) if(lv>=REALMS[i].minLv) return{...REALMS[i],index:i};
+  return{...REALMS[0],index:0};
 }
+function expToLv(lv){return Math.floor(100*Math.pow(1.15,lv-1));}
 
-// Canvas resize
-function resizeCanvas() {
-  const canvas = document.getElementById('game-canvas');
-  if (!canvas) return;
-  canvas.width = window.innerWidth - 280;
-  canvas.height = window.innerHeight;
-  gameState.player.x = canvas.width / 2;
-  gameState.player.y = canvas.height / 2;
-  rebuildDecorations();
-}
-
-// Equipment
-function generateEquip(type, qualityIndex, level) {
-  const quality = QUALITIES[qualityIndex];
-  const equipType = EQUIP_TYPES[type];
-  if (!quality || !equipType) return null;
-  const nameIndex = Math.min(Math.floor(level / 15), EQUIP_NAMES[type].length - 1);
-  const baseAtk = Math.floor(equipType.baseAtk * quality.mult * (1 + level * 0.1));
-  const baseDef = Math.floor(equipType.baseDef * quality.mult * (1 + level * 0.1));
-  const affixCount = Math.min(qualityIndex, 3);
-  const affixes = [];
-  for (let i = 0; i < affixCount; i++) {
-    const affix = AFFIXES[rand(0, AFFIXES.length - 1)];
-    affixes.push({ name: affix.name, stat: affix.stat, value: rand(affix.min, affix.max) * (qualityIndex + 1) });
+// ===== 装备生成 =====
+function genEquip(type,qi,lv){
+  const q=QUALITIES[qi],et=EQUIP_TYPES[type];
+  const ni=Math.min(Math.floor(lv/15),6);
+  const atk=Math.floor(et.baseAtk*q.mult*(1+lv*0.1));
+  const def=Math.floor(et.baseDef*q.mult*(1+lv*0.1));
+  const aff=[];const used=new Set();
+  for(let i=0;i<Math.min(qi,3);i++){
+    const av=AFFIXES.filter(a=>!used.has(a.stat));if(!av.length)break;
+    const a=av[rand(0,av.length-1)];used.add(a.stat);
+    aff.push({name:a.name,stat:a.stat,value:rand(a.min,a.max)*(qi+1)});
   }
-  return { id: Date.now() + Math.random(), type, name: EQUIP_NAMES[type][nameIndex], quality: qualityIndex, level, atk: baseAtk, def: baseDef, affixes, icon: equipType.icon };
+  return{id:Date.now()+Math.random(),type,name:EQUIP_NAMES[type][ni],quality:qi,level:lv,atk,def,affixes:aff,icon:et.icon};
 }
-
-// Drop processing
-function processDrop(mob, mobType) {
-  const drops = [];
-  const monster = MONSTERS[mobType];
-  if (!monster || !monster.dropTable) return drops;
-  
-  const counterKey = mobType;
-  gameState.player.guaranteeCounters[counterKey] = (gameState.player.guaranteeCounters[counterKey] || 0) + 1;
-  
-  // Guarantee drop
-  if (monster.guarantee && gameState.player.guaranteeCounters[counterKey] >= monster.guarantee.kills) {
-    const reward = monster.guarantee.reward;
-    if (reward.type === 'equip') {
-      const types = Object.keys(EQUIP_TYPES);
-      drops.push(generateEquip(types[rand(0, types.length - 1)], reward.quality, reward.level));
-    }
-    gameState.player.guaranteeCounters[counterKey] = 0;
+function processDrop(mob,mtype){
+  const drops=[];const mk=MONSTERS[mtype];
+  const key=mtype;gs.player.guaranteeCounters[key]=(gs.player.guaranteeCounters[key]||0)+1;
+  if(mk.guarantee&&gs.player.guaranteeCounters[key]>=mk.guarantee.kills){
+    const r=mk.guarantee.reward;
+    if(r.type==='equip'){const ts=Object.keys(EQUIP_TYPES);drops.push(genEquip(ts[rand(0,ts.length-1)],r.quality,r.level));}
+    gs.player.guaranteeCounters[key]=0;
   }
-  
-  // Normal drops - 兼容rate和chance
-  for (const entry of monster.dropTable) {
-    const chance = entry.chance || entry.rate || 0;
-    if (Math.random() < chance) {
-      if (entry.type === 'equip') {
-        const lvRange = entry.levelRange || [1, 10];
-        const lv = rand(lvRange[0], lvRange[1]);
-        const qRange = entry.qualityRange || [0, 2];
-        const q = rand(qRange[0], qRange[1]);
-        const types = Object.keys(EQUIP_TYPES);
-        const equipType = entry.equipType || types[rand(0, types.length - 1)];
-        drops.push(generateEquip(equipType, q, lv));
-      } else if (entry.type === 'gold') {
-        drops.push({ id: Date.now(), type: 'gold', name: '金币', value: entry.value, icon: '\u2696\ufe0f' });
-      } else if (entry.type === 'exp') {
-        gameState.player.exp += entry.value;
-        drops.push({ id: Date.now(), type: 'exp', name: '经验', value: entry.value, icon: '\u2605' });
-      }
+  for(const d of mk.dropTable){
+    if(Math.random()<d.rate){
+      if(d.type==='gold')drops.push({type:'gold',amount:rand(d.min,d.max)});
+      else if(d.type==='item')drops.push({type:'item',...ITEMS[d.id],id:d.id});
+      else if(d.type==='equip'){const ts=Object.keys(EQUIP_TYPES);drops.push(genEquip(ts[rand(0,ts.length-1)],rand(d.qualityRange[0],d.qualityRange[1]),rand(d.levelRange[0],d.levelRange[1])));}
     }
   }
   return drops;
 }
 
-// Mob spawning
-function spawnMob() {
-  const lv = gameState.player.level;
-  const allTypes = Object.keys(MONSTERS);
-  // Prefer matching level monsters
-  const matching = allTypes.filter(t => {
-    const m = MONSTERS[t];
-    return m.dropTable && m.dropTable.some(d => d.type === 'equip' && d.levelRange && lv >= d.levelRange[0] - 3 && lv <= d.levelRange[1] + 5);
+// ===== UI =====
+function updateUI(){
+  const p=gs.player;const r=getRealm(p.level);
+  if(p.realmIndex!==r.index){p.realmIndex=r.index;updateRealmHint(r);}
+  document.getElementById('player-name').textContent=p.name;
+  document.getElementById('player-realm').textContent=`${r.name}境 Lv.${p.level}`;
+  document.getElementById('hp-text').textContent=`${Math.floor(p.hp)}/${p.maxHp}`;
+  document.getElementById('hp-bar').style.width=`${Math.max(0,Math.min(100,(p.hp/p.maxHp)*100))}%`;
+  document.getElementById('mp-text').textContent=`${Math.floor(p.mp)}/${p.maxMp}`;
+  document.getElementById('mp-bar').style.width=`${Math.max(0,Math.min(100,(p.mp/p.maxMp)*100))}%`;
+  const expN=expToLv(p.level);
+  document.getElementById('exp-text').textContent=`${p.exp}/${expN}`;
+  document.getElementById('exp-bar').style.width=`${Math.max(0,Math.min(100,(p.exp/expN)*100))}%`;
+  let aT=p.baseAtk,aD=p.baseDef,aC=p.crit,aDo=p.dodge;
+  for(const s in p.equipment){const e=p.equipment[s];if(e){aT+=e.atk;aD+=e.def;for(const af of e.affixes){if(af.stat==='atk')aT+=af.value;if(af.stat==='def')aD+=af.value;if(af.stat==='crit')aC+=af.value;if(af.stat==='dodge')aDo+=af.value;}}}
+  document.getElementById('stat-atk').textContent=aT;
+  document.getElementById('stat-def').textContent=aD;
+  document.getElementById('stat-crit').textContent=aC+'%';
+  document.getElementById('stat-dodge').textContent=aDo+'%';
+  document.getElementById('pos-text').textContent=`${Math.floor(p.x)},${Math.floor(p.y)}`;
+  document.getElementById('gold-text').textContent=p.gold;
+  document.getElementById('kills-text').textContent=p.kills;
+  document.querySelectorAll('.equip-slot').forEach(sl=>{
+    const eq=p.equipment[sl.dataset.slot];
+    sl.textContent=eq?eq.icon:'·';
+    sl.className='equip-slot'+(eq?' '+QUALITIES[eq.quality].class:'');
   });
-  let candidates = matching.length > 0 ? matching : allTypes;
-  const type = candidates[rand(0, candidates.length - 1)];
-  const base = MONSTERS[type];
-  if (!base) return;
-  
-  const scale = 1 + (lv - 1) * 0.08;
-  const mob = {
-    ...base,
-    type,
-    x: 0, y: 0,
-    id: Date.now() + Math.random(),
-    hp: Math.floor(base.hp * scale),
-    maxHp: Math.floor(base.hp * scale),
-    atk: Math.floor(base.atk * scale),
-    def: Math.floor(base.def * scale),
-    exp: Math.floor(base.exp * scale),
-    targetX: 0, targetY: 0,
-  };
-  
-  // Spawn around player
-  const angle = Math.random() * Math.PI * 2;
-  const dist = 150 + Math.random() * 250;
-  mob.x = gameState.player.x + Math.cos(angle) * dist;
-  mob.y = gameState.player.y + Math.sin(angle) * dist;
-  mob.targetX = mob.x;
-  mob.targetY = mob.y;
-  
-  gameState.mobs.push(mob);
+  const ig=document.getElementById('inventory-grid');ig.innerHTML='';
+  for(let i=0;i<20;i++){
+    const sl=document.createElement('div');sl.className='inv-slot';
+    if(p.inventory[i]){const it=p.inventory[i];sl.textContent=it.icon;
+      if(it.quality!==undefined)sl.style.color=QUALITIES[it.quality].color;
+      if(it.count>1){const c=document.createElement('span');c.className='item-count';c.textContent=it.count;sl.appendChild(c);}
+      sl.title=it.name;}
+    ig.appendChild(sl);}
+  document.getElementById('inv-count').textContent=`(${p.inventory.filter(x=>x).length}/20)`;
+  document.querySelectorAll('.skill-slot').forEach((sl,i)=>{
+    const cd=p.skillCooldowns[i];
+    if(cd>0){sl.classList.add('on-cooldown');let t=sl.querySelector('.cd-timer');if(!t){t=document.createElement('span');t.className='cd-timer';sl.appendChild(t);}t.textContent=Math.ceil(cd/1000);}
+    else{sl.classList.remove('on-cooldown');const t=sl.querySelector('.cd-timer');if(t)t.textContent='';}
+  });
+}
+function updateRealmHint(r){
+  const h=document.getElementById('realm-hint');
+  h.textContent=r.hint;h.style.color=r.particleColor;h.style.borderColor=r.particleColor;
+  h.style.opacity='1';clearTimeout(window._rh);window._rh=setTimeout(()=>{h.style.transition='opacity 1s';h.style.opacity='0';},3000);
+}
+function log(msg,type=''){
+  const d=document.getElementById('combat-log');
+  const e=document.createElement('div');e.className='log-item'+(type?' log-'+type:'');e.textContent=msg;
+  d.appendChild(e);d.scrollTop=d.scrollHeight;
+  while(d.children.length>80)d.removeChild(d.firstChild);
 }
 
-// Collision
-function resolveCollisions() {
-  const entities = [
-    { x: gameState.player.x, y: gameState.player.y, r: 28, isPlayer: true }
-  ];
-  for (const m of gameState.mobs) entities.push({ x: m.x, y: m.y, r: m.isBoss ? 40 : 25, mob: m });
+// ===== Canvas =====
+const canvas=document.getElementById('game-canvas');
+const ctx=canvas.getContext('2d');
+
+function resizeCanvas(){
+  canvas.width=canvas.offsetWidth;
+  canvas.height=canvas.offsetHeight;
+  rebuildDecorations();
+}
+resizeCanvas();
+window.addEventListener('resize',resizeCanvas);
+
+// ===== 装饰物系统 =====
+let decorations=[];
+function rebuildDecorations(){
+  decorations=[];
+  const w=canvas.width, h=canvas.height;
+  // 假山
+  for(let i=0;i<5;i++){
+    decorations.push({type:'mountain',x:rand(50,w-50),y:rand(50,h-50),
+      size:rand(30,60),color:`hsl(${rand(20,40)},${rand(10,25)}%,${rand(25,40)}%)`,variant:rand(0,2)});
+  }
+  // 树木
+  for(let i=0;i<10;i++){
+    decorations.push({type:'tree',x:rand(30,w-30),y:rand(30,h-30),
+      size:rand(18,35),color:`hsl(${rand(80,140)},${rand(30,60)}%,${rand(20,40)}%)`});
+  }
+  // 河流（分段曲线）
+  const riverStartX=rand(50,w*0.3);
+  const riverStartY=0;
+  for(let seg=0;seg<8;seg++){
+    decorations.push({type:'river',x:riverStartX+seg*rand(20,40)-40,y:(h/8)*seg+rand(-20,20),
+      width:rand(25,50),angle:rand(-0.3,0.3),seg});
+  }
+  // 田地
+  for(let i=0;i<4;i++){
+    decorations.push({type:'farmland',x:rand(60,w-100),y:rand(60,h-80),
+      w:rand(60,120),h:rand(40,80)});
+  }
+  // 草丛
+  for(let i=0;i<20;i++){
+    decorations.push({type:'grass',x:rand(20,w-20),y:rand(20,h-20)});
+  }
+}
+
+function drawDecorations(){
+  const r=REALMS[gs.player.realmIndex]||REALMS[0];
+  const dark=r.bgGradient[0];
   
-  for (let i = 0; i < entities.length; i++) {
-    for (let j = i + 1; j < entities.length; j++) {
-      const a = entities[i], b = entities[j];
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      if (d > 0 && d < a.r + b.r) {
-        const overlap = (a.r + b.r - d) / 2;
-        const px = dx / d * overlap, py = dy / d * overlap;
-        if (a.isPlayer) { gameState.player.x -= px; gameState.player.y -= py; }
-        else if (a.mob) { a.mob.x -= px; a.mob.y -= py; }
-        if (b.isPlayer) { gameState.player.x += px; gameState.player.y += py; }
-        else if (b.mob) { b.mob.x += px; b.mob.y += py; }
+  for(const d of decorations){
+    if(d.type==='mountain'){
+      ctx.save();
+      // 山体阴影
+      ctx.fillStyle=d.color;
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x-d.size*0.8, d.y);
+      ctx.lineTo(d.x-d.size*0.2, d.y-d.size*0.6);
+      ctx.lineTo(d.x+d.size*0.2, d.y-d.size*0.8);
+      ctx.lineTo(d.x+d.size*0.6, d.y-d.size*0.4);
+      ctx.lineTo(d.x+d.size*0.8, d.y);
+      ctx.closePath();
+      ctx.fill();
+      // 山顶雪/亮点
+      ctx.fillStyle='rgba(200,200,210,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(d.x+d.size*0.2,d.y-d.size*0.8);
+      ctx.lineTo(d.x+d.size*0.05,d.y-d.size*0.6);
+      ctx.lineTo(d.x+d.size*0.4,d.y-d.size*0.5);
+      ctx.closePath();ctx.fill();
+      ctx.restore();
+    }
+    else if(d.type==='tree'){
+      // 树干
+      ctx.fillStyle=`hsl(25,${rand(30,50)}%,${rand(20,35)}%)`;
+      ctx.fillRect(d.x-3, d.y-d.size*0.4, 6, d.size*0.4);
+      // 树冠
+      ctx.fillStyle=d.color;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y-d.size*0.5, d.size*0.5, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle='rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.arc(d.x+d.size*0.1, d.y-d.size*0.4, d.size*0.4, 0, Math.PI*2);
+      ctx.fill();
+    }
+    else if(d.type==='river'){
+      const grd=ctx.createLinearGradient(d.x-d.width,d.y,d.x+d.width,d.y);
+      grd.addColorStop(0,'rgba(0,80,180,0.4)');
+      grd.addColorStop(0.5,'rgba(30,120,200,0.6)');
+      grd.addColorStop(1,'rgba(0,80,180,0.4)');
+      ctx.fillStyle=grd;
+      ctx.save();
+      ctx.translate(d.x,d.y);ctx.rotate(d.angle);ctx.scale(1,d.width/35);
+      ctx.beginPath();
+      ctx.arc(0,0,35,0,Math.PI*2);
+      ctx.fill();ctx.restore();
+      // 水波光
+      ctx.strokeStyle='rgba(150,200,255,0.3)';
+      ctx.lineWidth=1;
+      ctx.save();
+      ctx.translate(d.x,d.y);ctx.rotate(d.angle);
+      ctx.beginPath();ctx.arc(0,-5,15,0,Math.PI);ctx.stroke();
+      ctx.restore();
+    }
+    else if(d.type==='farmland'){
+      // 田埂
+      ctx.fillStyle='rgba(101,67,33,0.6)';
+      ctx.fillRect(d.x,d.y,d.w,d.h);
+      // 田地
+      ctx.fillStyle='rgba(80,60,20,0.5)';
+      ctx.fillRect(d.x+3,d.y+3,d.w-6,d.h-6);
+      // 庄稼行
+      ctx.strokeStyle='rgba(60,100,20,0.4)';
+      ctx.lineWidth=1;
+      for(let row=0;row<4;row++){
+        ctx.beginPath();
+        ctx.moveTo(d.x+5,d.y+8+row*(d.h-10)/4);
+        ctx.lineTo(d.x+d.w-5,d.y+8+row*(d.h-10)/4);
+        ctx.stroke();
+      }
+    }
+    else if(d.type==='grass'){
+      ctx.strokeStyle='rgba(40,80,20,0.5)';
+      ctx.lineWidth=1;
+      for(let g=0;g<3;g++){
+        ctx.beginPath();
+        ctx.moveTo(d.x+g*3,d.y+8);
+        ctx.quadraticCurveTo(d.x+g*3+rand(-4,4),d.y+2,d.x+g*3+rand(-3,3),d.y+rand(-6,-2));
+        ctx.stroke();
       }
     }
   }
 }
 
-// Update
-function update(dt) {
-  if (gameState.paused) return;
-  const p = gameState.player;
-  const speed = 3;
-  if (gameState.keys['w'] || gameState.keys['ArrowUp']) p.y -= speed;
-  if (gameState.keys['s'] || gameState.keys['ArrowDown']) p.y += speed;
-  if (gameState.keys['a'] || gameState.keys['ArrowLeft']) p.x -= speed;
-  if (gameState.keys['d'] || gameState.keys['ArrowRight']) p.x += speed;
+// 境界突破
+function spawnRealmParticles(){
+  const p=gs.player;const r=getRealm(p.level);
+  for(let i=0;i<50;i++){
+    const ang=Math.random()*Math.PI*2;const d=rand(20,120);
+    gs.realmParticles.push({x:p.x+Math.cos(ang)*d,y:p.y+Math.sin(ang)*d,
+      vx:Math.cos(ang)*randF(1,3),vy:Math.sin(ang)*randF(1,3)-2,
+      color:Math.random()>0.5?r.particleColor:r.particleColor2,
+      life:rand(30,60),maxLife:60,size:rand(3,8)});
+  }
+  gs.realmFlash=20;
+}
+
+function render(){
+  const p=gs.player;
+  const r=REALMS[p.realmIndex]||REALMS[0];
   
-  // Keep player in bounds
-  canvas = document.getElementById('game-canvas');
-  if (canvas) {
-    p.x = Math.max(20, Math.min(canvas.width - 20, p.x));
-    p.y = Math.max(20, Math.min(canvas.height - 20, p.y));
+  // 背景渐变
+  const bg=ctx.createLinearGradient(0,0,0,canvas.height);
+  bg.addColorStop(0,r.bgGradient[0]);bg.addColorStop(1,r.bgGradient[1]);
+  ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+  
+  // 突破白光
+  if(gs.realmFlash>0){ctx.fillStyle=`rgba(255,255,255,${gs.realmFlash/40})`;ctx.fillRect(0,0,canvas.width,canvas.height);gs.realmFlash--;}
+  
+  // 背景网格
+  ctx.strokeStyle='rgba(48,54,61,0.4)';ctx.lineWidth=1;
+  for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
+  for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+  
+  // 装饰物（底层）
+  drawDecorations();
+  
+  // 境界环境粒子
+  if(Math.random()<0.08){
+    gs.particles.push({x:rand(0,canvas.width),y:canvas.height+5,
+      vx:randF(-0.3,0.3),vy:randF(-0.5,-1.5),
+      color:Math.random()>0.5?r.particleColor:r.particleColor2,
+      life:rand(100,200),maxLife:200,size:rand(1,3),ambient:true});
   }
   
-  // Update mobs
-  for (const mob of gameState.mobs) {
-    const dx = p.x - mob.x, dy = p.y - mob.y;
-    const d = Math.sqrt(dx * dx + dy * dy);
-    if (d > 50) {
-      mob.x += (dx / d) * 1.5;
-      mob.y += (dy / d) * 1.5;
+  // 怪物
+  for(const mob of gs.mobs){
+    const md=MONSTERS[mob.type];
+    ctx.shadowColor=md.color;ctx.shadowBlur=10;
+    ctx.font='26px Arial';ctx.textAlign='center';
+    ctx.fillText(mob.icon,mob.x,mob.y+8);ctx.shadowBlur=0;
+    
+    // 血条背景
+    ctx.fillStyle='#21262d';ctx.fillRect(mob.x-25,mob.y-32,50,7);
+    const hpPct=Math.max(0,mob.hp/mob.maxHp);
+    ctx.fillStyle=hpPct>0.5?'#3fb950':hpPct>0.25?'#d29922':'#f85149';
+    ctx.fillRect(mob.x-25,mob.y-32,50*hpPct,7);
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(mob.x-25,mob.y-32,50*hpPct,3);
+    ctx.strokeStyle='#30363d';ctx.lineWidth=1;ctx.strokeRect(mob.x-25,mob.y-32,50,7);
+    ctx.font='9px Arial';ctx.fillStyle='#f0f6fc';
+    ctx.fillText(`${Math.ceil(mob.hp)}/${mob.maxHp}`,mob.x,mob.y-37);
+    ctx.font='10px Arial';ctx.fillStyle=mob.isBoss?'#ffa500':'#c9d1d9';
+    ctx.fillText(mob.name,mob.x,mob.y-42);
+  }
+  
+  // 玩家光晕
+  ctx.shadowColor=r.playerGlow;ctx.shadowBlur=15+Math.sin(Date.now()/500)*5;
+  
+  // 攻击挥砍动画
+  if(p.attackAnim>0){
+    const prog=1-p.attackAnim/10;
+    const swAng=prog*Math.PI*0.7;
+    ctx.strokeStyle=`rgba(255,165,87,${1-prog*0.5})`;ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(p.x,p.y,55,p.facing-swAng,p.facing+swAng);ctx.stroke();
+    ctx.strokeStyle=`rgba(255,255,255,${0.6-prog*0.6})`;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(p.x,p.y,42,p.facing-swAng*0.7,p.facing+swAng*0.7);ctx.stroke();
+    p.attackAnim--;
+  }
+  
+  // 玩家本体
+  ctx.font='32px Arial';ctx.textAlign='center';
+  ctx.fillText(r.playerIcon,p.x,p.y+10);ctx.shadowBlur=0;
+  
+  // 境界光环
+  ctx.strokeStyle=r.glowColor;ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.stroke();
+  
+  // 攻击范围
+  if(gs.mouse.down){
+    ctx.strokeStyle='rgba(88,166,255,0.3)';ctx.lineWidth=2;
+    ctx.setLineDash([5,5]);
+    ctx.beginPath();ctx.arc(p.x,p.y,CONFIG.ATTACK_RANGE,0,Math.PI*2);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  
+  // 伤害数字
+  for(const dmg of gs.damageNumbers){
+    const a=dmg.life/40;ctx.globalAlpha=a;
+    ctx.font=dmg.crit?'bold 18px Arial':'14px Arial';
+    ctx.fillStyle=dmg.color;ctx.textAlign='center';
+    ctx.fillText(dmg.text,dmg.x,dmg.y);dmg.y-=1.2;dmg.life--;
+  }ctx.globalAlpha=1;
+  gs.damageNumbers=gs.damageNumbers.filter(d=>d.life>0);
+  
+  // 粒子
+  for(const pt of gs.particles){
+    const a=pt.life/pt.maxLife;ctx.globalAlpha=a*(pt.ambient?0.35:1);
+    ctx.fillStyle=pt.color;
+    ctx.beginPath();ctx.arc(pt.x,pt.y,pt.size,0,Math.PI*2);ctx.fill();
+    pt.x+=pt.vx;pt.y+=pt.vy;
+    if(!pt.ambient)pt.vy+=0.05;pt.life--;
+  }ctx.globalAlpha=1;
+  gs.particles=gs.particles.filter(p=>p.life>0);
+  
+  // 突破粒子
+  for(const rp of gs.realmParticles){
+    const a=rp.life/rp.maxLife;ctx.globalAlpha=a;
+    ctx.fillStyle=rp.color;ctx.shadowColor=rp.color;ctx.shadowBlur=6;
+    ctx.beginPath();ctx.arc(rp.x,rp.y,rp.size*a,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;rp.x+=rp.vx;rp.y+=rp.vy;rp.vy+=0.05;rp.life--;
+  }ctx.globalAlpha=1;
+  gs.realmParticles=gs.realmParticles.filter(r=>r.life>0);
+}
+
+// ===== 游戏逻辑 =====
+function spawnMob(){
+  if(gs.mobs.length>=8)return;
+  const types=Object.keys(MONSTERS).filter(m=>!MONSTERS[m].isBoss);
+  const type=types[rand(0,types.length-1)];const md=MONSTERS[type];
+  let x,y,tries=0;
+  do{
+    const ang=Math.random()*Math.PI*2;const d=rand(180,320);
+    x=gs.player.x+Math.cos(ang)*d;y=gs.player.y+Math.sin(ang)*d;tries++;
+  }while((x<40||x>canvas.width-40||y<40||y>canvas.height-40)&&tries<20);
+  if(tries>=20)return;
+  gs.mobs.push({id:Date.now()+Math.random(),type,name:md.name,icon:md.icon,
+    x,y,hp:md.hp,maxHp:md.hp,atk:md.atk,def:md.def,exp:md.exp,gold:md.gold,
+    isBoss:md.isBoss||false,lastAttack:0});
+}
+
+function resolveCollisions(){
+  const p=gs.player;const mr=CONFIG.COLLISION_RADIUS;
+  // 怪物互相分开
+  for(let i=0;i<gs.mobs.length;i++)for(let j=i+1;j<gs.mobs.length;j++){
+    const m1=gs.mobs[i],m2=gs.mobs[j];
+    const d=dist(m1.x,m1.y,m2.x,m2.y);
+    if(d<mr&&d>0){
+      const ov=(mr-d)/2;const ang=Math.atan2(m2.y-m1.y,m2.x-m1.x);
+      m1.x-=Math.cos(ang)*ov;m1.y-=Math.sin(ang)*ov;
+      m2.x+=Math.cos(ang)*ov;m2.y+=Math.sin(ang)*ov;
     }
   }
+  // 怪物和玩家分开
+  for(const mob of gs.mobs){
+    const d=dist(mob.x,mob.y,p.x,p.y);
+    if(d<mr&&d>0){
+      const ov=mr-d;const ang=Math.atan2(mob.y-p.y,mob.x-p.x);
+      mob.x+=Math.cos(ang)*ov;mob.y+=Math.sin(ang)*ov;
+    }
+  }
+}
+
+function update(dt){
+  if(gs.paused)return;
+  const p=gs.player;
+  let dx=0,dy=0;
+  if(gs.keys['w']||gs.keys['W']||gs.keys['ArrowUp'])dy-=1;
+  if(gs.keys['s']||gs.keys['S']||gs.keys['ArrowDown'])dy+=1;
+  if(gs.keys['a']||gs.keys['A']||gs.keys['ArrowLeft'])dx-=1;
+  if(gs.keys['d']||gs.keys['D']||gs.keys['ArrowRight'])dx+=1;
+  if(dx||dy){
+    const l=Math.sqrt(dx*dx+dy*dy);
+    p.x+=(dx/l)*CONFIG.PLAYER_SPEED;p.y+=(dy/l)*CONFIG.PLAYER_SPEED;
+    p.facing=Math.atan2(dy,dx);
+    p.x=Math.max(25,Math.min(canvas.width-25,p.x));
+    p.y=Math.max(25,Math.min(canvas.height-25,p.y));
+  }
+  for(let i=0;i<p.skillCooldowns.length;i++)if(p.skillCooldowns[i]>0)p.skillCooldowns[i]-=dt;
+  p.mp=Math.min(p.maxMp,p.mp+0.015*dt/16);
   
-  // Mouse attack
-  if (gameState.mouse.down) {
-    const now = Date.now();
-    if (now - gameState.lastAttackTime > 300) {
-      gameState.lastAttackTime = now;
-      const mx = gameState.mouse.x, my = gameState.mouse.y;
-      const atk = p.baseAtk;
-      for (const mob of gameState.mobs) {
-        if (distance(mx, my, mob.x, mob.y) < 60) {
-          const dmg = Math.max(1, Math.floor(atk * (1 - mob.def / 200)));
-          mob.hp -= dmg;
-          gameState.damageNumbers.push({ text: '-' + dmg, x: mob.x, y: mob.y - 30, color: '#f85149', life: 40, crit: false });
-          gameState.particles.push({ x: mob.x, y: mob.y, vx: randFloat(-2, 2), vy: randFloat(-2, 2), color: '#f85149', size: rand(2, 4), life: 20, maxLife: 20 });
-          if (mob.hp <= 0) onMobDeath(mob);
+  for(const mob of gs.mobs){
+    const d=dist(mob.x,mob.y,p.x,p.y);
+    if(d<170&&d>CONFIG.COLLISION_RADIUS+5){
+      const ang=Math.atan2(p.y-mob.y,p.x-mob.x);
+      mob.x+=Math.cos(ang)*(mob.isBoss?1.5:1.0);
+      mob.y+=Math.sin(ang)*(mob.isBoss?1.5:1.0);
+      if(d<CONFIG.COLLISION_RADIUS+10&&Date.now()-mob.lastAttack>1200){
+        mob.lastAttack=Date.now();
+        if(Math.random()*100<p.dodge){
+          log(`闪避了 ${mob.name}!`);
+          gs.damageNumbers.push({text:'闪避',x:p.x,y:p.y-25,color:'#3fb950',life:35,crit:false});
+        }else{
+          const dmg=Math.max(1,mob.atk-p.baseDef);
+          p.hp-=dmg;log(`${mob.name} 攻击 -${dmg}`,'damage');
+          gs.damageNumbers.push({text:'-'+dmg,x:p.x,y:p.y-25,color:'#f85149',life:35,crit:false});
+          if(p.hp<=0){log('死亡! 复活...','damage');p.hp=p.maxHp;p.mp=p.maxMp;p.gold=Math.floor(p.gold*0.9);}
         }
       }
+    }else if(d>=170){
+      if(Math.random()<0.015){mob._tx=mob.x+rand(-50,50);mob._ty=mob.y+rand(-50,50);}
+      if(mob._tx!==undefined){
+        const ang=Math.atan2(mob._ty-mob.y,mob._tx-mob.x);
+        mob.x+=Math.cos(ang)*0.4;mob.y+=Math.sin(ang)*0.4;
+      }
     }
   }
-  
-  // Cooldowns
-  for (let i = 0; i < skillCooldowns.length; i++) {
-    if (skillCooldowns[i] > 0) skillCooldowns[i] = Math.max(0, skillCooldowns[i] - dt);
-  }
-  
-  // MP regeneration (1 MP per 100ms = 10 MP per second)
-  p.mp = Math.min(p.maxMp, p.mp + dt * 0.01);
-  
-  // Particles
-  gameState.particles = gameState.particles.filter(pt => {
-    pt.x += pt.vx; pt.y += pt.vy; pt.life--;
-    return pt.life > 0;
-  });
-  gameState.damageNumbers = gameState.damageNumbers.filter(dn => { dn.y -= 0.5; dn.life--; return dn.life > 0; });
-  
   resolveCollisions();
-  updateUI();
-}
-
-// Mob death
-function onMobDeath(mob) {
-  const idx = gameState.mobs.indexOf(mob);
-  if (idx >= 0) gameState.mobs.splice(idx, 1);
-  const drops = processDrop(mob, mob.type);
-  if (drops.length > 0) showDropModal(drops);
-  const exp = mob.exp;
-  if (exp) {
-    const oldLevel = gameState.player.level;
-    gameState.player.exp += exp;
-    const newLevel = gameState.player.level;
-    checkRealmBreakthrough(oldLevel, newLevel);
-  }
-  gameState.player.kills++;
-  saveGame(false);
-}
-
-// Render
-function render() {
-  canvas = document.getElementById('game-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  // Background
-  ctx.fillStyle = '#1a1a2e';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // Decorations
-  for (const r of decorations.rivers) {
-    ctx.fillStyle = 'rgba(100,149,237,0.3)';
-    ctx.beginPath();
-    ctx.ellipse(r.x, r.y, r.rx, r.ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  for (const f of decorations.farms) {
-    ctx.fillStyle = '#3d5c3d';
-    ctx.fillRect(f.x, f.y, f.w || 80, f.h || 40);
-  }
-  for (const m of decorations.mountains) {
-    ctx.fillStyle = '#2d2d44';
-    ctx.beginPath();
-    ctx.moveTo(m.x, m.y + m.h);
-    ctx.lineTo(m.x + m.w / 2, m.y);
-    ctx.lineTo(m.x + m.w, m.y + m.h);
-    ctx.fill();
-  }
-  for (const t of decorations.trees) {
-    ctx.fillStyle = '#1a4a1a';
-    ctx.beginPath();
-    ctx.arc(t.x, t.y, t.size || 15, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  for (const g of decorations.grass) {
-    ctx.fillStyle = 'rgba(50,100,50,0.4)';
-    ctx.fillRect(g.x, g.y, 3, g.size || 8);
-  }
-  
-  // Mobs
-  for (const mob of gameState.mobs) {
-    // Body
-    ctx.fillStyle = mob.isBoss ? '#ff6600' : '#8b0000';
-    ctx.beginPath();
-    ctx.arc(mob.x, mob.y, mob.isBoss ? 22 : 16, 0, Math.PI * 2);
-    ctx.fill();
-    // HP bar
-    const bw = 30, bh = 4;
-    ctx.fillStyle = '#333';
-    ctx.fillRect(mob.x - bw/2, mob.y - 22, bw, bh);
-    ctx.fillStyle = '#f85149';
-    ctx.fillRect(mob.x - bw/2, mob.y - 22, bw * (mob.hp / mob.maxHp), bh);
-    // Name
-    ctx.fillStyle = '#fff';
-    ctx.font = '10px Microsoft YaHei';
-    ctx.textAlign = 'center';
-    ctx.fillText(mob.name, mob.x, mob.y + 28);
-  }
-  
-  // Particles
-  for (const pt of gameState.particles) {
-    const alpha = pt.life / pt.maxLife;
-    ctx.fillStyle = pt.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-    ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
-  }
-  
-  // Player - 修士形象
-  const p = gameState.player;
-  const px = p.x, py = p.y;
-  
-  // 身体（道袍）
-  ctx.fillStyle = '#4a5568';
-  ctx.beginPath();
-  ctx.moveTo(px - 12, py + 5);
-  ctx.lineTo(px - 8, py + 25);
-  ctx.lineTo(px + 8, py + 25);
-  ctx.lineTo(px + 12, py + 5);
-  ctx.closePath();
-  ctx.fill();
-  
-  // 头
-  ctx.fillStyle = '#fcd5b8';
-  ctx.beginPath();
-  ctx.arc(px, py - 8, 10, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // 发髻
-  ctx.fillStyle = '#2d3748';
-  ctx.beginPath();
-  ctx.arc(px, py - 16, 5, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // 眼睛
-  ctx.fillStyle = '#1a202c';
-  ctx.fillRect(px - 5, py - 9, 3, 3);
-  ctx.fillRect(px + 2, py - 9, 3, 3);
-  
-  // 剑（右手）
-  ctx.strokeStyle = '#a0aec0';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(px + 14, py - 5);
-  ctx.lineTo(px + 25, py - 20);
-  ctx.stroke();
-  ctx.fillStyle = '#e2e8f0';
-  ctx.fillRect(px + 22, py - 22, 6, 3);
-  
-  // 名字
-  ctx.fillStyle = '#fff';
-  ctx.font = '10px Microsoft YaHei';
-  ctx.textAlign = 'center';
-  ctx.fillText('Lv.' + p.level, px, py + 38);
-  
-  // Damage numbers
-  ctx.textAlign = 'center';
-  for (const dn of gameState.damageNumbers) {
-    const alpha = dn.life / 40;
-    ctx.fillStyle = dn.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-    ctx.font = '14px Microsoft YaHei';
-    ctx.fillText(dn.text, dn.x, dn.y);
-  }
-}
-
-// Update UI
-function updateUI() {
-  const p = gameState.player;
-  const realm = getRealm(p.level);
-  
-  // Level + realm
-  const lvEl = document.getElementById('player-level');
-  if (lvEl) lvEl.textContent = 'Lv.' + p.level;
-  const realmEl = document.getElementById('player-realm');
-  if (realmEl) realmEl.textContent = realm.name + ' Lv.' + p.level;
-  
-  // HP
-  const hpBar = document.getElementById('hp-bar');
-  if (hpBar) hpBar.style.width = (p.hp / p.maxHp * 100) + '%';
-  const hpText = document.getElementById('hp-text');
-  if (hpText) hpText.textContent = Math.floor(p.hp) + '/' + p.maxHp;
-  
-  // MP
-  const mpBar = document.getElementById('mp-bar');
-  if (mpBar) mpBar.style.width = (p.mp / p.maxMp * 100) + '%';
-  const mpText = document.getElementById('mp-text');
-  if (mpText) mpText.textContent = Math.floor(p.mp) + '/' + p.maxMp;
-  
-  // EXP
-  const expNeeded = expToLevel(p.level);
-  const expBar = document.getElementById('exp-bar');
-  if (expBar) expBar.style.width = (p.exp / expNeeded * 100) + '%';
-  const expText = document.getElementById('exp-text');
-  if (expText) expText.textContent = p.exp + '/' + expNeeded;
-  
-  // Stats
-  const atkEl = document.getElementById('stat-atk');
-  if (atkEl) atkEl.textContent = '攻击' + p.baseAtk;
-  const defEl = document.getElementById('stat-def');
-  if (defEl) defEl.textContent = '防御' + p.baseDef;
-  const critEl = document.getElementById('stat-crit');
-  if (critEl) critEl.textContent = '暴击' + p.crit + '%';
-  const dodgeEl = document.getElementById('stat-dodge');
-  if (dodgeEl) dodgeEl.textContent = '闪避' + p.dodge + '%';
-  
-  // Gold + kills
-  const goldEl = document.getElementById('gold-count');
-  if (goldEl) goldEl.textContent = p.gold;
-  const killsEl = document.getElementById('kill-count');
-  if (killsEl) killsEl.textContent = p.kills;
-  
-  // Inventory
-  const invEl = document.getElementById('inventory-list');
-  if (invEl) {
-    invEl.innerHTML = '';
-    for (const item of p.inventory) {
-      if (!item) continue;
-      const span = document.createElement('span');
-      span.textContent = item.icon || '\u2753';
-      span.title = item.name + ' ' + item.level + '级';
-      invEl.appendChild(span);
+  if(gs.mouse.down&&Date.now()-gs.lastAttackTime>CONFIG.ATTACK_COOLDOWN){
+    p.facing=Math.atan2(gs.mouse.y-p.y,gs.mouse.x-p.x);
+    let nearest=null,nearDist=CONFIG.ATTACK_RANGE+30;
+    for(const mob of gs.mobs){
+      const d=dist(mob.x,mob.y,p.x,p.y);
+      const md=dist(mob.x,mob.y,gs.mouse.x,gs.mouse.y);
+      if(d<CONFIG.ATTACK_RANGE+15&&md<nearDist){nearest=mob;nearDist=md;}
     }
-  }
-  
-  // Cooldowns
-  for (let i = 0; i < 4; i++) {
-    const cdEl = document.getElementById('skill-cd-' + i);
-    if (cdEl) {
-      const pct = Math.max(0, p.skillCooldowns[i] / (SKILLS[i] ? SKILLS[i].cooldown : 5000) * 100);
-      cdEl.style.width = pct + '%';
-    }
-  }
-}
-
-// Drop modal
-function showDropModal(drops) {
-  const modal = document.getElementById('drop-modal');
-  const list = document.getElementById('drop-list');
-  if (!modal || !list) return;
-  list.innerHTML = '';
-  for (const item of drops) {
-    if (!item) continue;
-    const div = document.createElement('div');
-    if (item.type === 'gold' || item.type === 'exp') {
-      div.textContent = item.icon + ' ' + item.name + ' +' + item.value;
-      div.style.color = '#f0c040';
-    } else {
-      const q = QUALITIES[item.quality] || { color: '#fff' };
-      div.style.color = q.color;
-      div.textContent = (item.icon || '\u2694') + ' ' + item.name + ' ' + item.level + '级';
-      div.style.cursor = 'pointer';
-      div.onclick = () => { addToInventory(item); modal.style.display = 'none'; };
-    }
-    list.appendChild(div);
-  }
-  modal.style.display = 'block';
-  setTimeout(() => { modal.style.display = 'none'; }, 3000);
-}
-
-// Inventory management
-function addToInventory(item) {
-  if (!item) return;
-  const idx = gameState.player.inventory.findIndex(i => !i);
-  if (idx >= 0) {
-    gameState.player.inventory[idx] = item;
-  } else if (gameState.player.inventory.length < 20) {
-    gameState.player.inventory.push(item);
-  } else {
-    log('背包已满!', 'damage');
-    return;
-  }
-  log('获得: ' + item.name, 'info2');
-  updateUI();
-}
-
-// Skills
-function useSkill(index) {
-  const skill = SKILLS[index];
-  if (!skill) { log('技能不存在', 'damage'); return; }
-  const p = gameState.player;
-  if (p.mp < skill.cost) { log('法力不足! 需要' + skill.cost + 'MP', 'damage'); return; }
-  if (skillCooldowns[index] > 0) { log(skill.name + ' 冷却中(' + Math.ceil(skillCooldowns[index]/1000) + 's)', 'info'); return; }
-  p.mp -= skill.cost;
-  skillCooldowns[index] = skill.cooldown;
-  log('>>> 释放技能: ' + skill.name + ' ' + skill.icon, 'skill');
-  
-  if (skill.type === 'damage') {
-    for (const mob of gameState.mobs) {
-      if (distance(p.x, p.y, mob.x, mob.y) < skill.range) {
-        const dmg = Math.max(1, Math.floor(p.baseAtk * skill.mult));
-        mob.hp -= dmg;
-        gameState.damageNumbers.push({ text: dmg, x: mob.x, y: mob.y - 30, color: '#a371f7', life: 40, crit: false });
-        if (mob.hp <= 0) onMobDeath(mob);
+    if(nearest){
+      gs.lastAttackTime=Date.now();p.attackAnim=10;
+      const crit=Math.random()*100<p.crit;
+      let dmg=Math.max(1,p.baseAtk-nearest.def);if(crit)dmg=Math.floor(dmg*1.5);
+      nearest.hp-=dmg;
+      log(`→ ${nearest.name} -${dmg}${crit?' 暴击!':''}`,crit?'damage':'');
+      gs.damageNumbers.push({text:(crit?'暴击 ':'')+dmg,x:nearest.x,y:nearest.y-25,color:crit?'#ffd700':'#ffa657',life:35,crit});
+      for(let i=0;i<6;i++)gs.particles.push({x:nearest.x+rand(-10,10),y:nearest.y+rand(-10,10),vx:randF(-2,2),vy:randF(-3,-1),color:crit?'#ffd700':'#ffa657',size:rand(2,5),life:20,maxLife:20});
+      if(nearest.hp<=0){
+        log(`击杀 ${nearest.name}!`,'exp');
+        p.exp+=nearest.exp;p.gold+=nearest.gold;p.kills++;
+        const drops=processDrop(nearest,nearest.type);
+        if(drops.length)showDropModal(drops);
+        checkRealmUp();
+        while(p.exp>=expToLv(p.level)){
+          p.exp-=expToLv(p.level);p.level++;p.maxHp+=20;p.hp=Math.min(p.hp+20,p.maxHp);
+          p.maxMp+=10;p.mp=Math.min(p.mp+10,p.maxMp);p.baseAtk+=2;p.baseDef+=1;
+          log(`⬆️ Lv.${p.level}!`,'level');
+        }
+        gs.mobs=gs.mobs.filter(m=>m.id!==nearest.id);
       }
     }
-  } else if (skill.type === 'heal') {
-    const heal = Math.floor(skill.heal);
-    p.hp = Math.min(p.maxHp, p.hp + heal);
-    gameState.damageNumbers.push({ text: '+' + heal, x: p.x, y: p.y - 30, color: '#3fb950', life: 40, crit: false });
   }
-  log('使用技能: ' + skill.name, 'skill');
-}
-
-// Save/Load
-function saveGame(showMsg) {
-  const data = JSON.stringify({ player: gameState.player, version: 1 });
-  localStorage.setItem('xiantu_save', data);
-  gameState.player.lastSave = Date.now();
-  if (showMsg) log('游戏已自动存档', 'info');
-}
-
-function newPlayer() {
-  return {
-    x: 400, y: 300,
-    hp: 100, maxHp: 100,
-    mp: 50, maxMp: 50,
-    level: 1, exp: 0,
-    realm: 0, realmLayer: 1,
-    atk: 10, def: 5,
-    equipment: {},
-    inventory: [],
-    gold: 0,
-    guaranteeCounters: {},
-  };
-}
-
-function loadGame() {
-  const raw = localStorage.getItem('xiantu_save');
-  if (raw) {
-    try {
-      const data = JSON.parse(raw);
-      if (data.player) {
-        gameState.player = { ...gameState.player, ...data.player };
-        gameState.player.hp = Math.min(gameState.player.hp, gameState.player.maxHp);
-        gameState.player.mp = Math.min(gameState.player.mp, gameState.player.maxMp);
-        gameState.mobs = [];
-        updateUI();
-        log('存档已加载 Lv.' + gameState.player.level + ' ' + getRealm(gameState.player.level).name, 'info');
-        return;
-      }
-    } catch(e) { log('存档读取失败', 'damage'); }
-  }
-  initGame();
-}
-
-function initGame() {
-  const p = gameState.player;
-  p.level = 1; p.exp = 0; p.hp = p.maxHp; p.mp = p.maxMp;
-  p.gold = 0; p.kills = 0;
-  p.equipment = { weapon: null, helmet: null, armor: null, ring: null, amulet: null, boot: null };
-  p.inventory = [];
-  p.skillCooldowns = [0, 0, 0, 0];
-  p.guaranteeCounters = {};
-  gameState.mobs = [];
-  gameState.particles = [];
-  gameState.damageNumbers = [];
   updateUI();
-  log('新游戏开始! 境界: ' + getRealm(1).name, 'level');
 }
 
-// Decorations
-function rebuildDecorations() {
-  if (decorations.mountains.length > 0) return;
-  canvas = document.getElementById('game-canvas');
-  if (!canvas) return;
-  const w = canvas.width, h = canvas.height;
-  for (let i = 0; i < 5; i++) decorations.mountains.push({ x: w * (0.1 + i * 0.2), y: h * 0.3, w: 80 + rand(0, 40), h: 60 + rand(0, 30) });
-  for (let i = 0; i < 10; i++) decorations.trees.push({ x: w * (0.05 + Math.random() * 0.9), y: h * (0.1 + Math.random() * 0.8), size: 10 + rand(0, 10) });
-  decorations.rivers.push({ x: w * 0.4, y: h * 0.5, rx: 100, ry: 40 });
-  for (let i = 0; i < 4; i++) decorations.farms.push({ x: w * (0.1 + i * 0.2), y: h * 0.7, w: 80, h: 40 });
-  for (let i = 0; i < 15; i++) decorations.grass.push({ x: w * (0.05 + i * 0.06), y: h * (0.1 + (i % 5) * 0.18), size: 10 + i % 8 });
-}
-
-// Event listeners
-document.addEventListener('keydown', e => {
-  gameState.keys[e.key] = true;
-  if (e.key >= '1' && e.key <= '4') useSkill(parseInt(e.key) - 1);
-});
-document.addEventListener('keyup', e => { gameState.keys[e.key] = false; });
-
-canvas = document.getElementById('game-canvas');
-if (canvas) {
-  canvas.addEventListener('mousemove', e => {
-    const rect = canvas.getBoundingClientRect();
-    gameState.mouse.x = e.clientX - rect.left;
-    gameState.mouse.y = e.clientY - rect.top;
-  });
-  canvas.addEventListener('mousedown', e => { gameState.mouse.down = true; });
-  canvas.addEventListener('mouseup', e => { gameState.mouse.down = false; });
-  canvas.addEventListener('contextmenu', e => e.preventDefault());
-}
-document.getElementById('btn-pause').addEventListener('click', () => {
-  gameState.paused = !gameState.paused;
-  document.getElementById('btn-pause').textContent = gameState.paused ? '\u25b6\ufe0f 继续' : '\u23f8\ufe0f 暂停';
-});
-document.getElementById('btn-save').addEventListener('click', () => { saveGame(true); });
-document.getElementById('btn-load').addEventListener('click', loadGame);
-
-// ===== STARTUP =====
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-rebuildDecorations();
-loadGame();
-
-
-
-function init() {
-  loadGame();
-  rebuildDecorations();
-  requestAnimationFrame(gameLoop);
-}
-
-function gameLoop(timestamp) {
-  if (!gameState.paused) {
-    const dt = Math.min(timestamp - (gameState._lastTime || timestamp), 50);
-    gameState._lastTime = timestamp;
-    update(dt);
-    render();
+function checkRealmUp(){
+  const old=getRealm(gs.player.level);
+  const newR=REALMS[gs.player.realmIndex];
+  if(old.name!==newR.name){
+    gs.player.realmIndex=old.index;
+    spawnRealmParticles();
+    document.getElementById('realm-modal-name').textContent=newR.name+'境';
+    document.getElementById('realm-modal-desc').textContent=newR.hint;
+    document.getElementById('realm-modal-reward').textContent=`攻击+${newR.atkBonus} 防御+${newR.defBonus} 生命+${newR.hpBonus} 法力+${newR.mpBonus}`;
+    document.getElementById('realm-modal').classList.add('show');
+    gs.paused=true;
+    log(`🌟 境界突破! 踏入${newR.name}境!`,'realm');
   }
+}
+function closeRealmModal(){
+  document.getElementById('realm-modal').classList.remove('show');
+  gs.paused=false;
+}
+
+let pendingDrops=[];
+function showDropModal(drops){
+  pendingDrops=pendingDrops.concat(drops);
+  const md=document.getElementById('drop-modal');
+  const id=document.getElementById('drop-items');id.innerHTML='';
+  for(const dr of drops){
+    const div=document.createElement('div');div.className='drop-item';
+    if(dr.type==='gold')div.innerHTML=`<span style="color:#ffa657">💰 ${dr.amount} 金币</span>`;
+    else if(dr.type==='item')div.innerHTML=`${dr.icon} ${dr.name}`;
+    else if(dr.quality!==undefined)div.innerHTML=`<span style="color:${QUALITIES[dr.quality].color}">${dr.icon} ${QUALITIES[dr.quality].name} ${dr.name}</span>`;
+    id.appendChild(div);
+  }
+  md.classList.add('show');
+}
+function closeDropModal(){
+  document.getElementById('drop-modal').classList.remove('show');
+  for(const dr of pendingDrops){
+    if(dr.type==='gold')gs.player.gold+=dr.amount;
+    else addToInventory(dr);
+  }pendingDrops=[];updateUI();
+}
+function addToInventory(item){
+  if(item.stackable){const ex=gs.player.inventory.find(i=>i&&i.id===item.id);if(ex){ex.count++;return true;}}
+  const idx=gs.player.inventory.findIndex(i=>!i);
+  if(idx!==-1){gs.player.inventory[idx]={...item,count:1};return true;}
+  log('背包满!','damage');return false;
+}
+
+function useSkill(idx){
+  const p=gs.player;
+  const skills=[
+    {name:'剑气',mp:10,cd:3000,damage:30,range:150},
+    {name:'雷法',mp:20,cd:5000,damage:60,range:180,aoe:true},
+    {name:'护盾',mp:15,cd:8000,heal:50},
+    {name:'瞬移',mp:25,cd:6000,teleport:true},
+  ];
+  const sk=skills[idx];
+  if(p.skillCooldowns[idx]>0){log('冷却中...');return;}
+  if(p.mp<sk.mp){log('法力不足');return;}
+  p.mp-=sk.mp;p.skillCooldowns[idx]=sk.cd;p.attackAnim=8;
+  if(sk.damage){
+    for(const mob of gs.mobs){
+      if(dist(mob.x,mob.y,p.x,p.y)<sk.range){
+        mob.hp-=(sk.damage+p.baseAtk);
+        log(`${sk.name} → ${mob.name} -${sk.damage+p.baseAtk}`,'damage');
+        gs.damageNumbers.push({text:sk.damage+p.baseAtk,x:mob.x,y:mob.y-25,color:'#a371f7',life:35,crit:false});
+        if(!sk.aoe)break;
+      }
+    }
+  }
+  if(sk.heal){p.hp=Math.min(p.maxHp,p.hp+sk.heal);log(`${sk.name} +${sk.heal} HP`,'heal');gs.damageNumbers.push({text:'+'+sk.heal,x:p.x,y:p.y-25,color:'#3fb950',life:35,crit:false});}
+  if(sk.teleport){
+    if(dist(gs.mouse.x,gs.mouse.y,p.x,p.y)<200){p.x=gs.mouse.x;p.y=gs.mouse.y;log('瞬移!');rebuildDecorations();}
+    else{log('距离太远');p.mp+=sk.mp;p.skillCooldowns[idx]=0;}
+  }
+}
+
+function saveGame(){localStorage.setItem('xiantu_save',JSON.stringify(gs));log('存档成功');}
+function loadGame(){
+  const d=localStorage.getItem('xiantu_save');
+  if(d){gs=JSON.parse(d);rebuildDecorations();log('读档成功');updateUI();}else log('无存档');
+}
+
+// 事件
+document.addEventListener('keydown',e=>{gs.keys[e.key]=true;if(e.key>='1'&&e.key<='4')useSkill(parseInt(e.key)-1);});
+document.addEventListener('keyup',e=>{gs.keys[e.key]=false;});
+canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();gs.mouse.x=e.clientX-r.left;gs.mouse.y=e.clientY-r.top;});
+canvas.addEventListener('mousedown',e=>{gs.mouse.down=true;});
+canvas.addEventListener('mouseup',e=>{gs.mouse.down=false;});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+document.getElementById('btn-pause').addEventListener('click',()=>{gs.paused=!gs.paused;document.getElementById('btn-pause').textContent=gs.paused?'▶️':'⏸️';log(gs.paused?'暂停':'继续');});
+document.getElementById('btn-save').addEventListener('click',saveGame);
+document.getElementById('btn-load').addEventListener('click',loadGame);
+document.getElementById('inventory-grid').addEventListener('click',e=>{
+  if(!e.target.classList.contains('inv-slot'))return;
+  const idx=Array.from(e.target.parentElement.children).indexOf(e.target);
+  const item=gs.player.inventory[idx];if(!item)return;
+  if(item.effect){
+    if(item.effect.hp)gs.player.hp=Math.min(gs.player.maxHp,gs.player.hp+item.effect.hp);
+    if(item.effect.mp)gs.player.mp=Math.min(gs.player.maxMp,gs.player.mp+item.effect.mp);
+    log(`使用 ${item.name}`);item.count--;
+    if(item.count<=0)gs.player.inventory[idx]=null;
+  }else if(item.type){
+    const old=gs.player.equipment[item.type];gs.player.equipment[item.type]=item;gs.player.inventory[idx]=old;log(`装备 ${item.name}`);
+  }updateUI();
+});
+
+// 主循环
+let lastTime=0;
+function gameLoop(ts){
+  const dt=Math.min(ts-lastTime,50);lastTime=ts;
+  update(dt);render();
   requestAnimationFrame(gameLoop);
 }
+setInterval(spawnMob,3500);
+
+// 初始化
+rebuildDecorations();updateUI();updateRealmHint(REALMS[0]);
+log('欢迎来到仙途!');log('WASD移动 | 鼠标攻击 | 1-4技能');log('境界突破将改变全场景视觉!');
 requestAnimationFrame(gameLoop);
-setInterval(spawnMob, 3000);
-
-log('欢迎来到仙途!');
-log('WASD移动, 鼠标攻击, 数字键1-4释放技能');
-
-
-// Startup
-init();
 </script>
 </body>
 </html>
