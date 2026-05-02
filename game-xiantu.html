@@ -893,7 +893,13 @@ function useSkill(idx){
 function saveGame(){localStorage.setItem('xiantu_save',JSON.stringify(gs));log('存档成功');}
 function loadGame(){
   const d=localStorage.getItem('xiantu_save');
-  if(d){gs=JSON.parse(d);rebuildDecorations();log('读档成功');updateUI();}else log('无存档');
+  if(d){
+    // 保留运行时状态（按键/鼠标引用不能被JSON覆盖）
+    const rt={keys:gs.keys,mouse:gs.mouse};
+    gs=JSON.parse(d);
+    gs.keys=rt.keys;gs.mouse=rt.mouse;
+    rebuildDecorations();log('读档成功');updateUI();
+  }else log('无存档');
 }
 
 // 事件
