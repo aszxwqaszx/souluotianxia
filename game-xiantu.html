@@ -449,6 +449,9 @@ function log(msg,type=''){
 const canvas=document.getElementById('game-canvas');
 const ctx=canvas.getContext('2d');
 
+// ===== 装饰物系统 =====
+let decorations=[];
+
 function resizeCanvas(){
   canvas.width=canvas.offsetWidth;
   canvas.height=canvas.offsetHeight;
@@ -456,9 +459,6 @@ function resizeCanvas(){
 }
 resizeCanvas();
 window.addEventListener('resize',resizeCanvas);
-
-// ===== 装饰物系统 =====
-let decorations=[];
 function rebuildDecorations(){
   decorations=[];
   const w=canvas.width, h=canvas.height;
