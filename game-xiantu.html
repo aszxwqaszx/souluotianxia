@@ -342,7 +342,7 @@ let gs = {
     baseAtk:10,baseDef:5,crit:5,dodge:3,gold:0,kills:0,
     x:300,y:250,facing:0,attackAnim:0,realmIndex:0,
     equipment:{weapon:null,helmet:null,armor:null,ring:null,amulet:null,boot:null},
-    inventory:[],skillCooldowns:[0,0,0,0],guaranteeCounters:{},
+    inventory:new Array(20).fill(null),skillCooldowns:[0,0,0,0],guaranteeCounters:{},
   },
   mobs:[],particles:[],damageNumbers:[],
   keys:{},mouse:{x:0,y:0,down:false},
@@ -906,7 +906,7 @@ function loadGame(){
     // 补全可能缺失的字段（兼容旧存档）
     var pp=gs.player;
     if(!pp.gold&&pp.gold!==0)pp.gold=0;
-    if(!pp.inventory)pp.inventory=[];
+    if(!pp.inventory||!Array.isArray(pp.inventory)||pp.inventory.length===0)pp.inventory=new Array(20).fill(null);
     if(!pp.skillCooldowns)pp.skillCooldowns=[0,0,0,0];
     if(!pp.equipment)pp.equipment={weapon:null,helmet:null,armor:null,ring:null,amulet:null,boot:null};
     if(!pp.guaranteeCounters)pp.guaranteeCounters={};
