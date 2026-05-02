@@ -930,6 +930,7 @@ function gameLoop(ts){
 setInterval(spawnMob,3500);
 
 // 初始化
+loadGame();
 rebuildDecorations();updateUI();updateRealmHint(REALMS[0]);
 log('欢迎来到仙途!');log('WASD移动 | 鼠标攻击 | 1-4技能');log('境界突破将改变全场景视觉!');
 requestAnimationFrame(gameLoop);

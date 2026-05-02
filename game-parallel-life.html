@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平行人生 - 文字冒险</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0a0a1a;color:#ddd;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:20px}
+#app{width:100%;max-width:700px;display:flex;flex-direction:column;gap:16px}
+/* 标题 */
+#title-bar{text-align:center;padding:12px 0}
+#title-bar h1{font-size:1.8em;background:linear-gradient(135deg,#ff6b9d,#c44dff,#4dc9f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#title-bar .sub{color:#888;font-size:.85em;margin-top:4px}
+/* 状态栏 */
+#stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-item{background:#1a1a2e;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.stat-item .label{font-size:.7em;color:#888;text-transform:uppercase;letter-spacing:1px}
+.stat-item .value{font-size:1.1em;font-weight:bold}
+.stat-item .bar-bg{height:4px;background:#2a2a3e;border-radius:2px;margin-top:4px;overflow:hidden}
+.stat-item .bar-fill{height:100%;border-radius:2px;transition:width .6s}
+.age{color:#4dc9f6}.wealth{color:#ffd700}.health{color:#4caf50}.happiness{color:#ff9800}.career{color:#c44dff}.family{color:#ff6b9d}
+.bar-fill.age{background:#4dc9f6}.bar-fill.wealth{background:#ffd700}.bar-fill.health{background:#4caf50}
+.bar-fill.happiness{background:#ff9800}.bar-fill.career{background:#c44dff}.bar-fill.family{background:#ff6b9d}
+/* 阶段标签 */
+#stage-tag{text-align:center}
+#stage-tag span{display:inline-block;background:#1a1a2e;border-radius:20px;padding:4px 16px;font-size:.8em;color:#888}
+#stage-tag .stage-name{color:#4dc9f6;font-weight:bold}
+/* 主卡片 */
+#event-card{background:#1a1a2e;border-radius:16px;padding:28px 24px;border:1px solid #2a2a3e;position:relative;overflow:hidden;min-height:280px;display:flex;flex-direction:column;gap:16px}
+#event-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ff6b9d,#c44dff,#4dc9f6)}
+.event-year{font-size:.85em;color:#888}
+.event-narrative{font-size:1.05em;line-height:1.8;flex:1}
+.event-narrative .highlight{color:#ffd700;font-weight:bold}
+.event-narrative .bad{color:#ff4444}
+.event-narrative .good{color:#4caf50}
+/* 选择按钮 */
+#choices{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.choice-btn{background:#2a2a3e;border:1px solid #3a3a5e;border-radius:12px;padding:14px 16px;color:#ddd;cursor:pointer;font-size:.95em;text-align:left;transition:all .2s;font-family:inherit}
+.choice-btn:hover{background:#3a3a5e;border-color:#5a5a8e;transform:translateX(4px)}
+.choice-btn .emoji{font-size:1.2em;margin-right:8px}
+/* 事件日志 */
+#log-section{margin-top:4px}
+#log-section h3{font-size:.85em;color:#888;margin-bottom:8px;cursor:pointer;user-select:none}
+#log-list{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto}
+.log-entry{font-size:.8em;color:#666;padding:4px 8px;background:#12122a;border-radius:6px;border-left:2px solid #2a2a3e}
+.log-entry.good-log{border-left-color:#4caf50}
+.log-entry.bad-log{border-left-color:#ff4444}
+.log-entry.neutral-log{border-left-color:#4dc9f6}
+/* 结局弹窗 */
+#ending-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;justify-content:center;align-items:center}
+#ending-overlay.show{display:flex}
+#ending-card{background:#1a1a2e;border-radius:20px;padding:40px 32px;max-width:550px;width:90%;text-align:center;border:2px solid #ffd700;position:relative}
+#ending-card h2{font-size:2em;margin-bottom:8px}
+#ending-card .ending-type{font-size:1.1em;color:#ffd700;margin-bottom:16px}
+#ending-card .ending-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0;font-size:.9em}
+#ending-card .ending-stats div{background:#2a2a3e;padding:8px;border-radius:8px}
+#ending-card .ending-score{font-size:2.5em;font-weight:bold;color:#ffd700;margin:12px 0}
+#ending-card .ending-desc{font-size:.95em;line-height:1.7;color:#bbb;margin:16px 0}
+#ending-card button{background:linear-gradient(135deg,#ff6b9d,#c44dff);border:none;padding:12px 40px;border-radius:30px;color:#fff;font-size:1em;cursor:pointer;font-family:inherit;font-weight:bold;margin:8px}
+#ending-card button.secondary{background:transparent;border:1px solid #5a5a8e}
+/* 初始选择 */
+#start-screen{background:#1a1a2e;border-radius:16px;padding:32px 24px;text-align:center;border:1px solid #2a2a3e;min-height:300px;display:flex;flex-direction:column;gap:20px;align-items:center;justify-content:center}
+#start-screen h2{font-size:1.4em;color:#ddd}
+#start-screen p{color:#888;line-height:1.7;font-size:.95em}
+.career-select{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%}
+.career-opt{background:#2a2a3e;border:2px solid #3a3a5e;border-radius:12px;padding:14px;color:#ddd;cursor:pointer;text-align:center;transition:all .2s;font-family:inherit;font-size:.95em}
+.career-opt:hover{background:#3a3a5e;border-color:#5a5a8e;transform:translateY(-2px)}
+.career-opt .icon{font-size:2em;display:block;margin-bottom:6px}
+.career-opt .name{font-weight:bold}
+.career-opt .desc{font-size:.75em;color:#888;margin-top:4px}
+/* 浮动提示 */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#c44dff;color:#fff;padding:10px 24px;border-radius:30px;font-size:.9em;z-index:200;animation:toastIn .3s ease,toastOut .3s ease 2s forwards;pointer-events:none}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="title-bar">
+    <h1>🌌 平行人生</h1>
+    <div class="sub">你的每一个选择，都在书写另一种可能</div>
+  </div>
+  <div id="start-screen">
+    <h2>🏫 21岁，大学毕业</h2>
+    <p>你站在人生的第一个十字路口。<br>没有背景，没有资源，只有一张文凭和一腔热血。<br>选择你的起点——</p>
+    <div class="career-select" id="career-select"></div>
+    <button onclick="loadGame()" style="background:transparent;border:1px solid #5a5a8e;color:#888;padding:8px 24px;border-radius:20px;cursor:pointer;font-family:inherit;margin-top:8px">📂 读取存档</button>
+  </div>
+  <div id="game-screen" style="display:none">
+    <div id="stage-tag"><span>📍 <span class="stage-name" id="stage-label">青年期</span></span></div>
+    <div id="stats-bar">
+      <div class="stat-item"><span class="label">年龄</span><span class="value age" id="s-age">21</span><div class="bar-bg"><div class="bar-fill age" id="b-age" style="width:28%"></div></div></div>
+      <div class="stat-item"><span class="label">财富 ¥</span><span class="value wealth" id="s-wealth">3000</span><div class="bar-bg"><div class="bar-fill wealth" id="b-wealth" style="width:3%"></div></div></div>
+      <div class="stat-item"><span class="label">健康</span><span class="value health" id="s-health">95</span><div class="bar-bg"><div class="bar-fill health" id="b-health" style="width:95%"></div></div></div>
+      <div class="stat-item"><span class="label">幸福</span><span class="value happiness" id="s-happiness">65</span><div class="bar-bg"><div class="bar-fill happiness" id="b-happiness" style="width:65%"></div></div></div>
+      <div class="stat-item"><span class="label">事业</span><span class="value career" id="s-career">5</span><div class="bar-bg"><div class="bar-fill career" id="b-career" style="width:5%"></div></div></div>
+      <div class="stat-item"><span class="label">家庭</span><span class="value family" id="s-family">80</span><div class="bar-bg"><div class="bar-fill family" id="b-family" style="width:80%"></div></div></div>
+    </div>
+    <div id="event-card">
+      <div class="event-year" id="event-year"></div>
+      <div class="event-narrative" id="event-narrative"></div>
+      <div id="choices"></div>
+    </div>
+    <div id="log-section">
+      <h3 onclick="document.getElementById('log-list').style.display=document.getElementById('log-list').style.display==='none'?'flex':'none'">📜 人生轨迹 ▾</h3>
+      <div id="log-list"></div>
+    </div>
+  </div>
+</div>
+<div id="ending-overlay"><div id="ending-card"></div></div>
+
+<script>
+// ==================== 游戏状态 ====================
+let G = {
+  age: 21, wealth: 3000, health: 95, happiness: 65, career: 5, family: 80,
+  career_path: '', career_title: '', married: false, has_child: false,
+  education: '本科', house: '租房', car: false, investments: 0, debt: 0,
+  events_done: [], year_counter: 0, ended: false, ending_type: '', score: 0,
+  current_year_even: false, marriage_age: null
+};
+
+// ==================== 职业体系 ====================
+const CAREERS = {
+  'construction': {
+    name: '施工员', icon: '🏗️', desc: '工地一线，从搬砖开始',
+    ladder: [
+      {title:'见习施工员', years:2, salary:3500, career_req:0},
+      {title:'施工员', years:3, salary:5500, career_req:15},
+      {title:'技术负责人', years:4, salary:10000, career_req:35},
+      {title:'项目经理', years:5, salary:20000, career_req:55},
+      {title:'建筑公司总监', years:0, salary:40000, career_req:75}
+    ]
+  },
+  'coder': {
+    name: '程序员', icon: '💻', desc: '格子衫与咖啡，代码改变世界',
+    ladder: [
+      {title:'初级程序员', years:2, salary:6000, career_req:0},
+      {title:'中级开发', years:3, salary:12000, career_req:18},
+      {title:'高级工程师', years:4, salary:22000, career_req:40},
+      {title:'技术总监/架构师', years:5, salary:35000, career_req:60},
+      {title:'CTO/创始人', years:0, salary:60000, career_req:78}
+    ]
+  },
+  'sales': {
+    name: '销售代表', icon: '📈', desc: '靠嘴吃饭，业绩为王',
+    ladder: [
+      {title:'见习销售', years:2, salary:3500, career_req:0},
+      {title:'销售专员', years:3, salary:6000, career_req:15},
+      {title:'区域经理', years:4, salary:15000, career_req:35},
+      {title:'销售总监', years:5, salary:30000, career_req:58},
+      {title:'VP/合伙人', years:0, salary:50000, career_req:76}
+    ]
+  },
+  'civil': {
+    name: '公务员', icon: '🏛️', desc: '铁饭碗，稳定但需要熬',
+    ladder: [
+      {title:'办事员', years:3, salary:4000, career_req:0},
+      {title:'科员', years:4, salary:5500, career_req:12},
+      {title:'副科长', years:4, salary:8000, career_req:30},
+      {title:'科长/主任', years:5, salary:12000, career_req:50},
+      {title:'处长', years:0, salary:18000, career_req:70}
+    ]
+  },
+  'freelance': {
+    name: '自由职业', icon: '🎨', desc: '不打工，自己说了算',
+    ladder: [
+      {title:'接单萌新', years:2, salary:2000, career_req:0},
+      {title:'稳定自由职业', years:3, salary:6000, career_req:18},
+      {title:'个人品牌', years:4, salary:15000, career_req:40},
+      {title:'工作室主理人', years:5, salary:28000, career_req:60},
+      {title:'行业KOL', years:0, salary:45000, career_req:78}
+    ]
+  }
+};
+
+// ==================== 事件池 ====================
+// 分类: career, finance, relationship, health, family, random
+const EVENT_POOL = {
+  // ---- 职业事件 ----
+  career: [
+    {id:'c1', cond:()=>G.career<30, text:'你负责的项目出了差错，领导大发雷霆。怎么办？', 
+     choices:[
+       {text:'🎯 主动担责，加班补救', effect:{career:5,happiness:-5,wealth:-500}},
+       {text:'🤫 推给同事，明哲保身', effect:{career:-3,family:-5}},
+       {text:'📝 写详细报告，分析根因', effect:{career:8,happiness:3}}
+     ]},
+    {id:'c2', cond:()=>G.career<50, text:'猎头来电，有一家新公司开出不菲的薪资挖你。',
+     choices:[
+       {text:'💰 跳槽，追求更高薪资', effect:{career:8,wealth:5000,happiness:3}},
+       {text:'🔒 拒绝，稳定压倒一切', effect:{career:-2,happiness:-3}},
+       {text:'🤝 拿offer跟现在老板谈加薪', effect:{career:4,wealth:2000,family:3}}
+     ]},
+    {id:'c3', cond:()=>G.career<60, text:'公司组织管理层培训，但需要自费一部分。',
+     choices:[
+       {text:'📚 报名参加，投资自己', effect:{career:10,wealth:-3000,happiness:2}},
+       {text:'💤 算了，自学也一样', effect:{career:-2}},
+       {text:'💰 申请公司全额报销', effect:{career:3,family:2}}
+     ]},
+    {id:'c4', cond:()=>true, text:'行业不景气，公司开始裁员。你收到了风声。',
+     choices:[
+       {text:'📋 主动更新简历，做好准备', effect:{career:2,happiness:-5}},
+       {text:'💪 加倍努力表现自己', effect:{career:5,health:-5}},
+       {text:'😰 整天焦虑，无心工作', effect:{career:-5,health:-8,happiness:-10}}
+     ]},
+    {id:'c5', cond:()=>G.career>=30, text:'有个创业机会摆在你面前，但风险不小。',
+     choices:[
+       {text:'🚀 辞职创业', effect:{career:15,wealth:-20000,happiness:10,health:-5}},
+       {text:'👔 兼职试水，留条后路', effect:{career:5,wealth:-5000,happiness:3}},
+       {text:'🛑 安心打工，不想折腾', effect:{career:-3}}
+     ]},
+    {id:'c6', cond:()=>true, text:'新来的同事能力出众，你感到了一些压力。',
+     choices:[
+       {text:'🤝 主动请教，共同进步', effect:{career:5,happiness:2,family:3}},
+       {text:'😤 暗中较劲，加班卷', effect:{career:3,health:-8,happiness:-5}},
+       {text:'😐 做好自己的事就行', effect:{career:1,happiness:-1}}
+     ]},
+    {id:'c7', cond:()=>G.career>=45, text:'公司高层变动，新领导想提拔你进核心管理层。',
+     choices:[
+       {text:'🏆 接受，承担更大责任', effect:{career:12,wealth:8000,health:-5}},
+       {text:'⚖️ 婉拒，不想太累', effect:{career:-5,happiness:5}},
+       {text:'🤔 要求先试用半年', effect:{career:5,wealth:3000}}
+     ]}
+  ],
+  // ---- 财务事件 ----
+  finance: [
+    {id:'f1', cond:()=>G.wealth<10000, text:'这个月工资刚发就花完了，信用卡账单还等着。',
+     choices:[
+       {text:'📊 制定预算，削减开支', effect:{wealth:-500,happiness:-5,career:2}},
+       {text:'💳 刷信用卡，下个月再说', effect:{wealth:1000,happiness:3,debt:2000}},
+       {text:'💼 找个兼职赚外快', effect:{wealth:2000,health:-8,happiness:-3}}
+     ]},
+    {id:'f2', cond:()=>true, text:'朋友推荐了一个投资项目，据说回报率很高。',
+     choices:[
+       {text:'💰 投入大半积蓄', effect:{investments:10000,wealth:-10000,career:-2}},
+       {text:'🔍 先调查再说', effect:{career:3,happiness:1}},
+       {text:'🐷 少量试试水', effect:{investments:3000,wealth:-3000,happiness:2}}
+     ]},
+    {id:'f3', cond:()=>G.age>=25, text:'房价又涨了，周围的人都劝你赶紧买房。',
+     choices:[
+       {text:'🏠 咬牙贷款买房', effect:{wealth:-8000,happiness:-5,debt:500000,house:'按揭房',family:5}},
+       {text:'🏠 父母帮忙凑首付', effect:{wealth:-4000,happiness:-3,debt:400000,house:'按揭房',family:3}},
+       {text:'💤 继续租房，不跟风', effect:{happiness:2,wealth:1000}}
+     ]},
+    {id:'f4', cond:()=>G.investments>0, text:'你之前的投资突然大涨！收益远超预期。',
+     choices:[
+       {text:'💰 落袋为安，全部卖出', effect:{wealth:15000,happiness:8}},
+       {text:'📈 继续持有，期待更高', effect:{happiness:5}},
+       {text:'🔄 卖一半留一半', effect:{wealth:8000,happiness:3}}
+     ]},
+    {id:'f5', cond:()=>G.investments>0, text:'市场暴跌，你的投资缩水了大半。',
+     choices:[
+       {text:'😱 恐慌卖出', effect:{wealth:-8000,happiness:-15,health:-5}},
+       {text:'🧘 长线持有，不看不烦', effect:{happiness:-3}},
+       {text:'📉 逢低加仓', effect:{wealth:-3000,happiness:-5}}
+     ]},
+    {id:'f6', cond:()=>G.age>=30, text:'中了个小彩票，虽然不多但也是一笔意外之财。',
+     choices:[
+       {text:'🎉 请朋友吃大餐庆祝', effect:{wealth:3000,happiness:10,family:3}},
+       {text:'💼 全部存起来', effect:{wealth:5000,happiness:2}},
+       {text:'✈️ 给自己一次旅行', effect:{wealth:2000,happiness:12,health:5}}
+     ]}
+  ],
+  // ---- 感情事件 ----
+  relationship: [
+    {id:'r1', cond:()=>!G.married&&G.age>=23, text:'朋友介绍了一个人给你认识，感觉还不错。',
+     choices:[
+       {text:'💕 认真发展关系', effect:{happiness:10,wealth:-1000,family:5}},
+       {text:'🤷 随缘吧，不强求', effect:{happiness:2}},
+       {text:'🚫 现在不想恋爱，专注事业', effect:{career:3,happiness:-5}}
+     ]},
+    {id:'r2', cond:()=>!G.married&&G.age>=25, text:'交往了一段时间，对方问你对未来的打算。',
+     choices:[
+       {text:'💍 认真考虑结婚', effect:{happiness:8,family:10,marry:'yes',wealth:-5000}},
+       {text:'⏸️ 再处处，不急', effect:{happiness:-3}},
+       {text:'💔 感觉不太合适', effect:{happiness:-10,family:-5}}
+     ]},
+    {id:'r3', cond:()=>G.married, text:'最近工作太忙，伴侣抱怨你陪伴太少。',
+     choices:[
+       {text:'🌹 安排一次特别的约会', effect:{happiness:8,family:5,wealth:-800}},
+       {text:'📅 承诺忙完这阵子就好好陪', effect:{happiness:-2,career:2}},
+       {text:'😤 我也不容易啊，互相体谅吧', effect:{happiness:-8,family:-10}}
+     ]},
+    {id:'r4', cond:()=>G.married&&G.age>=28, text:'计划生育的话题被提上了日程。',
+     choices:[
+       {text:'👶 准备要孩子', effect:{happiness:10,family:15,child:'yes',wealth:-3000}},
+       {text:'⏰ 再推迟两年', effect:{happiness:-3,family:-5}},
+       {text:'❌ 丁克挺好的', effect:{happiness:3,family:-8}}
+     ]},
+    {id:'r5', cond:()=>G.has_child, text:'孩子学校的活动需要家长参加，但你手头有重要工作。',
+     choices:[
+       {text:'👨‍👩‍👧 请假参加孩子活动', effect:{family:10,happiness:8,career:-3}},
+       {text:'💼 工作重要，让伴侣去', effect:{family:-5,happiness:-3,career:3}},
+       {text:'📱 视频连线远程参与', effect:{family:3,happiness:2}}
+     ]}
+  ],
+  // ---- 健康事件 ----
+  health: [
+    {id:'h1', cond:()=>true, text:'加班太多，最近总觉得疲惫不堪。',
+     choices:[
+       {text:'🏃 开始健身，调整作息', effect:{health:8,happiness:3,wealth:-500}},
+       {text:'☕ 喝咖啡硬撑', effect:{health:-8,happiness:-3}},
+       {text:'🏥 去医院做个全面体检', effect:{health:5,wealth:-800}}
+     ]},
+    {id:'h2', cond:()=>G.age>=35, text:'体检报告出来了，脂肪肝+三高预警。',
+     choices:[
+       {text:'🥗 彻底改变饮食习惯', effect:{health:10,happiness:-5,wealth:-1000}},
+       {text:'💊 吃药控制，生活方式照旧', effect:{health:-3,wealth:-500}},
+       {text:'😰 不当回事', effect:{health:-15,happiness:-3}}
+     ]},
+    {id:'h3', cond:()=>G.health<60, text:'突然生了一场大病，住院治疗了一段时间。',
+     choices:[
+       {text:'💪 积极配合治疗，休养恢复', effect:{health:15,wealth:-10000,happiness:-8}},
+       {text:'😞 心情低落，恢复缓慢', effect:{health:5,happiness:-15}},
+       {text:'🏠 提前出院回家休养', effect:{health:8,wealth:-5000,happiness:-5}}
+     ]},
+    {id:'h4', cond:()=>G.age>=45, text:'到了中年，精力大不如前，记忆力也开始衰退。',
+     choices:[
+       {text:'🧠 学习新技能，保持大脑活跃', effect:{health:5,happiness:5,career:3}},
+       {text:'💤 顺其自然，该退休退休', effect:{career:-3,happiness:-2}},
+       {text:'🏋️ 加大运动量，对抗衰老', effect:{health:8,happiness:2,wealth:-500}}
+     ]}
+  ],
+  // ---- 家庭事件 ----
+  family: [
+    {id:'fm1', cond:()=>G.age>=28, text:'父母年纪大了，身体不如从前，打电话的频率越来越高。',
+     choices:[
+       {text:'🏠 经常回家看看', effect:{family:8,happiness:5,wealth:-1000}},
+       {text:'📞 多打电话，远程关心', effect:{family:3,happiness:2}},
+       {text:'💰 寄钱回家，人在江湖', effect:{family:2,wealth:-2000}}
+     ]},
+    {id:'fm2', cond:()=>G.age>=35, text:'父亲突然病倒，需要一大笔医疗费。',
+     choices:[
+       {text:'❤️ 倾尽所有，全力救治', effect:{wealth:-20000,family:15,happiness:-5}},
+       {text:'🏥 在能力范围内尽力', effect:{wealth:-8000,family:8,happiness:-3}},
+       {text:'💰 跟亲戚一起分摊', effect:{wealth:-5000,family:5,happiness:-2}}
+     ]},
+    {id:'fm3', cond:()=>G.has_child, text:'孩子进入叛逆期，你说什么都不听。',
+     choices:[
+       {text:'🗣️ 耐心沟通，尊重孩子的想法', effect:{family:8,happiness:3}},
+       {text:'😤 严格管教，不能惯', effect:{family:-5,happiness:-8}},
+       {text:'🤷 随他去，经历挫折才会成长', effect:{family:-2,happiness:-3}}
+     ]},
+    {id:'fm4', cond:()=>G.age>=50, text:'父母开始考虑养老问题，想搬到离你近的地方。',
+     choices:[
+       {text:'🏡 欢迎他们搬过来', effect:{family:12,happiness:5,wealth:-5000}},
+       {text:'🏘️ 在家附近给他们租个房子', effect:{family:8,wealth:-2000}},
+       {text:'🏥 推荐去养老社区', effect:{family:-5,wealth:-3000}}
+     ]}
+  ],
+  // ---- 随机事件 ----
+  random: [
+    {id:'rd1', cond:()=>true, text:'城市遭遇罕见暴雨，家里被淹了一部分。',
+     choices:[
+       {text:'🔧 自己动手抢修', effect:{wealth:-1000,health:-3,career:2}},
+       {text:'📞 叫专业维修', effect:{wealth:-3000}},
+       {text:'😮‍💨 等天气好了再说', effect:{health:-5,happiness:-5}}
+     ]},
+    {id:'rd2', cond:()=>true, text:'刷短视频时突发奇想，你想学一门新技能。',
+     choices:[
+       {text:'🎸 学会一种乐器', effect:{happiness:8,wealth:-1500,career:1}},
+       {text:'📷 学摄影/视频剪辑', effect:{happiness:5,career:3,wealth:-2000}},
+       {text:'🍳 学做菜', effect:{health:3,happiness:5,wealth:-500}}
+     ]},
+    {id:'rd3', cond:()=>true, text:'老同学突然联系你，说遇到困难想借点钱周转。',
+     choices:[
+       {text:'🤝 借给他，同学一场', effect:{wealth:-3000,family:5,happiness:3}},
+       {text:'😐 婉拒，装作没看到', effect:{family:-3}},
+       {text:'💡 帮他出主意但不借钱', effect:{family:2,career:1}}
+     ]},
+    {id:'rd4', cond:()=>true, text:'你在社交平台上发的一条内容突然火了，获得了大量关注。',
+     choices:[
+       {text:'🌟 趁机做自媒体', effect:{career:5,happiness:8}},
+       {text:'😅 不知所措，低调处理', effect:{happiness:-2}},
+       {text:'💼 联系品牌谈合作', effect:{wealth:5000,career:3,happiness:3}}
+     ]},
+    {id:'rd5', cond:()=>G.age>=40, text:'你开始思考人生的意义，感觉日复一日有些厌倦。',
+     choices:[
+       {text:'🧘 开启心灵探索之旅', effect:{happiness:10,wealth:-3000,career:-2}},
+       {text:'✈️ 来一次说走就走的旅行', effect:{happiness:12,wealth:-5000,career:-3}},
+       {text:'📖 多读书，在书中寻找答案', effect:{happiness:5,career:2}}
+     ]}
+  ]
+};
+
+// ==================== 游戏逻辑 ====================
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function getCareerLadder() {
+  let c = CAREERS[G.career_path];
+  if (!c) c = CAREERS['construction'];
+  for (let i = c.ladder.length - 1; i >= 0; i--) {
+    if (G.career >= c.ladder[i].career_req) {
+      return { level: i, data: c.ladder[i], max: i >= c.ladder.length - 1 };
+    }
+  }
+  return { level: 0, data: c.ladder[0], max: false };
+}
+
+function getLifeStage() {
+  if (G.age <= 25) return '🌱 青年期';
+  if (G.age <= 35) return '🌿 成长期';
+  if (G.age <= 50) return '🌳 巅峰期';
+  if (G.age <= 65) return '🍂 转折期';
+  return '🍁 暮年期';
+}
+
+function addLog(entry, type) {
+  // type: good, bad, neutral
+  G.year_counter++;
+  let cls = type === 'good' ? 'good-log' : type === 'bad' ? 'bad-log' : 'neutral-log';
+  let li = document.createElement('div');
+  li.className = 'log-entry ' + cls;
+  li.textContent = `[${G.age}岁] ${entry}`;
+  document.getElementById('log-list').prepend(li);
+  // 保留最近50条
+  while (document.getElementById('log-list').children.length > 50) {
+    document.getElementById('log-list').lastChild.remove();
+  }
+}
+
+function updateStats() {
+  // Clamp all stats
+  G.health = clamp(G.health, 0, 100);
+  G.happiness = clamp(G.happiness, 0, 100);
+  G.career = clamp(G.career, 0, 100);
+  G.family = clamp(G.family, 0, 100);
+  G.wealth = Math.max(0, G.wealth);
+  
+  // Update UI
+  document.getElementById('s-age').textContent = G.age;
+  document.getElementById('s-wealth').textContent = G.wealth.toLocaleString();
+  document.getElementById('s-health').textContent = G.health;
+  document.getElementById('s-happiness').textContent = G.happiness;
+  document.getElementById('s-career').textContent = G.career;
+  document.getElementById('s-family').textContent = G.family;
+  
+  document.getElementById('b-age').style.width = (G.age / 75 * 100) + '%';
+  document.getElementById('b-wealth').style.width = Math.min(G.wealth / 50000 * 100, 100) + '%';
+  document.getElementById('b-health').style.width = G.health + '%';
+  document.getElementById('b-happiness').style.width = G.happiness + '%';
+  document.getElementById('b-career').style.width = G.career + '%';
+  document.getElementById('b-family').style.width = G.family + '%';
+  
+  // Update stage label
+  document.getElementById('stage-label').textContent = getLifeStage();
+  
+  // Update career title
+  let ladder = getCareerLadder();
+  G.career_title = ladder.data.title;
+}
+
+function saveGame() {
+  localStorage.setItem('parallel_life_save', JSON.stringify(G));
+  showToast('💾 存档成功');
+}
+
+function applyEffect(effect) {
+  for (let [k, v] of Object.entries(effect)) {
+    if (k === 'marry') { G.married = true; G.marriage_age = G.age; }
+    else if (k === 'child') { G.has_child = true; }
+    else if (k === 'house') { G.house = v; }
+    else if (k === 'debt') { G.debt += v; }
+    else if (k === 'investments') { G.investments += v; }
+    else if (G.hasOwnProperty(k)) { G[k] += v; }
+  }
+  updateStats();
+  saveGame();
+}
+
+function showToast(msg) {
+  let t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function getSalary() {
+  let ladder = getCareerLadder();
+  return ladder.data.salary;
+}
+
+// Age up: advance 1-3 years
+function advanceYears(years) {
+  let y = years || (Math.floor(Math.random() * 3) + 1);
+  let oldAge = G.age;
+  G.age += y;
+  
+  // Salary income
+  let salary = getSalary();
+  G.wealth += salary * y * 12;
+  
+  // Passive health decline with age
+  if (G.age > 30) G.health -= y * 0.5;
+  if (G.age > 50) G.health -= y * 1.5;
+  
+  // Age-based events
+  if (G.age >= 28 && !G.married && Math.random() < 0.3) {
+    G.family -= 3; // family pressure
+    addLog('父母开始催婚了...', 'neutral');
+  }
+  
+  // Add natural career growth
+  if (G.career < 80) G.career += y * 0.8;
+  
+  // Debts accumulate interest
+  if (G.debt > 0) G.debt += G.debt * 0.05 * y;
+  
+  updateStats();
+  saveGame();
+  
+  addLog(`${oldAge}→${G.age}岁，年收入¥${(salary*12).toLocaleString()}，${getLifeStage()}`, 'neutral');
+  
+  // Check for ending conditions
+  if (G.age >= 75 || G.health <= 0 || G.happiness <= 0) {
+    endGame();
+    return true;
+  }
+  return false;
+}
+
+function getRandomEvent() {
+  // Determine event category based on weights
+  let categories = [];
+  
+  // Weight by life stage
+  if (G.career < 70) categories.push(...['career','career']);
+  if (G.wealth < 10000 || G.investments > 0) categories.push('finance');
+  if (!G.married && G.age >= 23) categories.push(...['relationship','relationship']);
+  if (G.married) categories.push('relationship');
+  if (G.health < 70) categories.push(...['health','health']);
+  if (G.age >= 28) categories.push('family');
+  categories.push(...['random','random','random']);
+  
+  // Pick category
+  let cat = categories[Math.floor(Math.random() * categories.length)];
+  let pool = EVENT_POOL[cat];
+  
+  // Filter by conditions
+  let valid = pool.filter(e => e.cond());
+  if (valid.length === 0) {
+    // Fallback to random
+    valid = EVENT_POOL['random'].filter(e => e.cond());
+  }
+  
+  let event = valid[Math.floor(Math.random() * valid.length)];
+  
+  // Avoid repeating same event recently
+  if (G.events_done.slice(-3).includes(event.id) && valid.length > 1) {
+    let alt = valid.filter(e => e.id !== event.id);
+    if (alt.length > 0) event = alt[Math.floor(Math.random() * alt.length)];
+  }
+  
+  G.events_done.push(event.id);
+  return { ...event, category: cat };
+}
+
+function renderEvent(event) {
+  let year = document.getElementById('event-year');
+  let narrative = document.getElementById('event-narrative');
+  let choices = document.getElementById('choices');
+  
+  year.textContent = `📅 ${G.age}岁 · ${G.career_title} · ${getLifeStage()}`;
+  narrative.innerHTML = event.text.replace(/\*\*(.*?)\*\*/g, '<span class="highlight">$1</span>');
+  choices.innerHTML = '';
+  
+  event.choices.forEach((ch, idx) => {
+    let btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = ch.text;
+    btn.addEventListener('click', () => {
+      // Apply effect
+      let effects = [];
+      for (let [k, v] of Object.entries(ch.effect)) {
+        let oldVal = G[k] || 0;
+        G[k] = (G[k] || 0) + v;
+        let newVal = G[k];
+        if (Math.abs(v) >= 3) {
+          effects.push(`${k}: ${oldVal}→${newVal}`);
+        }
+      }
+      applyEffect(ch.effect);
+      
+      // Add result log
+      let total = Object.values(ch.effect).reduce((a,b) => a+b, 0);
+      if (total > 5) addLog(event.text.substring(0,15) + '... → ' + ch.text.substring(0,12) + ' ✅', 'good');
+      else if (total < -5) addLog(event.text.substring(0,15) + '... → ' + ch.text.substring(0,12) + ' ⚠️', 'bad');
+      else addLog(event.text.substring(0,15) + '... → ' + ch.text.substring(0,12), 'neutral');
+      
+      // Advance years
+      let ended = advanceYears();
+      
+      if (!ended) {
+        // Trigger next event
+        nextEvent();
+      }
+    });
+    choices.appendChild(btn);
+  });
+}
+
+function nextEvent() {
+  let event = getRandomEvent();
+  renderEvent(event);
+}
+
+function startGame(careerKey) {
+  G.career_path = careerKey;
+  G.career_title = CAREERS[careerKey].ladder[0].title;
+  G.wealth = 3000;
+  G.health = 95;
+  G.happiness = 65;
+  G.career = 5;
+  G.family = 80;
+  G.age = 21;
+  G.married = false;
+  G.has_child = false;
+  G.events_done = [];
+  G.year_counter = 0;
+  G.ended = false;
+  G.investments = 0;
+  G.debt = 0;
+  G.house = '租房';
+  
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = '';
+  
+  updateStats();
+  addLog(`🎓 21岁大学毕业，选择了${CAREERS[careerKey].name}作为起点`, 'good');
+  saveGame();
+  
+  // First event
+  nextEvent();
+}
+
+function loadGame() {
+  let d = localStorage.getItem('parallel_life_save');
+  if (!d) {
+    showToast('📭 没有存档，请选择职业开始');
+    return;
+  }
+  G = JSON.parse(d);
+  
+  if (G.ended) {
+    showToast('⚠️ 这个存档的人生已经结束，请重新开始');
+    return;
+  }
+  
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = '';
+  
+  updateStats();
+  addLog('📂 读取存档，继续人生', 'neutral');
+  
+  // Continue from where left off
+  nextEvent();
+}
+
+// ==================== 结局系统 ====================
+function calculateScore() {
+  let score = 0;
+  score += G.wealth / 100;        // 财富分
+  score += G.health * 3;          // 健康分
+  score += G.happiness * 3;       // 幸福分
+  score += G.career * 3;          // 事业分
+  score += G.family * 3;          // 家庭分
+  if (G.married) score += 50;
+  if (G.has_child) score += 50;
+  if (G.house !== '租房') score += 80;
+  if (G.debt < 10000) score += 30;
+  return Math.round(score);
+}
+
+const ENDINGS = [
+  { name: '💰 财富传奇', cond: s => s.wealth >= 40000, score_bonus: 200,
+    desc: '你白手起家，积累了大量财富。在商海浮沉中杀出一条血路，成为人们口中的传奇。但夜深人静时，你偶尔会想——如果当初选了另一条路，会不会更快乐？' },
+  { name: '😊 美满人生', cond: s => s.happiness >= 85 && s.family >= 80, score_bonus: 250,
+    desc: '你没有大富大贵，也没有功成名就，但你的每一天都过得充实而快乐。有爱的人在身边，有喜欢的事可做——这或许就是最好的结局。' },
+  { name: '🏆 事业有成', cond: s => s.career >= 85, score_bonus: 200,
+    desc: '从基层一步步爬到行业顶端，你的专业能力和领导力无人质疑。行业会议上，你是被争相邀请的嘉宾。但为此付出的代价，只有你自己知道。' },
+  { name: '👨‍👩‍👧‍👦 家庭幸福', cond: s => s.family >= 90, score_bonus: 220,
+    desc: '你把大部分精力投入了家庭，看着孩子一天天长大，陪父母走完最后一程。虽然没有惊天动地的成就，但家庭的和睦是你最大的骄傲。' },
+  { name: '🧘 平凡是真', cond: s => true, score_bonus: 150,
+    desc: '你的生活平淡如水，没有大起大落。按时上班下班，周末逛逛菜市场，偶尔和老友喝两杯。这样的生活未必精彩，但胜在安稳。' },
+  { name: '😞 遗憾人生', cond: s => s.wealth < 10000 && s.health < 40 && s.happiness < 40, score_bonus: 0,
+    desc: '回望这一生，太多的"如果当时"。如果当时再努力一点，如果当时做出了不同的选择……但人生没有如果，只有结果。' }
+];
+
+function endGame() {
+  G.ended = true;
+  let score = calculateScore();
+  
+  // Find ending
+  let ending = null;
+  for (let e of ENDINGS) {
+    if (e.cond(G)) { ending = e; break; }
+  }
+  if (!ending) ending = ENDINGS[4]; // default to 平凡是真
+  
+  score += ending.score_bonus;
+  G.score = score;
+  G.ending_type = ending.name;
+  
+  saveGame();
+  
+  // Show ending overlay
+  let card = document.getElementById('ending-card');
+  card.innerHTML = `
+    <h2>${ending.name.split(' ')[1] || ending.name}</h2>
+    <div class="ending-type">${ending.name}</div>
+    <div class="ending-stats">
+      <div>💰 财富<br>¥${G.wealth.toLocaleString()}</div>
+      <div>💪 健康<br>${G.health}</div>
+      <div>😊 幸福<br>${G.happiness}</div>
+      <div>📈 事业<br>${G.career}</div>
+      <div>👨‍👩‍👧 家庭<br>${G.family}</div>
+      <div>🎯 职业<br>${G.career_title}</div>
+    </div>
+    <div class="ending-score">${score}分</div>
+    <div class="ending-desc">${ending.desc}</div>
+    <p style="color:#888;font-size:.85em">享年${G.age}岁 · ${G.married?'已婚':'未婚'}${G.has_child?' · 有子女':''} · ${G.house}</p>
+    <button onclick="restartGame()">🔄 重新开始</button>
+    <button class="secondary" onclick="shareScore()">📤 分享成绩</button>
+  `;
+  document.getElementById('ending-overlay').classList.add('show');
+  
+  addLog(`🏁 人生谢幕 · ${ending.name} · ${score}分`, 'good');
+  // Clear current event display
+  document.getElementById('event-year').textContent = `🏁 ${G.age}岁 · 人生谢幕`;
+  document.getElementById('event-narrative').textContent = ending.desc;
+  document.getElementById('choices').innerHTML = '<button class="choice-btn" onclick="restartGame()">🔄 再来一次</button>';
+}
+
+function restartGame() {
+  document.getElementById('ending-overlay').classList.remove('show');
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = '';
+  document.getElementById('log-list').innerHTML = '';
+  
+  // Reset game state
+  G = {
+    age: 21, wealth: 3000, health: 95, happiness: 65, career: 5, family: 80,
+    career_path: '', career_title: '', married: false, has_child: false,
+    education: '本科', house: '租房', car: false, investments: 0, debt: 0,
+    events_done: [], year_counter: 0, ended: false, ending_type: '', score: 0,
+    current_year_even: false, marriage_age: null
+  };
+}
+
+function shareScore() {
+  let text = `🌌 平行人生\n${G.ending_type}\n得分: ${G.score}分\n享年${G.age}岁 · ${G.career_title}\nhttps://aszxwqaszx.github.io/souluotianxia/game-parallel-life.html`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('📋 已复制分享文字'));
+  } else {
+    showToast('📋 ' + text);
+  }
+}
+
+// ==================== 初始化 ====================
+function initCareerSelect() {
+  let container = document.getElementById('career-select');
+  container.innerHTML = '';
+  for (let [key, c] of Object.entries(CAREERS)) {
+    let btn = document.createElement('button');
+    btn.className = 'career-opt';
+    btn.innerHTML = `<span class="icon">${c.icon}</span><span class="name">${c.name}</span><span class="desc">${c.desc}</span>`;
+    btn.addEventListener('click', () => startGame(key));
+    container.appendChild(btn);
+  }
+}
+
+// Auto-load on startup
+initCareerSelect();
+let saved = localStorage.getItem('parallel_life_save');
+if (saved) {
+  let s = JSON.parse(saved);
+  if (!s.ended) {
+    // Show load option
+    let loadBtn = document.createElement('button');
+    loadBtn.textContent = '📂 继续上次的人生';
+    loadBtn.style.cssText = 'background:linear-gradient(135deg,#4dc9f6,#c44dff);border:none;padding:12px 32px;border-radius:30px;color:#fff;font-size:1em;cursor:pointer;font-family:inherit;font-weight:bold;margin-top:8px';
+    loadBtn.addEventListener('click', loadGame);
+    document.getElementById('start-screen').appendChild(loadBtn);
+  }
+}
+</script>
+</body>
+</html>
