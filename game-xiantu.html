@@ -175,6 +175,31 @@ html, body {
   border-radius: 8px; padding: 6px 16px; font-size: 12px;
   color: #8b949e; z-index: 10; pointer-events: none;
 }
+/* 商店 */
+#shop-modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:100;justify-content:center;align-items:center;
+}
+#shop-inner{
+  background:#161b22;border:1px solid #30363d;border-radius:12px;
+  padding:20px;width:340px;max-height:80vh;overflow-y:auto;
+}
+#shop-inner h2{color:#ffa657;margin:0 0 4px;font-size:18px;}
+#shop-inner button{
+  width:100%;margin-top:10px;padding:8px;background:#21262d;
+  border:1px solid #30363d;border-radius:6px;color:#8b949e;
+  cursor:pointer;font-size:13px;
+}
+#shop-inner button:hover{background:#30363d;color:#f0f6fc;}
+.shop-row{
+  display:flex;align-items:center;gap:8px;padding:8px 6px;
+  border-bottom:1px solid #21262d;cursor:pointer;transition:background 0.2s;
+}
+.shop-row:hover{background:#1c2128;}
+.shop-icon{font-size:18px;width:28px;text-align:center;}
+.shop-name{flex:1;color:#f0f6fc;font-size:13px;}
+.shop-desc{color:#8b949e;font-size:11px;}
+.shop-cost{font-size:12px;font-weight:bold;min-width:50px;text-align:right;}
 </style>
 </head>
 <body>
@@ -239,12 +264,22 @@ html, body {
   <button class="ctrl-btn" id="btn-pause" title="暂停">⏸️</button>
   <button class="ctrl-btn" id="btn-save" title="存档">💾</button>
   <button class="ctrl-btn" id="btn-load" title="读档">📂</button>
+  <button class="ctrl-btn" id="btn-shop" title="商店" onclick="openShop()">🛒</button>
 </div>
 
 <div id="drop-modal">
   <h3>🎉 战利品</h3>
   <div id="drop-items"></div>
   <button onclick="closeDropModal()">收下</button>
+</div>
+
+<div id="shop-modal">
+  <div id="shop-inner">
+    <h2>🛒 神秘商店</h2>
+    <p style="color:#8b949e;font-size:12px;margin:4px 0 10px;">你有 <span id="shop-gold" style="color:#ffa657;font-weight:bold;">0</span> 金币</p>
+    <div id="shop-items"></div>
+    <button onclick="closeShop()">关闭商店</button>
+  </div>
 </div>
 
 <div id="realm-modal">
@@ -334,6 +369,18 @@ const ITEMS = {
   hp_potion:{name:'回血丹',icon:'💊',effect:{hp:50},stackable:true},
   mp_potion:{name:'回气丹',icon:'🧪',effect:{mp:30},stackable:true},
 };
+
+const SHOP=[
+  {id:'hp5',name:'回血丹x5',icon:'💊',cost:50,desc:'恢复50HP',buy(){for(let i=0;i<5;i++)addToInventory({type:'item',...ITEMS.hp_potion,id:'hp_potion'});}},
+  {id:'mp5',name:'回气丹x5',icon:'🧪',cost:40,desc:'恢复30MP',buy(){for(let i=0;i<5;i++)addToInventory({type:'item',...ITEMS.mp_potion,id:'mp_potion'});}},
+  {id:'eqw',name:'随机白装',icon:'⬜',cost:120,desc:'随机白色装备',buy(){var ks=Object.keys(EQUIP_TYPES);addToInventory(genEquip(ks[rand(0,ks.length-1)],0,gs.player.level));}},
+  {id:'eqg',name:'随机绿装',icon:'🟩',cost:350,desc:'随机绿色装备',buy(){var ks=Object.keys(EQUIP_TYPES);addToInventory(genEquip(ks[rand(0,ks.length-1)],1,gs.player.level+3));}},
+  {id:'eqb',name:'随机蓝装',icon:'🟦',cost:900,desc:'随机蓝色装备',buy(){var ks=Object.keys(EQUIP_TYPES);addToInventory(genEquip(ks[rand(0,ks.length-1)],2,gs.player.level+6));}},
+  {id:'atk',name:'攻击强化',icon:'⚔️',cost:500,desc:'永久+5攻击',buy(){gs.player.baseAtk+=5;log('攻击力+5!');}},
+  {id:'def',name:'防御强化',icon:'🛡️',cost:500,desc:'永久+5防御',buy(){gs.player.baseDef+=5;log('防御力+5!');}},
+  {id:'hp',name:'生命强化',icon:'❤️',cost:400,desc:'永久+30最大HP',buy(){gs.player.maxHp+=30;gs.player.hp+=30;log('生命上限+30!');}},
+  {id:'crit',name:'暴击强化',icon:'💥',cost:600,desc:'永久+3%暴击',buy(){gs.player.crit=Math.min(50,gs.player.crit+3);log('暴击率+3%!');}},
+];
 
 // ===== 游戏状态 =====
 let gs = {
@@ -906,7 +953,7 @@ function loadGame(){
     // 补全可能缺失的字段（兼容旧存档）
     var pp=gs.player;
     if(!pp.gold&&pp.gold!==0)pp.gold=0;
-    if(!pp.inventory||!Array.isArray(pp.inventory)||pp.inventory.length===0)pp.inventory=new Array(20).fill(null);
+    if(!pp.inventory||!Array.isArray(pp.inventory)||pp.inventory.length!==20)pp.inventory=new Array(20).fill(null);
     if(!pp.skillCooldowns)pp.skillCooldowns=[0,0,0,0];
     if(!pp.equipment)pp.equipment={weapon:null,helmet:null,armor:null,ring:null,amulet:null,boot:null};
     if(!pp.guaranteeCounters)pp.guaranteeCounters={};
@@ -927,17 +974,51 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 document.getElementById('btn-pause').addEventListener('click',()=>{gs.paused=!gs.paused;document.getElementById('btn-pause').textContent=gs.paused?'▶️':'⏸️';log(gs.paused?'暂停':'继续');});
 document.getElementById('btn-save').addEventListener('click',saveGame);
 document.getElementById('btn-load').addEventListener('click',loadGame);
-document.getElementById('inventory-grid').addEventListener('click',e=>{
-  if(!e.target.classList.contains('inv-slot'))return;
-  const idx=Array.from(e.target.parentElement.children).indexOf(e.target);
-  const item=gs.player.inventory[idx];if(!item)return;
+// 商店
+var shGold=gs.player.gold;
+function openShop(){
+  gs.paused=true;document.getElementById('btn-pause').textContent='▶️';
+  renderShopItems();document.getElementById('shop-modal').style.display='flex';
+}
+function closeShop(){
+  gs.paused=false;document.getElementById('btn-pause').textContent='⏸️';
+  document.getElementById('shop-modal').style.display='none';
+}
+function renderShopItems(){
+  document.getElementById('shop-gold').textContent=gs.player.gold;
+  var c=document.getElementById('shop-items');c.innerHTML='';
+  var p=gs.player;
+  SHOP.forEach(function(it){
+    var row=document.createElement('div');row.className='shop-row';
+    var canBuy=p.gold>=it.cost;
+    row.style.opacity=canBuy?'1':'0.45';
+    row.innerHTML='<span class="shop-icon">'+it.icon+'</span><span class="shop-name">'+it.name+'</span><span class="shop-desc">'+it.desc+'</span><span class="shop-cost" style="color:'+(canBuy?'#3fb950':'#f85149')+'">💰'+it.cost+'</span>';
+    row.addEventListener('click',function(){
+      if(p.gold<it.cost){log('金币不足!','damage');return;}
+      if(!confirm('花费 '+it.cost+' 金币购买 '+it.name+'?'))return;
+      p.gold-=it.cost;it.buy();updateUI();saveGame();renderShopItems();
+    });
+    c.appendChild(row);
+  });
+}
+// inventory click
+var igEl=document.getElementById('inventory-grid');
+igEl.addEventListener('click',function(e){
+  var sl=e.target.closest('.inv-slot');if(!sl)return;
+  var idx=Array.from(sl.parentElement.children).indexOf(sl);
+  var item=gs.player.inventory[idx];if(!item)return;
   if(item.effect){
+    var had=item.effect.hp?item.effect.hp:item.effect.mp?item.effect.mp:0;
     if(item.effect.hp)gs.player.hp=Math.min(gs.player.maxHp,gs.player.hp+item.effect.hp);
     if(item.effect.mp)gs.player.mp=Math.min(gs.player.maxMp,gs.player.mp+item.effect.mp);
-    log(`使用 ${item.name}`);item.count--;
-    if(item.count<=0)gs.player.inventory[idx]=null;
+    log('使用 '+item.name+' +'+had);
+    sl.style.transform='scale(1.25)';sl.style.borderColor='#3fb950';
+    setTimeout(function(){sl.style.transform='';sl.style.borderColor='';},250);
+    item.count--;if(item.count<=0)gs.player.inventory[idx]=null;
   }else if(item.type){
-    const old=gs.player.equipment[item.type];gs.player.equipment[item.type]=item;gs.player.inventory[idx]=old;log(`装备 ${item.name}`);
+    var old=gs.player.equipment[item.type];gs.player.equipment[item.type]=item;gs.player.inventory[idx]=old;
+    log('装备 '+item.name+'!');
+    sl.style.background='rgba(63,185,80,0.35)';setTimeout(function(){sl.style.background='';},400);
   }updateUI();
 });
 
