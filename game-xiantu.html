@@ -892,6 +892,7 @@ function useSkill(idx){
     if(dist(gs.mouse.x,gs.mouse.y,p.x,p.y)<200){p.x=gs.mouse.x;p.y=gs.mouse.y;log('瞬移!');rebuildDecorations();}
     else{log('距离太远');p.mp+=sk.mp;p.skillCooldowns[idx]=0;}
   }
+  updateUI();
 }
 
 function saveGame(){localStorage.setItem('xiantu_save',JSON.stringify(gs));log('存档成功');}
@@ -902,6 +903,16 @@ function loadGame(){
     const rt={keys:gs.keys,mouse:gs.mouse};
     gs=JSON.parse(d);
     gs.keys=rt.keys;gs.mouse=rt.mouse;
+    // 补全可能缺失的字段（兼容旧存档）
+    var pp=gs.player;
+    if(!pp.gold&&pp.gold!==0)pp.gold=0;
+    if(!pp.inventory)pp.inventory=[];
+    if(!pp.skillCooldowns)pp.skillCooldowns=[0,0,0,0];
+    if(!pp.equipment)pp.equipment={weapon:null,helmet:null,armor:null,ring:null,amulet:null,boot:null};
+    if(!pp.guaranteeCounters)pp.guaranteeCounters={};
+    if(!gs.mobs)gs.mobs=[];
+    if(!gs.particles)gs.particles=[];
+    if(!gs.damageNumbers)gs.damageNumbers=[];
     rebuildDecorations();log('读档成功');updateUI();
   }else log('无存档');
 }
