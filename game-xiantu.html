@@ -108,23 +108,8 @@ html, body {
 .log-exp { color: #a371f7; }
 .log-level { color: #ffd700; font-weight: bold; }
 .log-realm { color: #ff69b4; font-weight: bold; }
-#drop-modal {
-  position: fixed; top: 50%; left: calc(50% - 130px);
-  transform: translate(-50%,-50%);
-  background: #0d1117; border: 2px solid #d29922;
-  border-radius: 12px; padding: 16px; min-width: 280px;
-  display: none; z-index: 200; text-align: center;
-  box-shadow: 0 0 40px rgba(210,153,34,0.3);
-}
-#drop-modal.show { display: block; }
-#drop-modal h3 { color: #ffa657; margin-bottom: 10px; }
-#drop-items { margin: 10px 0; }
-.drop-item { padding: 6px; margin: 3px 0; background: #161b22; border-radius: 4px; }
-#drop-modal button {
-  margin-top: 10px; padding: 6px 24px; background: #238636;
-  border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 13px;
-}
-#drop-modal button:hover { background: #2ea043; }
+.ground-drop { position:absolute; font-size:18px; pointer-events:none; z-index:99; transition:transform 0.15s; }
+.ground-drop.pickup-flash { transform:scale(1.5); opacity:0.3; }
 #realm-modal {
   position: fixed; top: 50%; left: calc(50% - 130px);
   transform: translate(-50%,-50%);
@@ -267,12 +252,6 @@ html, body {
   <button class="ctrl-btn" id="btn-shop" title="商店" onclick="openShop()">🛒</button>
 </div>
 
-<div id="drop-modal">
-  <h3>🎉 战利品</h3>
-  <div id="drop-items"></div>
-  <button onclick="closeDropModal()">收下</button>
-</div>
-
 <div id="shop-modal">
   <div id="shop-inner">
     <h2>🛒 神秘商店</h2>
@@ -393,7 +372,7 @@ let gs = {
   },
   mobs:[],particles:[],damageNumbers:[],
   keys:{},mouse:{x:0,y:0,down:false},
-  paused:false,lastAttackTime:0,realmFlash:0,realmParticles:[],
+  paused:false,lastAttackTime:0,realmFlash:0,realmParticles:[],drops:[],
 };
 
 // ===== 工具函数 =====
@@ -467,7 +446,7 @@ function updateUI(){
   });
   const ig=document.getElementById('inventory-grid');ig.innerHTML='';
   for(let i=0;i<20;i++){
-    const sl=document.createElement('div');sl.className='inv-slot';
+    const sl=document.createElement('div');sl.className='inv-slot';sl.setAttribute('data-index',i);
     if(p.inventory[i]){const it=p.inventory[i];sl.textContent=it.icon;
       if(it.quality!==undefined)sl.style.color=QUALITIES[it.quality].color;
       if(it.count>1){const c=document.createElement('span');c.className='item-count';c.textContent=it.count;sl.appendChild(c);}
@@ -688,6 +667,9 @@ function render(){
     ctx.fillText(mob.name,mob.x,mob.y-42);
   }
   
+  // 地面掉落
+  renderDrops();
+  
   // 玩家光晕
   ctx.shadowColor=r.playerGlow;ctx.shadowBlur=15+Math.sin(Date.now()/500)*5;
   
@@ -851,7 +833,7 @@ function update(dt){
         log(`击杀 ${nearest.name}!`,'exp');
         p.exp+=nearest.exp;p.gold+=nearest.gold;p.kills++;
         const drops=processDrop(nearest,nearest.type);
-        if(drops.length)showDropModal(drops);
+        if(drops.length){for(const dr of drops){gs.drops.push({...dr,x:nearest.x+rand(-25,25),y:nearest.y+rand(-25,25),life:450});}}
         checkRealmUp();
         while(p.exp>=expToLv(p.level)){
           p.exp-=expToLv(p.level);p.level++;p.maxHp+=20;p.hp=Math.min(p.hp+20,p.maxHp);
@@ -862,6 +844,10 @@ function update(dt){
       }
     }
   }
+  // auto-pickup ground drops
+  for(let i=gs.drops.length-1;i>=0;i--){if(dist(p.x,p.y,gs.drops[i].x,gs.drops[i].y)<45){collectDrop(gs.drops[i]);gs.drops.splice(i,1);}}
+  // decay old drops
+  for(let i=gs.drops.length-1;i>=0;i--){gs.drops[i].life-=dt;if(gs.drops[i].life<=0)gs.drops.splice(i,1);}
   updateUI();
 }
 
@@ -884,26 +870,9 @@ function closeRealmModal(){
   gs.paused=false;
 }
 
-let pendingDrops=[];
-function showDropModal(drops){
-  pendingDrops=pendingDrops.concat(drops);
-  const md=document.getElementById('drop-modal');
-  const id=document.getElementById('drop-items');id.innerHTML='';
-  for(const dr of drops){
-    const div=document.createElement('div');div.className='drop-item';
-    if(dr.type==='gold')div.innerHTML=`<span style="color:#ffa657">💰 ${dr.amount} 金币</span>`;
-    else if(dr.type==='item')div.innerHTML=`${dr.icon} ${dr.name}`;
-    else if(dr.quality!==undefined)div.innerHTML=`<span style="color:${QUALITIES[dr.quality].color}">${dr.icon} ${QUALITIES[dr.quality].name} ${dr.name}</span>`;
-    id.appendChild(div);
-  }
-  md.classList.add('show');
-}
-function closeDropModal(){
-  document.getElementById('drop-modal').classList.remove('show');
-  for(const dr of pendingDrops){
-    if(dr.type==='gold')gs.player.gold+=dr.amount;
-    else addToInventory(dr);
-  }pendingDrops=[];updateUI();
+function collectDrop(dr){
+  if(dr.type==='gold'){gs.player.gold+=dr.amount;log(`+${dr.amount} 金币`,'drop');return;}
+  addToInventory(dr);
 }
 function addToInventory(item){
   if(item.stackable){const ex=gs.player.inventory.find(i=>i&&i.id===item.id);if(ex){ex.count++;return true;}}
@@ -925,14 +894,17 @@ function useSkill(idx){
   if(p.mp<sk.mp){log('法力不足');return;}
   p.mp-=sk.mp;p.skillCooldowns[idx]=sk.cd;p.attackAnim=8;
   if(sk.damage){
+    var deadMobs=[];
     for(const mob of gs.mobs){
       if(dist(mob.x,mob.y,p.x,p.y)<sk.range){
         mob.hp-=(sk.damage+p.baseAtk);
         log(`${sk.name} → ${mob.name} -${sk.damage+p.baseAtk}`,'damage');
         gs.damageNumbers.push({text:sk.damage+p.baseAtk,x:mob.x,y:mob.y-25,color:'#a371f7',life:35,crit:false});
+        if(mob.hp<=0)deadMobs.push(mob);
         if(!sk.aoe)break;
       }
     }
+    for(var di=0;di<deadMobs.length;di++)processMobKill(deadMobs[di]);
   }
   if(sk.heal){p.hp=Math.min(p.maxHp,p.hp+sk.heal);log(`${sk.name} +${sk.heal} HP`,'heal');gs.damageNumbers.push({text:'+'+sk.heal,x:p.x,y:p.y-25,color:'#3fb950',life:35,crit:false});}
   if(sk.teleport){
@@ -940,6 +912,20 @@ function useSkill(idx){
     else{log('距离太远');p.mp+=sk.mp;p.skillCooldowns[idx]=0;}
   }
   updateUI();
+}
+
+function processMobKill(mob){
+  var p=gs.player;p.exp+=mob.exp;p.gold+=mob.gold;p.kills++;
+  log('击杀 '+mob.name+'!','exp');
+  var drops=processDrop(mob,mob.type);
+  if(drops.length){for(var dk=0;dk<drops.length;dk++){gs.drops.push({...drops[dk],x:mob.x+rand(-25,25),y:mob.y+rand(-25,25),life:450});}}
+  gs.mobs=gs.mobs.filter(function(m){return m.id!==mob.id;});
+  checkRealmUp();
+  while(p.exp>=expToLv(p.level)){
+    p.exp-=expToLv(p.level);p.level++;p.maxHp+=20;p.hp=Math.min(p.hp+20,p.maxHp);
+    p.maxMp+=10;p.mp=Math.min(p.mp+10,p.maxMp);p.baseAtk+=2;p.baseDef+=1;
+    log('⬆️ Lv.'+p.level+'!','level');
+  }
 }
 
 function saveGame(){localStorage.setItem('xiantu_save',JSON.stringify(gs));log('存档成功');}
@@ -953,13 +939,14 @@ function loadGame(){
     // 补全可能缺失的字段（兼容旧存档）
     var pp=gs.player;
     if(!pp.gold&&pp.gold!==0)pp.gold=0;
-    if(!pp.inventory||!Array.isArray(pp.inventory)||pp.inventory.length!==20)pp.inventory=new Array(20).fill(null);
+    if(!pp.inventory||!Array.isArray(pp.inventory)||pp.inventory.length!==20){var oldInv=pp.inventory||[];pp.inventory=new Array(20).fill(null);for(var oi=0;oi<Math.min(oldInv.length,20);oi++)if(oldInv[oi])pp.inventory[oi]=oldInv[oi];}
     if(!pp.skillCooldowns)pp.skillCooldowns=[0,0,0,0];
     if(!pp.equipment)pp.equipment={weapon:null,helmet:null,armor:null,ring:null,amulet:null,boot:null};
     if(!pp.guaranteeCounters)pp.guaranteeCounters={};
     if(!gs.mobs)gs.mobs=[];
     if(!gs.particles)gs.particles=[];
     if(!gs.damageNumbers)gs.damageNumbers=[];
+    if(!gs.drops)gs.drops=[];
     rebuildDecorations();log('读档成功');updateUI();
   }else log('无存档');
 }
@@ -1004,23 +991,29 @@ function renderShopItems(){
 // inventory click
 var igEl=document.getElementById('inventory-grid');
 igEl.addEventListener('click',function(e){
-  var sl=e.target.closest('.inv-slot');if(!sl)return;
-  var idx=Array.from(sl.parentElement.children).indexOf(sl);
+  var sl=e.target.closest&&e.target.closest('.inv-slot')||(e.target.classList&&e.target.classList.contains('inv-slot')?e.target:null);if(!sl)return;
+  var idx=parseInt(sl.getAttribute('data-index'));if(isNaN(idx))return;
   var item=gs.player.inventory[idx];if(!item)return;
   if(item.effect){
     var had=item.effect.hp?item.effect.hp:item.effect.mp?item.effect.mp:0;
     if(item.effect.hp)gs.player.hp=Math.min(gs.player.maxHp,gs.player.hp+item.effect.hp);
     if(item.effect.mp)gs.player.mp=Math.min(gs.player.maxMp,gs.player.mp+item.effect.mp);
     log('使用 '+item.name+' +'+had);
-    sl.style.transform='scale(1.25)';sl.style.borderColor='#3fb950';
-    setTimeout(function(){sl.style.transform='';sl.style.borderColor='';},250);
     item.count--;if(item.count<=0)gs.player.inventory[idx]=null;
+    flashSlot(sl,'#3fb950');
+    updateUI();
   }else if(item.type){
     var old=gs.player.equipment[item.type];gs.player.equipment[item.type]=item;gs.player.inventory[idx]=old;
     log('装备 '+item.name+'!');
-    sl.style.background='rgba(63,185,80,0.35)';setTimeout(function(){sl.style.background='';},400);
-  }updateUI();
+    flashSlot(sl,'rgba(63,185,80,0.5)');
+    updateUI();
+  }
 });
+
+function flashSlot(sl,cl){sl.style.transition='none';sl.style.background=cl;sl.style.transform='scale(1.3)';setTimeout(function(){sl.style.transition='all 0.35s';sl.style.background='';sl.style.transform='';},50);}
+
+// 渲染地面掉落
+function renderDrops(){for(const dr of gs.drops){var a=dr.life>60?1:dr.life/60;ctx.globalAlpha=a;ctx.font='18px Arial';ctx.textAlign='center';var label='';if(dr.type==='gold'){ctx.fillStyle='#ffa657';label='💰+'+dr.amount;}else if(dr.type==='item'){ctx.fillStyle='#f0f6fc';var it=ITEMS[dr.id];label=(it?it.icon:'❓')+' '+dr.name;}else{ctx.fillStyle=QUALITIES[dr.quality].color;label=dr.icon+' '+dr.name;}ctx.fillText(label,dr.x,dr.y-dr.life*0.02);ctx.fillText('⬇',dr.x,dr.y-14-dr.life*0.02);}ctx.globalAlpha=1;}
 
 // 主循环
 let lastTime=0;
