@@ -194,7 +194,7 @@ html, body {
 
 .inv-slot:hover { border-color: #58a6ff; }
 
-.inv-slot .item-count { position: absolute; bottom: 0; right: 1px; font-size: 9px; color: #f0f6fc; }
+.inv-slot .item-count { position: absolute; bottom: 0; right: 1px; font-size: 9px; color: #f0f6fc; pointer-events: none; }
 
 #combat-log {
 
@@ -1991,15 +1991,15 @@ var igEl=document.getElementById('inventory-grid');
 
 igEl.addEventListener('click',function(e){
 
-  var el=e.target;if(el.nodeType===3)el=el.parentElement;
+  var el=e.target;log('[DBG] click tg='+(el.nodeName||'#text')+' cls='+(el.className||''));if(el.nodeType===3)el=el.parentElement;
 
-  var sl=(el.closest&&el.closest('.inv-slot'))||(el.classList&&el.classList.contains('inv-slot')?el:null);if(!sl)return;
+  var sl=(el.closest&&el.closest('.inv-slot'))||(el.classList&&el.classList.contains('inv-slot')?el:null);if(!sl){log('[DBG] no inv-slot found','damage');return;}
 
-  var idx=parseInt(sl.getAttribute('data-index'));if(isNaN(idx))return;
+  var idx=parseInt(sl.getAttribute('data-index'));if(isNaN(idx)){log('[DBG] no data-idx','damage');return;}
 
-  var item=gs.player.inventory[idx];if(!item)return;
+  var item=gs.player.inventory[idx];if(!item){log('[DBG] slot '+idx+' empty','damage');return;}
 
-  var p=gs.player;
+  var p=gs.player;log('[DBG] item: '+item.name+' type='+item.type+' effect='+!!item.effect);
 
   if(item.effect){
 
