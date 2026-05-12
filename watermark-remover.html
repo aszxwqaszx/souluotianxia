@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>水印橡皮擦 | Watermark Eraser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a26;
+      --surface: #1e1e2e;
+      --border: #2a2a3a;
+      --text-primary: #f0f0f5;
+      --text-secondary: #9090a0;
+      --text-muted: #606070;
+      --accent: #00d4aa;
+      --accent-dim: #00d4aa33;
+      --accent-hover: #00ffcc;
+      --danger: #ff4757;
+      --warning: #ffa502;
+      --success: #2ed573;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background texture */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(0,212,170,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(0,212,170,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent) 0%, #00a080 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(0,212,170,0.3);
+    }
+
+    .logo-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .mode-toggle {
+      display: flex;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .mode-btn {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    /* Main layout */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 30px;
+      min-height: calc(100vh - 100px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .panel-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    /* Tool buttons */
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      background: var(--bg-tertiary);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tool-btn:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      transform: translateY(-2px);
+    }
+
+    .tool-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .tool-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Method selector */
+    .method-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .method-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg-tertiary);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .method-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .method-item.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .method-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .method-item.active .method-icon {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .method-info {
+      flex: 1;
+    }
+
+    .method-name {
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .method-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Brush size slider */
+    .slider-group {
+      margin-top: 16px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .slider-label span:last-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,212,170,0.4);
+      transition: transform 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Action buttons */
+    .action-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #00a080 100%);
+      color: var(--bg-primary);
+      box-shadow: 0 4px 16px rgba(0,212,170,0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0,212,170,0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-secondary);
+      border-color: var(--accent);
+    }
+
+    .btn-danger {
+      background: rgba(255,71,87,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(255,71,87,0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(255,71,87,0.2);
+    }
+
+    /* Workspace */
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Upload area */
+    .upload-area {
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 80px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .upload-area:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      transform: scale(1.01);
+    }
+
+    .upload-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-icon svg {
+      width: 36px;
+      height: 36px;
+      color: var(--accent);
+    }
+
+    .upload-text {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .upload-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .upload-hint span {
+      color: var(--accent);
+    }
+
+    /* Canvas container */
+    .canvas-container {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .canvas-container.active {
+      display: block;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .canvas-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .canvas-info span {
+      color: var(--accent);
+    }
+
+    .canvas-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      max-height: 600px;
+      overflow: auto;
+      background: repeating-conic-gradient(var(--bg-tertiary) 0% 25%, var(--bg-secondary) 0% 50%) 50% / 20px 20px;
+    }
+
+    .canvas-wrapper canvas {
+      max-width: 100%;
+      max-height: 100%;
+      cursor: crosshair;
+    }
+
+    .canvas-wrapper.tool-rect canvas {
+      cursor: crosshair;
+    }
+
+    .canvas-wrapper.tool-brush canvas {
+      cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="%2300d4aa" stroke-width="2"/></svg>') 12 12, crosshair;
+    }
+
+    /* Compare slider */
+    .compare-container {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .compare-slider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--accent);
+      cursor: ew-resize;
+      z-index: 10;
+      box-shadow: 0 0 20px rgba(0,212,170,0.5);
+    }
+
+    .compare-slider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 4px 20px rgba(0,212,170,0.4);
+    }
+
+    .compare-slider::after {
+      content: '⟷';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--bg-primary);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .status-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .status-dot.success {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .status-dot.processing {
+      background: var(--warning);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Video progress */
+    .video-progress {
+      display: none;
+      padding: 20px;
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border);
+    }
+
+    .video-progress.active {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, #00ffcc 100%);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      .sidebar {
+        order: 2;
+      }
+
+      .tool-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .method-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10,10,15,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 50;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--bg-tertiary);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">✕</div>
+        <div class="logo-text">水印<span>橡皮擦</span></div>
+      </div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="image">图片</button>
+        <button class="mode-btn" data-mode="video">视频</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-title">选择工具</div>
+        <div class="tool-grid">
+          <button class="tool-btn active" data-tool="brush">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M12 8v8M8 12h8"/>
+            </svg>
+            <span>画笔</span>
+          </button>
+          <button class="tool-btn" data-tool="rect">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+            </svg>
+            <span>矩形</span>
+          </button>
+          <button class="tool-btn" data-tool="lasso">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1.8 0 3.5-.5 5-1.3"/>
+              <circle cx="19" cy="19" r="3"/>
+            </svg>
+            <span>套索</span>
+          </button>
+          <button class="tool-btn" data-tool="magic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M3 21l9-9"/>
+            </svg>
+            <span>魔棒</span>
+          </button>
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>画笔大小</span>
+            <span id="brushSizeValue">30px</span>
+          </div>
+          <input type="range" id="brushSize" min="5" max="100" value="30">
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">去除方式</div>
+        <div class="method-list">
+          <div class="method-item active" data-method="inpaint">
+            <div class="method-icon">✨</div>
+            <div class="method-info">
+              <div class="method-name">智能填充</div>
+              <div class="method-desc">AI内容感知，自动补全</div>
+            </div>
+          </div>
+          <div class="method-item" data-method="blur">
+            <div class="method-icon">🌫️</div>
+            <div class="method-info">
+              <div class="method-name">模糊处理</div>
+              <div class="method-desc">高斯模糊遮盖水印</div>
+            </div>
+          </div>
+          <div class="method-item" data-method="crop">
+            <div class="method-icon">✂️</div>
+            <div class="method-info">
+              <div class="method-name">裁剪边缘</div>
+              <div class="method-desc">裁掉带水印的边缘</div>
+            </div>
+          </div>
+          <div class="method-item" data-method="fill">
+            <div class="method-icon">🎨</div>
+            <div class="method-info">
+              <div class="method-name">颜色填充</div>
+              <div class="method-desc">用纯色覆盖水印</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="panel-title">操作</div>
+        <div class="action-btns">
+          <button class="btn btn-primary" id="processBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+            开始处理
+          </button>
+          <button class="btn btn-secondary" id="previewBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            前后对比
+          </button>
+          <button class="btn btn-secondary" id="downloadBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            下载结果
+          </button>
+          <button class="btn btn-danger" id="clearBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            清除重来
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+        </div>
+        <div class="upload-text">拖拽文件到这里，或点击上传</div>
+        <div class="upload-hint">支持 <span>JPG</span> <span>PNG</span> <span>WebP</span> <span>MP4</span> <span>WebM</span> 格式</div>
+        <input type="file" id="fileInput" accept="image/*,video/*" hidden>
+      </div>
+
+      <div class="canvas-container" id="canvasContainer">
+        <div class="canvas-toolbar">
+          <div class="canvas-info">
+            <span>尺寸: <span id="imgSize">-</span></span>
+            <span>已选区域: <span id="selectedArea">-</span></span>
+          </div>
+          <div class="canvas-actions">
+            <button class="icon-btn" id="undoBtn" title="撤销">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 7v6h6M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+              </svg>
+            </button>
+            <button class="icon-btn" id="redoBtn" title="重做">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 7v6h-6M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
+              </svg>
+            </button>
+            <button class="icon-btn" id="zoomInBtn" title="放大">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
+              </svg>
+            </button>
+            <button class="icon-btn" id="zoomOutBtn" title="缩小">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11h6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper tool-brush" id="canvasWrapper">
+          <canvas id="mainCanvas"></canvas>
+          <canvas id="maskCanvas" style="position: absolute; top: 0; left: 0; pointer-events: none; opacity: 0.5;"></canvas>
+          <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <div class="loading-text">正在处理...</div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-message">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">准备就绪，上传图片或视频开始</span>
+          </div>
+          <span id="modeIndicator">图片模式</span>
+        </div>
+
+        <div class="video-progress" id="videoProgress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">处理中... <span id="frameProgress">0/0</span> 帧</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ==================== State ====================
+    const state = {
+      mode: 'image', // 'image' or 'video'
+      tool: 'brush',
+      method: 'inpaint',
+      brushSize: 30,
+      image: null,
+      video: null,
+      originalImageData: null,
+      processedImageData: null,
+      maskData: null,
+      zoom: 1,
+      history: [],
+      historyIndex: -1,
+      isDrawing: false,
+      lastX: 0,
+      lastY: 0,
+      rectStart: null,
+      lassoPoints: []
+    };
+
+    // ==================== Elements ====================
+    const elements = {
+      uploadArea: document.getElementById('uploadArea'),
+      fileInput: document.getElementById('fileInput'),
+      canvasContainer: document.getElementById('canvasContainer'),
+      mainCanvas: document.getElementById('mainCanvas'),
+      maskCanvas: document.getElementById('maskCanvas'),
+      canvasWrapper: document.getElementById('canvasWrapper'),
+      brushSize: document.getElementById('brushSize'),
+      brushSizeValue: document.getElementById('brushSizeValue'),
+      imgSize: document.getElementById('imgSize'),
+      selectedArea: document.getElementById('selectedArea'),
+      processBtn: document.getElementById('processBtn'),
+      previewBtn: document.getElementById('previewBtn'),
+      downloadBtn: document.getElementById('downloadBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      undoBtn: document.getElementById('undoBtn'),
+      redoBtn: document.getElementById('redoBtn'),
+      zoomInBtn: document.getElementById('zoomInBtn'),
+      zoomOutBtn: document.getElementById('zoomOutBtn'),
+      statusDot: document.getElementById('statusDot'),
+      statusText: document.getElementById('statusText'),
+      modeIndicator: document.getElementById('modeIndicator'),
+      loadingOverlay: document.getElementById('loadingOverlay'),
+      videoProgress: document.getElementById('videoProgress'),
+      progressFill: document.getElementById('progressFill'),
+      frameProgress: document.getElementById('frameProgress')
+    };
+
+    const mainCtx = elements.mainCanvas.getContext('2d');
+    const maskCtx = elements.maskCanvas.getContext('2d');
+
+    // ==================== Event Listeners ====================
+    
+    // Mode toggle
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.mode = btn.dataset.mode;
+        elements.modeIndicator.textContent = state.mode === 'image' ? '图片模式' : '视频模式';
+        elements.uploadArea.querySelector('.upload-hint').innerHTML = state.mode === 'image' 
+          ? '支持 <span>JPG</span> <span>PNG</span> <span>WebP</span> 格式'
+          : '支持 <span>MP4</span> <span>WebM</span> 格式';
+      });
+    });
+
+    // Tool selection
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.tool = btn.dataset.tool;
+        elements.canvasWrapper.className = `canvas-wrapper tool-${state.tool}`;
+      });
+    });
+
+    // Method selection
+    document.querySelectorAll('.method-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.method-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        state.method = item.dataset.method;
+      });
+    });
+
+    // Brush size
+    elements.brushSize.addEventListener('input', (e) => {
+      state.brushSize = parseInt(e.target.value);
+      elements.brushSizeValue.textContent = `${state.brushSize}px`;
+    });
+
+    // File upload
+    elements.uploadArea.addEventListener('click', () => elements.fileInput.click());
+    elements.uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      elements.uploadArea.classList.add('dragover');
+    });
+    elements.uploadArea.addEventListener('dragleave', () => {
+      elements.uploadArea.classList.remove('dragover');
+    });
+    elements.uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      elements.uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+    elements.fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    // Canvas drawing
+    elements.mainCanvas.addEventListener('mousedown', startDrawing);
+    elements.mainCanvas.addEventListener('mousemove', draw);
+    elements.mainCanvas.addEventListener('mouseup', stopDrawing);
+    elements.mainCanvas.addEventListener('mouseleave', stopDrawing);
+
+    // Buttons
+    elements.processBtn.addEventListener('click', processImage);
+    elements.previewBtn.addEventListener('click', togglePreview);
+    elements.downloadBtn.addEventListener('click', downloadResult);
+    elements.clearBtn.addEventListener('click', clearAll);
+    elements.undoBtn.addEventListener('click', undo);
+    elements.redoBtn.addEventListener('click', redo);
+    elements.zoomInBtn.addEventListener('click', () => adjustZoom(1.2));
+    elements.zoomOutBtn.addEventListener('click', () => adjustZoom(0.8));
+
+    // ==================== Functions ====================
+
+    function handleFile(file) {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+
+      if (state.mode === 'image' && !isImage) {
+        alert('请上传图片文件');
+        return;
+      }
+      if (state.mode === 'video' && !isVideo) {
+        alert('请上传视频文件');
+        return;
+      }
+
+      setStatus('processing', '加载文件中...');
+
+      if (isImage) {
+        loadImage(file);
+      } else {
+        loadVideo(file);
+      }
+    }
+
+    function loadImage(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          state.image = img;
+          initCanvas(img.width, img.height);
+          mainCtx.drawImage(img, 0, 0);
+          state.originalImageData = mainCtx.getImageData(0, 0, img.width, img.height);
+          elements.uploadArea.style.display = 'none';
+          elements.canvasContainer.classList.add('active');
+          elements.imgSize.textContent = `${img.width} × ${img.height}`;
+          enableButtons(true);
+          setStatus('success', '图片加载完成，请选择水印区域');
+          saveHistory();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function loadVideo(file) {
+      const url = URL.createObjectURL(file);
+      const video = document.createElement('video');
+      video.onloadedmetadata = () => {
+        state.video = video;
+        initCanvas(video.videoWidth, video.videoHeight);
+        
+        // Draw first frame
+        video.currentTime = 0;
+        video.onseeked = () => {
+          mainCtx.drawImage(video, 0, 0);
+          state.originalImageData = mainCtx.getImageData(0, 0, video.videoWidth, video.videoHeight);
+          elements.uploadArea.style.display = 'none';
+          elements.canvasContainer.classList.add('active');
+          elements.imgSize.textContent = `${video.videoWidth} × ${video.videoHeight}`;
+          elements.videoProgress.classList.add('active');
+          enableButtons(true);
+          setStatus('success', '视频加载完成，请选择水印区域');
+          saveHistory();
+        };
+      };
+      video.src = url;
+      video.load();
+    }
+
+    function initCanvas(width, height) {
+      elements.mainCanvas.width = width;
+      elements.mainCanvas.height = height;
+      elements.maskCanvas.width = width;
+      elements.maskCanvas.height = height;
+      state.zoom = Math.min(1, 800 / Math.max(width, height));
+      applyZoom();
+      
+      // Clear mask
+      maskCtx.clearRect(0, 0, width, height);
+      state.maskData = null;
+    }
+
+    function applyZoom() {
+      elements.mainCanvas.style.transform = `scale(${state.zoom})`;
+      elements.maskCanvas.style.transform = `scale(${state.zoom})`;
+    }
+
+    function adjustZoom(factor) {
+      state.zoom = Math.max(0.1, Math.min(3, state.zoom * factor));
+      applyZoom();
+    }
+
+    function startDrawing(e) {
+      if (!state.image && !state.video) return;
+      state.isDrawing = true;
+      const rect = elements.mainCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / state.zoom;
+      const y = (e.clientY - rect.top) / state.zoom;
+      state.lastX = x;
+      state.lastY = y;
+
+      if (state.tool === 'rect') {
+        state.rectStart = { x, y };
+      } else if (state.tool === 'lasso') {
+        state.lassoPoints = [{ x, y }];
+      } else if (state.tool === 'magic') {
+        magicWandSelect(Math.floor(x), Math.floor(y));
+      } else {
+        drawOnMask(x, y, x, y);
+      }
+    }
+
+    function draw(e) {
+      if (!state.isDrawing) return;
+      const rect = elements.mainCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / state.zoom;
+      const y = (e.clientY - rect.top) / state.zoom;
+
+      if (state.tool === 'rect' && state.rectStart) {
+        // Show rectangle preview
+        maskCtx.clearRect(0, 0, elements.maskCanvas.width, elements.maskCanvas.height);
+        maskCtx.fillStyle = 'rgba(0, 212, 170, 0.4)';
+        maskCtx.strokeStyle = '#00d4aa';
+        maskCtx.lineWidth = 2;
+        const rx = Math.min(state.rectStart.x, x);
+        const ry = Math.min(state.rectStart.y, y);
+        const rw = Math.abs(x - state.rectStart.x);
+        const rh = Math.abs(y - state.rectStart.y);
+        maskCtx.fillRect(rx, ry, rw, rh);
+        maskCtx.strokeRect(rx, ry, rw, rh);
+        elements.selectedArea.textContent = `${Math.round(rw)} × ${Math.round(rh)}`;
+      } else if (state.tool === 'lasso') {
+        state.lassoPoints.push({ x, y });
+        maskCtx.clearRect(0, 0, elements.maskCanvas.width, elements.maskCanvas.height);
+        maskCtx.fillStyle = 'rgba(0, 212, 170, 0.4)';
+        maskCtx.strokeStyle = '#00d4aa';
+        maskCtx.lineWidth = 2;
+        maskCtx.beginPath();
+        maskCtx.moveTo(state.lassoPoints[0].x, state.lassoPoints[0].y);
+        state.lassoPoints.forEach(p => maskCtx.lineTo(p.x, p.y));
+        maskCtx.closePath();
+        maskCtx.fill();
+        maskCtx.stroke();
+      } else if (state.tool === 'brush') {
+        drawOnMask(state.lastX, state.lastY, x, y);
+        state.lastX = x;
+        state.lastY = y;
+      }
+    }
+
+    function stopDrawing(e) {
+      if (!state.isDrawing) return;
+      state.isDrawing = false;
+
+      if (state.tool === 'rect' && state.rectStart) {
+        const rect = elements.mainCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / state.zoom;
+        const y = (e.clientY - rect.top) / state.zoom;
+        const rx = Math.min(state.rectStart.x, x);
+        const ry = Math.min(state.rectStart.y, y);
+        const rw = Math.abs(x - state.rectStart.x);
+        const rh = Math.abs(y - state.rectStart.y);
+        
+        // Save mask
+        state.maskData = maskCtx.getImageData(0, 0, elements.maskCanvas.width, elements.maskCanvas.height);
+        state.rectStart = null;
+        saveHistory();
+      } else if (state.tool === 'lasso' && state.lassoPoints.length > 2) {
+        state.maskData = maskCtx.getImageData(0, 0, elements.maskCanvas.width, elements.maskCanvas.height);
+        state.lassoPoints = [];
+        saveHistory();
+      } else if (state.tool === 'brush') {
+        state.maskData = maskCtx.getImageData(0, 0, elements.maskCanvas.width, elements.maskCanvas.height);
+        saveHistory();
+      }
+    }
+
+    function drawOnMask(x1, y1, x2, y2) {
+      maskCtx.strokeStyle = 'rgba(0, 212, 170, 0.8)';
+      maskCtx.lineWidth = state.brushSize;
+      maskCtx.lineCap = 'round';
+      maskCtx.lineJoin = 'round';
+      maskCtx.beginPath();
+      maskCtx.moveTo(x1, y1);
+      maskCtx.lineTo(x2, y2);
+      maskCtx.stroke();
+
+      // Also fill with semi-transparent
+      maskCtx.globalCompositeOperation = 'source-over';
+      const dist = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+      const steps = Math.ceil(dist / 5);
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const cx = x1 + (x2 - x1) * t;
+        const cy = y1 + (y2 - y1) * t;
+        maskCtx.fillStyle = 'rgba(0, 212, 170, 0.3)';
+        maskCtx.beginPath();
+        maskCtx.arc(cx, cy, state.brushSize / 2, 0, Math.PI * 2);
+        maskCtx.fill();
+      }
+    }
+
+    function magicWandSelect(startX, startY) {
+      // Flood fill based on color similarity
+      const imageData = mainCtx.getImageData(0, 0, elements.mainCanvas.width, elements.mainCanvas.height);
+      const data = imageData.data;
+      const width = elements.mainCanvas.width;
+      const height = elements.mainCanvas.height;
+      const tolerance = 30;
+      
+      const startIdx = (startY * width + startX) * 4;
+      const startR = data[startIdx];
+      const startG = data[startIdx + 1];
+      const startB = data[startIdx + 2];
+      
+      const visited = new Set();
+      const stack = [[startX, startY]];
+      const maskPixels = [];
+      
+      while (stack.length > 0 && maskPixels.length < 100000) {
+        const [x, y] = stack.pop();
+        const key = `${x},${y}`;
+        if (visited.has(key)) continue;
+        if (x < 0 || x >= width || y < 0 || y >= height) continue;
+        
+        const idx = (y * width + x) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        
+        const diff = Math.sqrt((r - startR) ** 2 + (g - startG) ** 2 + (b - startB) ** 2);
+        if (diff <= tolerance) {
+          visited.add(key);
+          maskPixels.push([x, y]);
+          stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+        }
+      }
+      
+      // Draw mask
+      maskCtx.clearRect(0, 0, width, height);
+      maskCtx.fillStyle = 'rgba(0, 212, 170, 0.4)';
+      maskPixels.forEach(([x, y]) => {
+        maskCtx.fillRect(x, y, 1, 1);
+      });
+      
+      state.maskData = maskCtx.getImageData(0, 0, width, height);
+      elements.selectedArea.textContent = `${maskPixels.length} 像素`;
+      saveHistory();
+    }
+
+    function processImage() {
+      if (!state.maskData) {
+        alert('请先选择要去除的水印区域');
+        return;
+      }
+
+      setStatus('processing', '正在处理...');
+      elements.loadingOverlay.classList.add('active');
+
+      setTimeout(() => {
+        const method = state.method;
+        const width = elements.mainCanvas.width;
+        const height = elements.mainCanvas.height;
+        const srcData = mainCtx.getImageData(0, 0, width, height);
+        const result = new ImageData(new Uint8ClampedArray(srcData.data), width, height);
+        const mask = state.maskData.data;
+
+        if (method === 'inpaint') {
+          inpaint(result, mask, width, height);
+        } else if (method === 'blur') {
+          applyBlur(result, mask, width, height);
+        } else if (method === 'crop') {
+          cropEdges(result, mask, width, height);
+        } else if (method === 'fill') {
+          fillColor(result, mask, width, height);
+        }
+
+        mainCtx.putImageData(result, 0, 0);
+        state.processedImageData = result;
+        elements.previewBtn.disabled = false;
+        elements.downloadBtn.disabled = false;
+        
+        elements.loadingOverlay.classList.remove('active');
+        setStatus('success', '处理完成！');
+        saveHistory();
+      }, 100);
+    }
+
+    function inpaint(imageData, mask, width, height) {
+      // Content-aware fill algorithm
+      const data = imageData.data;
+      const iterations = 10;
+      
+      for (let iter = 0; iter < iterations; iter++) {
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+            const maskVal = mask[idx + 3];
+            
+            if (maskVal > 128) {
+              // Sample from surrounding pixels
+              let r = 0, g = 0, b = 0, count = 0;
+              const radius = 3 + iter;
+              
+              for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                  const nx = x + dx;
+                  const ny = y + dy;
+                  if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                    const nidx = (ny * width + nx) * 4;
+                    const nMaskVal = mask[nidx + 3];
+                    if (nMaskVal <= 128) {
+                      const dist = Math.sqrt(dx * dx + dy * dy);
+                      const weight = 1 / (1 + dist);
+                      r += data[nidx] * weight;
+                      g += data[nidx + 1] * weight;
+                      b += data[nidx + 2] * weight;
+                      count += weight;
+                    }
+                  }
+                }
+              }
+              
+              if (count > 0) {
+                data[idx] = Math.round(r / count);
+                data[idx + 1] = Math.round(g / count);
+                data[idx + 2] = Math.round(b / count);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function applyBlur(imageData, mask, width, height) {
+      const data = imageData.data;
+      const radius = 15;
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          if (mask[idx + 3] > 128) {
+            let r = 0, g = 0, b = 0, count = 0;
+            
+            for (let dy = -radius; dy <= radius; dy++) {
+              for (let dx = -radius; dx <= radius; dx++) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                  const nidx = (ny * width + nx) * 4;
+                  const weight = Math.exp(-(dx * dx + dy * dy) / (2 * radius * radius / 3));
+                  r += data[nidx] * weight;
+                  g += data[nidx + 1] * weight;
+                  b += data[nidx + 2] * weight;
+                  count += weight;
+                }
+              }
+            }
+            
+            data[idx] = Math.round(r / count);
+            data[idx + 1] = Math.round(g / count);
+            data[idx + 2] = Math.round(b / count);
+          }
+        }
+      }
+    }
+
+    function cropEdges(imageData, mask, width, height) {
+      // Find bounds of masked area and suggest crop
+      let minX = width, maxX = 0, minY = height, maxY = 0;
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          if (mask[idx + 3] > 128) {
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      
+      // Fill the region with edge colors
+      const data = imageData.data;
+      const topColor = getEdgeColor(data, width, height, 'top', minY);
+      const bottomColor = getEdgeColor(data, width, height, 'bottom', maxY);
+      const leftColor = getEdgeColor(data, width, height, 'left', minX);
+      const rightColor = getEdgeColor(data, width, height, 'right', maxX);
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          if (mask[idx + 3] > 128) {
+            // Use nearest edge color
+            const distTop = y;
+            const distBottom = height - y;
+            const distLeft = x;
+            const distRight = width - x;
+            const minDist = Math.min(distTop, distBottom, distLeft, distRight);
+            
+            let color;
+            if (minDist === distTop) color = topColor;
+            else if (minDist === distBottom) color = bottomColor;
+            else if (minDist === distLeft) color = leftColor;
+            else color = rightColor;
+            
+            data[idx] = color.r;
+            data[idx + 1] = color.g;
+            data[idx + 2] = color.b;
+          }
+        }
+      }
+    }
+
+    function getEdgeColor(data, width, height, edge, bound) {
+      let r = 0, g = 0, b = 0, count = 0;
+      
+      if (edge === 'top') {
+        for (let x = 0; x < width; x++) {
+          const idx = Math.max(0, bound - 10) * width * 4 + x * 4;
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count++;
+        }
+      } else if (edge === 'bottom') {
+        for (let x = 0; x < width; x++) {
+          const idx = Math.min(height - 1, bound + 10) * width * 4 + x * 4;
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count++;
+        }
+      } else if (edge === 'left') {
+        for (let y = 0; y < height; y++) {
+          const idx = y * width * 4 + Math.max(0, bound - 10) * 4;
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count++;
+        }
+      } else {
+        for (let y = 0; y < height; y++) {
+          const idx = y * width * 4 + Math.min(width - 1, bound + 10) * 4;
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count++;
+        }
+      }
+      
+      return { r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) };
+    }
+
+    function fillColor(imageData, mask, width, height) {
+      const data = imageData.data;
+      // Use average color of image
+      let r = 0, g = 0, b = 0, count = 0;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        if (mask[i + 3] <= 128) {
+          r += data[i];
+          g += data[i + 1];
+          b += data[i + 2];
+          count++;
+        }
+      }
+      
+      r = Math.round(r / count);
+      g = Math.round(g / count);
+      b = Math.round(b / count);
+      
+      for (let i = 0; i < data.length; i += 4) {
+        if (mask[i + 3] > 128) {
+          data[i] = r;
+          data[i + 1] = g;
+          data[i + 2] = b;
+        }
+      }
+    }
+
+    let showingOriginal = false;
+    function togglePreview() {
+      if (!state.originalImageData || !state.processedImageData) return;
+      
+      showingOriginal = !showingOriginal;
+      if (showingOriginal) {
+        mainCtx.putImageData(state.originalImageData, 0, 0);
+        elements.previewBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          查看结果
+        `;
+      } else {
+        mainCtx.putImageData(state.processedImageData, 0, 0);
+        elements.previewBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          前后对比
+        `;
+      }
+    }
+
+    function downloadResult() {
+      const link = document.createElement('a');
+      link.download = `watermark-removed-${Date.now()}.png`;
+      link.href = elements.mainCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function clearAll() {
+      state.image = null;
+      state.video = null;
+      state.originalImageData = null;
+      state.processedImageData = null;
+      state.maskData = null;
+      state.history = [];
+      state.historyIndex = -1;
+      
+      mainCtx.clearRect(0, 0, elements.mainCanvas.width, elements.mainCanvas.height);
+      maskCtx.clearRect(0, 0, elements.maskCanvas.width, elements.maskCanvas.height);
+      
+      elements.uploadArea.style.display = 'block';
+      elements.canvasContainer.classList.remove('active');
+      elements.videoProgress.classList.remove('active');
+      elements.fileInput.value = '';
+      enableButtons(false);
+      elements.previewBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        前后对比
+      `;
+      showingOriginal = false;
+      setStatus('', '准备就绪，上传图片或视频开始');
+    }
+
+    function enableButtons(enabled) {
+      elements.processBtn.disabled = !enabled;
+      elements.previewBtn.disabled = !enabled;
+      elements.downloadBtn.disabled = !enabled;
+    }
+
+    function setStatus(type, message) {
+      elements.statusDot.className = 'status-dot ' + type;
+      elements.statusText.textContent = message;
+    }
+
+    function saveHistory() {
+      const historyState = {
+        image: mainCtx.getImageData(0, 0, elements.mainCanvas.width, elements.mainCanvas.height),
+        mask: state.maskData ? maskCtx.getImageData(0, 0, elements.maskCanvas.width, elements.maskCanvas.height) : null
+      };
+      
+      // Remove future states if we're not at the end
+      state.history = state.history.slice(0, state.historyIndex + 1);
+      state.history.push(historyState);
+      state.historyIndex = state.history.length - 1;
+      
+      // Limit history size
+      if (state.history.length > 20) {
+        state.history.shift();
+        state.historyIndex--;
+      }
+    }
+
+    function undo() {
+      if (state.historyIndex > 0) {
+        state.historyIndex--;
+        restoreHistory();
+      }
+    }
+
+    function redo() {
+      if (state.historyIndex < state.history.length - 1) {
+        state.historyIndex++;
+        restoreHistory();
+      }
+    }
+
+    function restoreHistory() {
+      const historyState = state.history[state.historyIndex];
+      mainCtx.putImageData(historyState.image, 0, 0);
+      if (historyState.mask) {
+        maskCtx.putImageData(historyState.mask, 0, 0);
+        state.maskData = historyState.mask;
+      } else {
+        maskCtx.clearRect(0, 0, elements.maskCanvas.width, elements.maskCanvas.height);
+        state.maskData = null;
+      }
+    }
+  </script>
+</body>
+</html>
