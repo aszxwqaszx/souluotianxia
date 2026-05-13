@@ -1274,27 +1274,45 @@
       saveHistory();
     }
 
-    function processImage() {
+    // Yield to browser every CHUNK_SIZE pixels
+    const CHUNK_SIZE = 5000;
+
+    function yieldToBrowser() {
+      return new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    function updateProgress(done, total, label) {
+      const pct = Math.round((done / total) * 100);
+      setStatus('processing', label + ' ' + done + '/' + total + ' (' + pct + '%)');
+    }
+
+    async function processImage() {
       if (!state.maskData) {
         alert('请先选择要去除的水印区域');
         return;
       }
 
-      setStatus('processing', '正在处理...');
-      elements.loadingOverlay.classList.add('active');
+      const width = elements.mainCanvas.width;
+      const height = elements.mainCanvas.height;
+      const totalPixels = width * height;
+      const method = state.method;
 
-      setTimeout(() => {
-        const method = state.method;
-        const width = elements.mainCanvas.width;
-        const height = elements.mainCanvas.height;
+      if ((method === 'inpaint' || method === 'blur') && totalPixels > 2000000) {
+        setStatus('processing', '大图优化中，请稍候...');
+      }
+
+      elements.loadingOverlay.classList.add('active');
+      elements.processBtn.disabled = true;
+
+      try {
         const srcData = mainCtx.getImageData(0, 0, width, height);
         const result = new ImageData(new Uint8ClampedArray(srcData.data), width, height);
         const mask = state.maskData.data;
 
         if (method === 'inpaint') {
-          inpaint(result, mask, width, height);
+          await inpaintAsync(result, mask, width, height);
         } else if (method === 'blur') {
-          applyBlur(result, mask, width, height);
+          await applyBlurAsync(result, mask, width, height);
         } else if (method === 'crop') {
           cropEdges(result, mask, width, height);
         } else if (method === 'fill') {
@@ -1305,89 +1323,134 @@
         state.processedImageData = result;
         elements.previewBtn.disabled = false;
         elements.downloadBtn.disabled = false;
-        
-        elements.loadingOverlay.classList.remove('active');
         setStatus('success', '处理完成！');
         saveHistory();
-      }, 100);
-    }
-
-    function inpaint(imageData, mask, width, height) {
-      // Content-aware fill algorithm
-      const data = imageData.data;
-      const iterations = 10;
-      
-      for (let iter = 0; iter < iterations; iter++) {
-        for (let y = 0; y < height; y++) {
-          for (let x = 0; x < width; x++) {
-            const idx = (y * width + x) * 4;
-            const maskVal = mask[idx + 3];
-            
-            if (maskVal > 128) {
-              // Sample from surrounding pixels
-              let r = 0, g = 0, b = 0, count = 0;
-              const radius = 3 + iter;
-              
-              for (let dy = -radius; dy <= radius; dy++) {
-                for (let dx = -radius; dx <= radius; dx++) {
-                  const nx = x + dx;
-                  const ny = y + dy;
-                  if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    const nidx = (ny * width + nx) * 4;
-                    const nMaskVal = mask[nidx + 3];
-                    if (nMaskVal <= 128) {
-                      const dist = Math.sqrt(dx * dx + dy * dy);
-                      const weight = 1 / (1 + dist);
-                      r += data[nidx] * weight;
-                      g += data[nidx + 1] * weight;
-                      b += data[nidx + 2] * weight;
-                      count += weight;
-                    }
-                  }
-                }
-              }
-              
-              if (count > 0) {
-                data[idx] = Math.round(r / count);
-                data[idx + 1] = Math.round(g / count);
-                data[idx + 2] = Math.round(b / count);
-              }
-            }
-          }
-        }
+      } catch (e) {
+        setStatus('', '处理出错，请重试');
+        console.error(e);
+      } finally {
+        elements.loadingOverlay.classList.remove('active');
+        elements.processBtn.disabled = false;
       }
     }
 
-    function applyBlur(imageData, mask, width, height) {
-      const data = imageData.data;
-      const radius = 15;
-      
+    // Find all masked pixel positions (returns flat indices)
+    function findMaskedPixels(mask, width, height) {
+      const pixels = [];
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           const idx = (y * width + x) * 4;
-          if (mask[idx + 3] > 128) {
-            let r = 0, g = 0, b = 0, count = 0;
-            
-            for (let dy = -radius; dy <= radius; dy++) {
-              for (let dx = -radius; dx <= radius; dx++) {
-                const nx = x + dx;
-                const ny = y + dy;
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                  const nidx = (ny * width + nx) * 4;
-                  const weight = Math.exp(-(dx * dx + dy * dy) / (2 * radius * radius / 3));
-                  r += data[nidx] * weight;
-                  g += data[nidx + 1] * weight;
-                  b += data[nidx + 2] * weight;
-                  count += weight;
-                }
-              }
+          if (mask[idx + 3] > 128) pixels.push({ x, y, idx });
+        }
+      }
+      return pixels;
+    }
+
+    // Sample color from non-masked neighbors (fast, fixed radius)
+    function sampleNeighbor(data, mask, x, y, width, height) {
+      // Search in expanding rings until we find non-masked pixels
+      for (let r = 1; r <= 20; r++) {
+        let sr = 0, sg = 0, sb = 0, sc = 0;
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            // Only check the outer ring
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+            const nidx = (ny * width + nx) * 4;
+            if (mask[nidx + 3] <= 128) {
+              sr += data[nidx];
+              sg += data[nidx + 1];
+              sb += data[nidx + 2];
+              sc++;
             }
-            
-            data[idx] = Math.round(r / count);
-            data[idx + 1] = Math.round(g / count);
-            data[idx + 2] = Math.round(b / count);
           }
         }
+        if (sc >= 3) {
+          return { r: Math.round(sr / sc), g: Math.round(sg / sc), b: Math.round(sb / sc) };
+        }
+      }
+      return { r: 128, g: 128, b: 128 }; // fallback grey
+    }
+
+    async function inpaintAsync(imageData, mask, width, height) {
+      const data = imageData.data;
+      const masked = findMaskedPixels(mask, width, height);
+
+      if (masked.length === 0) {
+        setStatus('success', '未检测到水印区域');
+        return;
+      }
+
+      updateProgress(0, masked.length, '智能填充中');
+
+      // Process in sorted order (from edges inward for better results)
+      // Sort by distance to nearest non-masked pixel (approximate by position)
+      // Simpler: just process in batches with yield
+      for (let i = 0; i < masked.length; i += CHUNK_SIZE) {
+        const end = Math.min(i + CHUNK_SIZE, masked.length);
+        for (let j = i; j < end; j++) {
+          const { x, y, idx } = masked[j];
+          const color = sampleNeighbor(data, mask, x, y, width, height);
+          data[idx] = color.r;
+          data[idx + 1] = color.g;
+          data[idx + 2] = color.b;
+          // Mark this pixel as "filled" in the mask so neighbors can use it
+          mask[idx + 3] = 64; // half-filled, still usable for sampling
+        }
+
+        // Update progress and yield to browser every chunk
+        if (i % (CHUNK_SIZE * 5) === 0 || end === masked.length) {
+          updateProgress(end, masked.length, '智能填充');
+        }
+        await yieldToBrowser();
+      }
+
+      // Restore mask alpha for display
+      for (const { idx } of masked) {
+        mask[idx + 3] = 128;
+      }
+    }
+
+    async function applyBlurAsync(imageData, mask, width, height) {
+      const data = imageData.data;
+      const masked = findMaskedPixels(mask, width, height);
+
+      if (masked.length === 0) return;
+
+      updateProgress(0, masked.length, '模糊处理中');
+      const radius = 10;
+
+      for (let i = 0; i < masked.length; i += CHUNK_SIZE) {
+        const end = Math.min(i + CHUNK_SIZE, masked.length);
+        for (let j = i; j < end; j++) {
+          const { x, y, idx } = masked[j];
+          let sr = 0, sg = 0, sb = 0, sc = 0;
+
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+              const nidx = (ny * width + nx) * 4;
+              const w = 1;
+              sr += data[nidx] * w;
+              sg += data[nidx + 1] * w;
+              sb += data[nidx + 2] * w;
+              sc += w;
+            }
+          }
+
+          data[idx] = Math.round(sr / sc);
+          data[idx + 1] = Math.round(sg / sc);
+          data[idx + 2] = Math.round(sb / sc);
+        }
+
+        if (i % (CHUNK_SIZE * 3) === 0 || end === masked.length) {
+          updateProgress(end, masked.length, '模糊处理');
+        }
+        await yieldToBrowser();
       }
     }
 
