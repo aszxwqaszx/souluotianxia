@@ -868,8 +868,10 @@
         </div>
 
         <div class="canvas-wrapper tool-brush" id="canvasWrapper">
+        <div id="canvasInner" style="position: relative; display: inline-block; line-height: 0;">
           <canvas id="mainCanvas"></canvas>
           <canvas id="maskCanvas" style="position: absolute; top: 0; left: 0; pointer-events: none; opacity: 0.5;"></canvas>
+        </div>
           <div class="loading-overlay" id="loadingOverlay">
             <div class="spinner"></div>
             <div class="loading-text">正在处理...</div>
@@ -1075,8 +1077,7 @@
         state.video = video;
         initCanvas(video.videoWidth, video.videoHeight);
         
-        // Draw first frame
-        video.currentTime = 0;
+        // Draw first frame - MUST set onseeked BEFORE currentTime
         video.onseeked = () => {
           mainCtx.drawImage(video, 0, 0);
           state.originalImageData = mainCtx.getImageData(0, 0, video.videoWidth, video.videoHeight);
