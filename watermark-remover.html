@@ -1077,7 +1077,7 @@
         state.video = video;
         initCanvas(video.videoWidth, video.videoHeight);
         
-        // Draw first frame - MUST set onseeked BEFORE currentTime
+        // Draw first frame - set onseeked BEFORE triggering seek
         video.onseeked = () => {
           mainCtx.drawImage(video, 0, 0);
           state.originalImageData = mainCtx.getImageData(0, 0, video.videoWidth, video.videoHeight);
@@ -1089,6 +1089,7 @@
           setStatus('success', '视频加载完成，请选择水印区域');
           saveHistory();
         };
+        video.currentTime = 0;
       };
       video.src = url;
       video.load();
