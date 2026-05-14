@@ -1329,49 +1329,51 @@
       }
     }
 
-    // Auto-detect watermark areas using edge detection + corner heuristics
+    // Auto-detect watermarks: frequency separation on watermark-prone zones only
     function autoDetectWatermark(imageData, width, height) {
       const data = imageData.data;
       const maskData = new ImageData(width, height);
       const mask = maskData.data;
-      const threshold = 25;
-      const skip = 3;
+      const blurR = 5; // small blur = text-scale detection
+      const threshold = 20; // difference threshold per channel
       
-      // Edge detection: find high-contrast areas (likely text/logos)
-      for (let y = 1; y < height - 1; y += skip) {
-        for (let x = 1; x < width - 1; x += skip) {
-          const idx = (y * width + x) * 4;
-          const idxL = (y * width + (x - 1)) * 4;
-          const idxT = ((y - 1) * width + x) * 4;
-          
-          const dr = Math.abs(data[idx] - data[idxL]);
-          const dg = Math.abs(data[idx + 1] - data[idxL + 1]);
-          const db = Math.abs(data[idx + 2] - data[idxL + 2]);
-          const d2 = Math.abs(data[idx] - data[idxT]) + Math.abs(data[idx + 1] - data[idxT + 1]) + Math.abs(data[idx + 2] - data[idxT + 2]);
-          
-          if (dr + dg + db > threshold * 3 || d2 > threshold * 3) {
-            for (let dy = 0; dy < skip && y + dy < height; dy++) {
-              for (let dx = 0; dx < skip && x + dx < width; dx++) {
-                const m = ((y + dy) * width + (x + dx)) * 4;
-                mask[m + 3] = 255;
+      // Only scan zones where watermarks typically appear
+      const scanZones = [
+        { y1: Math.floor(height * 0.58), y2: height, x1: 0, x2: width },       // bottom 42%
+        { y1: 0, y2: Math.floor(height * 0.1), x1: 0, x2: width },              // top 10%
+        { y1: 0, y2: Math.floor(height * 0.15), x1: 0, x2: Math.floor(width * 0.2) },  // top-left
+        { y1: 0, y2: Math.floor(height * 0.15), x1: Math.floor(width * 0.8), x2: width } // top-right
+      ];
+      
+      for (const zone of scanZones) {
+        for (let y = zone.y1; y < zone.y2; y++) {
+          for (let x = zone.x1; x < zone.x2; x++) {
+            // Compute local average
+            let sr = 0, sg = 0, sb = 0, sc = 0;
+            for (let dy = -blurR; dy <= blurR; dy++) {
+              for (let dx = -blurR; dx <= blurR; dx++) {
+                const nx = x + dx, ny = y + dy;
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+                const j = (ny * width + nx) * 4;
+                sr += data[j]; sg += data[j+1]; sb += data[j+2]; sc++;
+              }
+            }
+            // Compare pixel to local average
+            const i = (y * width + x) * 4;
+            if (Math.abs(data[i] - sr/sc) + Math.abs(data[i+1] - sg/sc) + Math.abs(data[i+2] - sb/sc) > threshold * 3) {
+              // Mark as potential watermark + small dilation
+              for (let dy = -2; dy <= 2; dy++) {
+                for (let dx = -2; dx <= 2; dx++) {
+                  const nx = x + dx, ny = y + dy;
+                  if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                    mask[(ny * width + nx) * 4 + 3] = 255;
+                  }
+                }
               }
             }
           }
         }
       }
-      
-      // Additional: mark corners (common watermark positions)
-      const cw = Math.floor(width * 0.3), ch = Math.floor(height * 0.3);
-      for (let y = height - ch; y < height; y++)
-        for (let x = width - cw; x < width; x++)
-          mask[(y * width + x) * 4 + 3] = 255;
-      for (let y = height - ch; y < height; y++)
-        for (let x = 0; x < cw; x++)
-          mask[(y * width + x) * 4 + 3] = 255;
-      for (let y = 0; y < ch; y++)
-        for (let x = width - cw; x < width; x++)
-          mask[(y * width + x) * 4 + 3] = 255;
-      
       return maskData;
     }
 
@@ -1387,15 +1389,13 @@
       return pixels;
     }
 
-    // Sample color from non-masked neighbors (unlimited search radius)
-    function sampleNeighbor(data, mask, x, y, width, height) {
-      const MAX_RADIUS = Math.max(width, height);
-      // Search in expanding rings until we find non-masked pixels
-      for (let r = 1; r <= MAX_RADIUS; r++) {
+    // Sample color from nearest non-masked neighbors within bounded radius
+    function sampleNeighbor(data, mask, x, y, width, height, maxRadius) {
+      if (!maxRadius) maxRadius = 60;
+      for (let r = 1; r <= maxRadius; r++) {
         let sr = 0, sg = 0, sb = 0, sc = 0;
         for (let dy = -r; dy <= r; dy++) {
           for (let dx = -r; dx <= r; dx++) {
-            // Only check the outer ring
             if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
             const nx = x + dx;
             const ny = y + dy;
@@ -1413,45 +1413,52 @@
           return { r: Math.round(sr / sc), g: Math.round(sg / sc), b: Math.round(sb / sc) };
         }
       }
-      return { r: 128, g: 128, b: 128 }; // fallback grey
+      return null; // No unmasked neighbors within range
     }
 
     async function inpaintAsync(imageData, mask, width, height) {
       const data = imageData.data;
-      const masked = findMaskedPixels(mask, width, height);
-
-      if (masked.length === 0) {
-        setStatus('success', '未检测到水印区域');
-        return;
-      }
-
-      updateProgress(0, masked.length, '智能填充中');
-
-      // Process in sorted order (from edges inward for better results)
-      // Sort by distance to nearest non-masked pixel (approximate by position)
-      // Simpler: just process in batches with yield
-      for (let i = 0; i < masked.length; i += CHUNK_SIZE) {
-        const end = Math.min(i + CHUNK_SIZE, masked.length);
-        for (let j = i; j < end; j++) {
-          const { x, y, idx } = masked[j];
-          const color = sampleNeighbor(data, mask, x, y, width, height);
-          data[idx] = color.r;
-          data[idx + 1] = color.g;
-          data[idx + 2] = color.b;
-          // Mark this pixel as "filled" in the mask so neighbors can use it
-          mask[idx + 3] = 64; // half-filled, still usable for sampling
+      const MAX_RADIUS = 60;
+      const MAX_PASSES = 40;
+      
+      updateProgress(0, 1, '智能填充准备中');
+      
+      for (let pass = 0; pass < MAX_PASSES; pass++) {
+        // Collect currently-masked pixels
+        const toProcess = [];
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+            if (mask[idx + 3] > 128) toProcess.push({ x, y, idx });
+          }
         }
-
-        // Update progress and yield to browser every chunk
-        if (i % (CHUNK_SIZE * 5) === 0 || end === masked.length) {
-          updateProgress(end, masked.length, '智能填充');
+        
+        if (toProcess.length === 0) break;
+        
+        updateProgress(pass + 1, MAX_PASSES, '智能填充 第' + (pass + 1) + '轮');
+        
+        let filled = 0;
+        for (const { x, y, idx } of toProcess) {
+          const color = sampleNeighbor(data, mask, x, y, width, height, MAX_RADIUS);
+          if (color) {
+            data[idx] = color.r;
+            data[idx + 1] = color.g;
+            data[idx + 2] = color.b;
+            mask[idx + 3] = 64; // filled, now usable as source for next pass
+            filled++;
+          }
         }
+        
+        if (filled === 0) break; // No more pixels can be filled
         await yieldToBrowser();
       }
-
+      
       // Restore mask alpha for display
-      for (const { idx } of masked) {
-        mask[idx + 3] = 128;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          if (mask[idx + 3] === 64) mask[idx + 3] = 128;
+        }
       }
     }
 
