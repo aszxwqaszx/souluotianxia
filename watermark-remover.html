@@ -802,13 +802,6 @@
             </svg>
             开始处理
           </button>
-          <button class="btn btn-secondary" id="previewBtn" disabled>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-            前后对比
-          </button>
           <button class="btn btn-secondary" id="downloadBtn" disabled>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
@@ -931,7 +924,6 @@
       imgSize: document.getElementById('imgSize'),
       selectedArea: document.getElementById('selectedArea'),
       processBtn: document.getElementById('processBtn'),
-      previewBtn: document.getElementById('previewBtn'),
       downloadBtn: document.getElementById('downloadBtn'),
       clearBtn: document.getElementById('clearBtn'),
       undoBtn: document.getElementById('undoBtn'),
@@ -1017,7 +1009,6 @@
 
     // Buttons
     elements.processBtn.addEventListener('click', processImage);
-    elements.previewBtn.addEventListener('click', togglePreview);
     elements.downloadBtn.addEventListener('click', downloadResult);
     elements.clearBtn.addEventListener('click', clearAll);
     elements.undoBtn.addEventListener('click', undo);
@@ -1290,8 +1281,11 @@
 
     async function processImage() {
       if (!state.maskData) {
-        alert('请先选择要去除的水印区域');
-        return;
+        // Auto-detect watermark areas when no manual selection
+        setStatus('processing', '正在自动检测水印区域...');
+        const srcData = mainCtx.getImageData(0, 0, elements.mainCanvas.width, elements.mainCanvas.height);
+        const detected = autoDetectWatermark(srcData, elements.mainCanvas.width, elements.mainCanvas.height);
+        state.maskData = detected;
       }
 
       const width = elements.mainCanvas.width;
@@ -1323,7 +1317,6 @@
 
         mainCtx.putImageData(result, 0, 0);
         state.processedImageData = result;
-        elements.previewBtn.disabled = false;
         elements.downloadBtn.disabled = false;
         setStatus('success', '处理完成！');
         saveHistory();
@@ -1334,6 +1327,52 @@
         elements.loadingOverlay.classList.remove('active');
         elements.processBtn.disabled = false;
       }
+    }
+
+    // Auto-detect watermark areas using edge detection + corner heuristics
+    function autoDetectWatermark(imageData, width, height) {
+      const data = imageData.data;
+      const maskData = new ImageData(width, height);
+      const mask = maskData.data;
+      const threshold = 25;
+      const skip = 3;
+      
+      // Edge detection: find high-contrast areas (likely text/logos)
+      for (let y = 1; y < height - 1; y += skip) {
+        for (let x = 1; x < width - 1; x += skip) {
+          const idx = (y * width + x) * 4;
+          const idxL = (y * width + (x - 1)) * 4;
+          const idxT = ((y - 1) * width + x) * 4;
+          
+          const dr = Math.abs(data[idx] - data[idxL]);
+          const dg = Math.abs(data[idx + 1] - data[idxL + 1]);
+          const db = Math.abs(data[idx + 2] - data[idxL + 2]);
+          const d2 = Math.abs(data[idx] - data[idxT]) + Math.abs(data[idx + 1] - data[idxT + 1]) + Math.abs(data[idx + 2] - data[idxT + 2]);
+          
+          if (dr + dg + db > threshold * 3 || d2 > threshold * 3) {
+            for (let dy = 0; dy < skip && y + dy < height; dy++) {
+              for (let dx = 0; dx < skip && x + dx < width; dx++) {
+                const m = ((y + dy) * width + (x + dx)) * 4;
+                mask[m + 3] = 255;
+              }
+            }
+          }
+        }
+      }
+      
+      // Additional: mark corners (common watermark positions)
+      const cw = Math.floor(width * 0.3), ch = Math.floor(height * 0.3);
+      for (let y = height - ch; y < height; y++)
+        for (let x = width - cw; x < width; x++)
+          mask[(y * width + x) * 4 + 3] = 255;
+      for (let y = height - ch; y < height; y++)
+        for (let x = 0; x < cw; x++)
+          mask[(y * width + x) * 4 + 3] = 255;
+      for (let y = 0; y < ch; y++)
+        for (let x = width - cw; x < width; x++)
+          mask[(y * width + x) * 4 + 3] = 255;
+      
+      return maskData;
     }
 
     // Find all masked pixel positions (returns flat indices)
@@ -1348,10 +1387,11 @@
       return pixels;
     }
 
-    // Sample color from non-masked neighbors (fast, fixed radius)
+    // Sample color from non-masked neighbors (unlimited search radius)
     function sampleNeighbor(data, mask, x, y, width, height) {
+      const MAX_RADIUS = Math.max(width, height);
       // Search in expanding rings until we find non-masked pixels
-      for (let r = 1; r <= 20; r++) {
+      for (let r = 1; r <= MAX_RADIUS; r++) {
         let sr = 0, sg = 0, sb = 0, sc = 0;
         for (let dy = -r; dy <= r; dy++) {
           for (let dx = -r; dx <= r; dx++) {
@@ -1571,32 +1611,6 @@
       }
     }
 
-    let showingOriginal = false;
-    function togglePreview() {
-      if (!state.originalImageData || !state.processedImageData) return;
-      
-      showingOriginal = !showingOriginal;
-      if (showingOriginal) {
-        mainCtx.putImageData(state.originalImageData, 0, 0);
-        elements.previewBtn.innerHTML = `
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          查看结果
-        `;
-      } else {
-        mainCtx.putImageData(state.processedImageData, 0, 0);
-        elements.previewBtn.innerHTML = `
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          前后对比
-        `;
-      }
-    }
-
     function downloadResult() {
       const link = document.createElement('a');
       link.download = `watermark-removed-${Date.now()}.png`;
@@ -1621,20 +1635,11 @@
       elements.videoProgress.classList.remove('active');
       elements.fileInput.value = '';
       enableButtons(false);
-      elements.previewBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-        前后对比
-      `;
-      showingOriginal = false;
       setStatus('', '准备就绪，上传图片或视频开始');
     }
 
     function enableButtons(enabled) {
       elements.processBtn.disabled = !enabled;
-      elements.previewBtn.disabled = !enabled;
       elements.downloadBtn.disabled = !enabled;
     }
 
