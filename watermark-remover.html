@@ -762,14 +762,14 @@
       <div class="panel">
         <div class="panel-title">去除方式</div>
         <div class="method-list">
-          <div class="method-item active" data-method="inpaint">
+          <div class="method-item" data-method="inpaint">
             <div class="method-icon">✨</div>
             <div class="method-info">
               <div class="method-name">智能填充</div>
               <div class="method-desc">AI内容感知，自动补全</div>
             </div>
           </div>
-          <div class="method-item" data-method="blur">
+          <div class="method-item active" data-method="blur">
             <div class="method-icon">🌫️</div>
             <div class="method-info">
               <div class="method-name">模糊处理</div>
@@ -894,7 +894,7 @@
     const state = {
       mode: 'image', // 'image' or 'video'
       tool: 'brush',
-      method: 'inpaint',
+      method: 'blur',
       brushSize: 30,
       image: null,
       video: null,
@@ -1335,7 +1335,7 @@
       const maskData = new ImageData(width, height);
       const mask = maskData.data;
       const blurR = 5; // small blur = text-scale detection
-      const threshold = 20; // difference threshold per channel
+      const threshold = 35; // stricter: fewer false positives
       
       // Only scan zones where watermarks typically appear
       const scanZones = [
@@ -1483,11 +1483,11 @@
               const ny = y + dy;
               if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
               const nidx = (ny * width + nx) * 4;
-              const w = 1;
-              sr += data[nidx] * w;
-              sg += data[nidx + 1] * w;
-              sb += data[nidx + 2] * w;
-              sc += w;
+              if (mask[nidx + 3] > 128) continue; // Skip watermarked pixels
+              sr += data[nidx];
+              sg += data[nidx + 1];
+              sb += data[nidx + 2];
+              sc++;
             }
           }
 
